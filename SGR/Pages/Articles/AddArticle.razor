@@ -1,0 +1,59 @@
+﻿@page "/addArticle"
+
+@inject IManager<Article> articleManager
+@inject IManager<Category> categoryManager
+@inject Microsoft.AspNetCore.Components.NavigationManager navigationManager
+
+<h2>
+    Add Article
+</h2>
+
+<div class="row">
+    <div class="col-md-4">
+        <form>
+            <div class="form-group">
+                <label for="Name" class="control-label">Name</label>
+                <input for="Name" class="form-control" @bind="@article.Title" /> <!--@bind-value="" @bind-value:event ="" />-->
+
+                <label for="Name" class="control-label">Category</label>
+                <select class="form-control" @bind="@SelectedCategory">
+                    @foreach (var category in categories)
+                    {
+                        <option value="@category.IdCategory">@category.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <button type="button" class="btn btn-primary" @onclick="() => CreateArticle()">Save</button>
+                <button type="button" class="btn btn-danger" @onclick="() => Cancel()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@code {
+
+    Article article = new Article();
+    IList<Category> categories;
+
+    public int? SelectedCategory { get; set; }
+
+    protected override async Task OnInitializedAsync() //Init //Constructor de este component...
+    {
+        categories = await categoryManager.ListAll();
+        SelectedCategory = categories.FirstOrDefault()?.IdCategory;
+    }
+
+    protected async Task CreateArticle()
+    {
+        article.Category = (SelectedCategory != null)? new Category() { IdCategory = SelectedCategory.Value } : null;
+
+        await articleManager.Create(article);
+        navigationManager.NavigateTo("/articlelist");
+    }
+
+    void Cancel()
+    {
+        navigationManager.NavigateTo("/articlelist");
+    }
+}
