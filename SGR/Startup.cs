@@ -10,16 +10,16 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
-using SGR.DAL.Contracts;
-using SGR.DAL.Concrete;
+using SGI.DAL.Contracts;
+using SGI.DAL.Concrete;
 using Microsoft.AspNetCore.Identity;
-using SGR.DAL.DataAccess;
+using SGI.DAL.DataAccess;
 using Microsoft.AspNetCore.Components.Authorization;
 using BlazorAppAuth.Areas.Identity;
-using SGR.Entities;
+using SGI.Entities;
 using Connector;
 
-namespace SGR
+namespace SGI
 {
     public class Startup
     {

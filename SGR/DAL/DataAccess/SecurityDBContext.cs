@@ -4,7 +4,7 @@ using System.Text;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace SGR.DAL.DataAccess
+namespace SGI.DAL.DataAccess
 {
     public class SecurityDBContext : IdentityDbContext
     {

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 
-namespace SGR.DAL.Contracts
+namespace SGI.DAL.Contracts
 {
     public interface IDapperManager : IDisposable
     {

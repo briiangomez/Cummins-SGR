@@ -1,11 +1,11 @@
-﻿using SGR.DAL.Contracts;
-using SGR.Entities;
+﻿using SGI.DAL.Contracts;
+using SGI.Entities;
 using Dapper;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 
-namespace SGR.DAL.Concrete
+namespace SGI.DAL.Concrete
 {
     public class ArticleManager : IManager<Article>
     {

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29926.136
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SGR", "SGR\SGR.csproj", "{F8316F26-FAD2-478B-990A-B4FCE0822559}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SGI", "SGR\SGI.csproj", "{F8316F26-FAD2-478B-990A-B4FCE0822559}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

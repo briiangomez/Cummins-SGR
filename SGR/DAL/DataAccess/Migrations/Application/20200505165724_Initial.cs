@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace SGR.DAL.DataAccess.Migrations.Application
+namespace SGI.DAL.DataAccess.Migrations.Application
 {
     public partial class Initial : Migration
     {

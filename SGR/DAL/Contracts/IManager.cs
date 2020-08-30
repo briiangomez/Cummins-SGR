@@ -1,8 +1,8 @@
-﻿using SGR.Entities;
+﻿using SGI.Entities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace SGR.DAL.Contracts
+namespace SGI.DAL.Contracts
 {
     public interface IManager<T>
     {

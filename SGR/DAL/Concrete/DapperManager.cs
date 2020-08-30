@@ -1,5 +1,5 @@
-﻿using SGR.DAL.Contracts;
-using SGR.Entities;
+﻿using SGI.DAL.Contracts;
+using SGI.Entities;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
@@ -10,7 +10,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
 
-namespace SGR.DAL.Concrete
+namespace SGI.DAL.Concrete
 {
     public class DapperManager : IDapperManager
     {

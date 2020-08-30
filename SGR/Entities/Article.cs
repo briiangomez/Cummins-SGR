@@ -1,8 +1,8 @@
-﻿using SGR.Pages;
+﻿using SGI.Pages;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace SGR.Entities
+namespace SGI.Entities
 {
     public class Article
     {

@@ -1,6 +1,6 @@
 using System;
 
-namespace SGR.Entities
+namespace SGI.Entities
 {
     public class WeatherForecast
     {

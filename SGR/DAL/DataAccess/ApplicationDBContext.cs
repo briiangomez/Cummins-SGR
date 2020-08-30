@@ -1,7 +1,7 @@
-﻿using SGR.Entities;
+﻿using SGI.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace SGR.DAL.DataAccess
+namespace SGI.DAL.DataAccess
 {
     public class ApplicationDBContext : DbContext
     {
