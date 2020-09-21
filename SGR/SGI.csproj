@@ -34,12 +34,7 @@
   <ItemGroup>
     <ProjectReference Include="..\SGI.ApplicationCore\SGI.ApplicationCore.csproj" />
     <ProjectReference Include="..\SGI.Infrastructure\SGI.Infrastructure.csproj" />
-  </ItemGroup>
-</Project>
-
-  <ItemGroup>
     <ProjectReference Include="..\CMM.Survey\CMM.Survey.csproj" />
     <ProjectReference Include="..\CMM\CMM.csproj" />
   </ItemGroup>
-
 </Project>
