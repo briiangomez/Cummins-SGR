@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2008/09/mapping/cs">
+  <EntityContainerMapping StorageEntityContainer="CMMCommunicatorModelStoreContainer" CdmEntityContainer="CMMCommunicator">
+    <EntitySetMapping Name="Survey_Answer">
+      <EntityTypeMapping TypeName="CMMCommunicatorModel.Survey_Answer">
+        <MappingFragment StoreEntitySet="Survey_Answer">
+          <ScalarProperty Name="CommentText" ColumnName="CommentText" />
+          <ScalarProperty Name="AnswerText" ColumnName="AnswerText" />
+          <ScalarProperty Name="AnswerType" ColumnName="AnswerType" />
+          <ScalarProperty Name="AnswerHtmlId" ColumnName="AnswerHtmlId" />
+          <ScalarProperty Name="PostDataId" ColumnName="PostDataId" />
+          <ScalarProperty Name="QuestionId" ColumnName="QuestionId" />
+          <ScalarProperty Name="Id" ColumnName="Id" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="Survey_Form">
+      <EntityTypeMapping TypeName="CMMCommunicatorModel.Survey_Form">
+        <MappingFragment StoreEntitySet="Survey_Form">
+          <ScalarProperty Name="ValidatorType" ColumnName="ValidatorType" />
+          <ScalarProperty Name="JoinPassword" ColumnName="JoinPassword" />
+          <ScalarProperty Name="SendEmail" ColumnName="SendEmail" />
+          <ScalarProperty Name="RespondResult" ColumnName="RespondResult" />
+          <ScalarProperty Name="Paused" ColumnName="Paused" />
+          <ScalarProperty Name="VisitCount" ColumnName="VisitCount" />
+          <ScalarProperty Name="EndTime" ColumnName="EndTime" />
+          <ScalarProperty Name="StartTime" ColumnName="StartTime" />
+          <ScalarProperty Name="PublishTime" ColumnName="PublishTime" />
+          <ScalarProperty Name="CreateTime" ColumnName="CreateTime" />
+          <ScalarProperty Name="FormHtml" ColumnName="FormHtml" />
+          <ScalarProperty Name="FormName" ColumnName="FormName" />
+          <ScalarProperty Name="PortalId" ColumnName="PortalId" />
+          <ScalarProperty Name="Id" ColumnName="Id" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="Survey_PostData">
+      <EntityTypeMapping TypeName="CMMCommunicatorModel.Survey_PostData">
+        <MappingFragment StoreEntitySet="Survey_PostData">
+          <ScalarProperty Name="SourceType" ColumnName="SourceType" />
+          <ScalarProperty Name="ValidToken" ColumnName="ValidToken" />
+          <ScalarProperty Name="ClientPlatform" ColumnName="ClientPlatform" />
+          <ScalarProperty Name="ClientBrowser" ColumnName="ClientBrowser" />
+          <ScalarProperty Name="ClientIP" ColumnName="ClientIP" />
+          <ScalarProperty Name="PostDate" ColumnName="PostDate" />
+          <ScalarProperty Name="ContactId" ColumnName="ContactId" />
+          <ScalarProperty Name="FormId" ColumnName="FormId" />
+          <ScalarProperty Name="Id" ColumnName="Id" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="Survey_Preview">
+      <EntityTypeMapping TypeName="CMMCommunicatorModel.Survey_Preview">
+        <MappingFragment StoreEntitySet="Survey_Preview">
+          <ScalarProperty Name="CreateDate" ColumnName="CreateDate" />
+          <ScalarProperty Name="FormHtml" ColumnName="FormHtml" />
+          <ScalarProperty Name="FormName" ColumnName="FormName" />
+          <ScalarProperty Name="PortalId" ColumnName="PortalId" />
+          <ScalarProperty Name="Id" ColumnName="Id" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="Survey_Question">
+      <EntityTypeMapping TypeName="CMMCommunicatorModel.Survey_Question">
+        <MappingFragment StoreEntitySet="Survey_Question">
+          <ScalarProperty Name="AllowComment" ColumnName="AllowComment" />
+          <ScalarProperty Name="IsRequired" ColumnName="IsRequired" />
+          <ScalarProperty Name="QuestionHtmlId" ColumnName="QuestionHtmlId" />
+          <ScalarProperty Name="QuestionIndex" ColumnName="QuestionIndex" />
+          <ScalarProperty Name="QuestionText" ColumnName="QuestionText" />
+          <ScalarProperty Name="FormId" ColumnName="FormId" />
+          <ScalarProperty Name="Id" ColumnName="Id" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+  </EntityContainerMapping>
+</Mapping>

@@ -1,0 +1,410 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <ProjectType>local</ProjectType>
+    <ProjectVersion>7.10.377</ProjectVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{C2C66B90-870C-4B38-9394-8FF631B7D6BA}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <AssemblyName>CMM</AssemblyName>
+    <OutputType>Library</OutputType>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\x64\Release\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <OutputPath>bin\Release\</OutputPath>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Reference Include="System.Web" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web.Mvc, Version=4.0.0.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Dlls\System.Web.Mvc.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages">
+      <HintPath>..\Dlls\System.Web.WebPages.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.ServiceModel.Web" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="Microsoft.CSharp" />
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="CMM\Data\SQLGuid.cs" />
+    <Compile Include="CMM\ICMMException.cs" />
+    <Compile Include="CMM\Web\Css\Combiner.IDom.cs" />
+    <Compile Include="CMM\Web\Css\Combiner.NodeStyle.cs" />
+    <Compile Include="Global.cs" />
+    <Compile Include="CMM\Web\WatchModule.cs" />
+    <Compile Include="CMM\Web\Script\Serialization\JsonHelper.cs" />
+    <Compile Include="CMM\Web\Mvc\WebResourceLoader\CSSMinify.cs" />
+    <Compile Include="CMM\Web\Mvc\CMMRequiredAttributeAdapter.cs" />
+    <Compile Include="CMM\Web\Mvc\Menu\IMenuItemContainer.cs" />
+    <Compile Include="CMM\Web\Mvc\Menu\MenuItem.cs" />
+    <Compile Include="CMM\Web\Mvc\Menu\Configuration\MenuItemElementCollection.cs" />
+    <Compile Include="CMM\Web\Mvc\Menu\Configuration\MenuItemElement.cs" />
+    <Compile Include="CMM\Web\Html\HtmlReader.cs" />
+    <Compile Include="CMM\Web\Css\Meta\PropertyMeta.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Calculator.cs" />
+    <Compile Include="CMM\Drawing\Quantizer.cs" />
+    <Compile Include="CMM\Drawing\OctreeQuantizer.cs" />
+    <Compile Include="CMM\Drawing\ImageTools.cs" />
+    <Compile Include="CMM\Drawing\Filters\IFilter.cs" />
+    <Compile Include="CMM\Drawing\Filters\BasicFilter.cs" />
+    <Compile Include="CMM\Drawing\Filters\WaterMarkFilter.cs" />
+    <Compile Include="CMM\Drawing\Filters\TextWatermarkFilter.cs" />
+    <Compile Include="CMM\Drawing\Filters\RoundedCornersFilter.cs" />
+    <Compile Include="CMM\Drawing\Filters\CutCornersFilter.cs" />
+    <Compile Include="CMM\Web\Mvc\ViewDataDictionaryExtensions.cs" />
+    <Compile Include="CMM\Web\Mvc\SelectableList.cs" />
+    <Compile Include="CMM\Web\Mvc\Paging\PagedList.cs" />
+    <Compile Include="CMM\Web\Mvc\CMMDataAnnotationsModelMetadataProvider.cs" />
+    <Compile Include="CMM\Web\HttpFileCollectionBaseWrapper.cs" />
+    <Compile Include="CMM\Web\HttpApplicationStateBaseWrapper.cs" />
+    <Compile Include="System\ServiceModel\Web\JSONPBehavior.cs" />
+    <Compile Include="CMM\IoC\ExportProviders.cs" />
+    <Compile Include="CMM\IoC\IExportProvider.cs" />
+    <Compile Include="CMM\IoC\ExportProvider.cs" />
+    <Compile Include="CMM\IoC\ObjectPool.cs" />
+    <Compile Include="CMM\Extensions\TypeExtensions.cs" />
+    <Compile Include="CMM\Web\Mvc\WebResourceLoader\Configuration\ReferenceElement.cs" />
+    <Compile Include="CMM\Configuration\StandaloneConfigurationSection.cs" />
+    <Compile Include="CMM\Web\Mvc\WebResourceLoader\Configuration\WebResourcesSection.cs" />
+    <Compile Include="CMM\Web\Mvc\Routing\RouteTableRegister.cs" />
+    <Compile Include="CMM\Reflection\MemberException.cs" />
+    <Compile Include="CMM\Globalization\ElementCategory.cs" />
+    <Compile Include="CMM\Globalization\IElementRepository.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Support\ExStack!1.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Support\ExStackEnumerator!1.cs" />
+    <Compile Include="CMM\ContextualCompositionContainerHttpModule.cs" />
+    <Compile Include="CMM\IoC\ILifetimeManager.cs" />
+    <Compile Include="CMM\IoC\SharedLifetimeManager.cs" />
+    <Compile Include="CMM\Extensions\ObjectExtensions.cs" />
+    <Compile Include="CMM\Extensions\AarrayExtensions.cs" />
+    <Compile Include="CMM\Web\Css\Meta\PropertyValueType.cs" />
+    <Compile Include="CMM\Web\Css\Meta\AnyType.cs" />
+    <Compile Include="CMM\Web\Css\Meta\PropertyMetaCollection.cs" />
+    <Compile Include="CMM\SR.cs" />
+    <Compile Include="CMM\RegexPatterns.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Parser\Tokens.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Parser\TokensEnumerator.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Parser\TokenType.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Parser\TokenDataType.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Parser\TokenItem.cs" />
+    <Compile Include="CMM\Drawing\ColorExtensions.cs" />
+    <Compile Include="CMM\Web\StringEx.cs" />
+    <Compile Include="CMM\Web\Mvc\Grid\GridItemAction.cs" />
+    <Compile Include="CMM\Web\Mvc\DataSourceAttribute.cs" />
+    <Compile Include="CMM\Web\HttpCachePolicyBaseWrapper.cs" />
+    <Compile Include="CMM\Job\IJob.cs" />
+    <Compile Include="CMM\Job\TestJob.cs" />
+    <Compile Include="CMM\Job\Jobs.cs" />
+    <Compile Include="CMM\IoC\ObjectKey.cs" />
+    <Compile Include="CMM\Web\Mvc\WebResourceLoader\Mode.cs" />
+    <Compile Include="CMM\Web\Html\HtmlUtility.cs" />
+    <Compile Include="CMM\Web\Css\StyleSheet.cs" />
+    <Compile Include="CMM\Web\Css\Statement.cs" />
+    <Compile Include="CMM\Web\Css\RuleSet.cs" />
+    <Compile Include="CMM\Web\Css\Meta\ShorthandRule.cs" />
+    <Compile Include="CMM\Web\Css\Meta\ValueDiscriminationRule.cs" />
+    <Compile Include="CMM\Web\Css\Meta\FontFamilyType.cs" />
+    <Compile Include="CMM\IO\IOUtility.cs" />
+    <Compile Include="CMM\Web\Mvc\Grid\IColumnHeaderRender.cs" />
+    <Compile Include="CMM\Web\Mvc\Grid\GridCommandAttribute.cs" />
+    <Compile Include="CMM\Web\IHtmlStringComparer.cs" />
+    <Compile Include="CMM\IoC\Contract.cs" />
+    <Compile Include="CMM\Web\Script\JSMin.cs" />
+    <Compile Include="CMM\Web\Mvc\WebResourceLoader\Configuration\FileInfoElement.cs" />
+    <Compile Include="CMM\Web\Mvc\CMMRegularExpressionAttributeAdapter.cs" />
+    <Compile Include="CMM\Web\Mvc\Routing\RouteTableSection.cs" />
+    <Compile Include="CMM\Web\Mvc\Menu\Configuration\MenuSection.cs" />
+    <Compile Include="CMM\Web\Css\Meta\PositionDescriminationRule.cs" />
+    <Compile Include="CMM\Web\Css\Meta\EnumType.cs" />
+    <Compile Include="CMM\Globalization\Element.cs" />
+    <Compile Include="CMM\Globalization\ElementCacheKeyEqualityComparer.cs" />
+    <Compile Include="CMM\Globalization\ElementCacheKey.cs" />
+    <Compile Include="CMM\Extensions\StringExtensions.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Support\DataTypeCheck.cs" />
+    <Compile Include="CMM\Drawing\Filters\FloorReflectionFilter.cs" />
+    <Compile Include="CMM\Drawing\Filters\DropShadowFilter.cs" />
+    <Compile Include="CMM\ConfigurableCompositionContainer.cs" />
+    <Compile Include="CMM\ComponentModel\DataAnnotations\CMMValidationAttribute.cs" />
+    <Compile Include="CMM\ComponentModel\DataAnnotations\CMMRequiredAttribute.cs" />
+    <Compile Include="CMM\Web\Mvc\RequestContextExtensions.cs" />
+    <Compile Include="CMM\Web\Mvc\ModelStateDictionaryExtenstions.cs" />
+    <Compile Include="CMM\Web\Mvc\Grid\GridColumn.cs" />
+    <Compile Include="CMM\Web\HttpStaticObjectsCollectionBaseWrapper.cs" />
+    <Compile Include="CMM\Web\Mvc\Html\IHtmlControl.cs" />
+    <Compile Include="CMM\Web\Mvc\Html\HtmlControlBase.cs" />
+    <Compile Include="CMM\Web\Mvc\Html\HtmlTextarea.cs" />
+    <Compile Include="CMM\Web\Mvc\Constraints\IgnoreConstraint.cs" />
+    <Compile Include="CMM\Web\Html\InvalidHtmlException.cs" />
+    <Compile Include="CMM\Web\Css\SplitOptions.cs" />
+    <Compile Include="CMM\Web\Css\Combiner.cs" />
+    <Compile Include="CMM\Web\Css\SimpleSelector.cs" />
+    <Compile Include="CMM\Web\Css\AttributeSelector.cs" />
+    <Compile Include="CMM\Reflection\Members.cs" />
+    <Compile Include="CMM\Reflection\ObjectExtensions.cs" />
+    <Compile Include="CMM\Drawing\Filters\ResizeFilter.cs" />
+    <Compile Include="CMM\Drawing\Filters\PolaroidFrameFilter.cs" />
+    <Compile Include="CMM\Contracts\ContractException.cs" />
+    <Compile Include="CMM\Web\Mvc\Paging\PagerOptions.cs" />
+    <Compile Include="CMM\Web\Mvc\Paging\PageIndexBoxType.cs" />
+    <Compile Include="CMM\Web\Mvc\Grid\GridActionAttribute.cs" />
+    <Compile Include="CMM\Web\Mvc\JsonTextResult.cs" />
+    <Compile Include="CMM\Web\Mvc\JsonTextResultContollerExtensions.cs" />
+    <Compile Include="CMM\Web\HttpContextBaseWrapper.cs" />
+    <Compile Include="CMM\CMMException.cs" />
+    <Compile Include="CMM\IoC\OrderedExportAttribute.cs" />
+    <Compile Include="CMM\Diagnostics\LoopWatch.cs" />
+    <Compile Include="CMM\Web\Mvc\WebResourceLoader\ReferenceFomatter.cs" />
+    <Compile Include="CMM\Web\Mvc\WebResourceLoader\MvcExtensions.cs" />
+    <Compile Include="CMM\Web\Mvc\WebResourceLoader\Condition.cs" />
+    <Compile Include="CMM\Web\Mvc\WebResourceLoader\ConditionComparer.cs" />
+    <Compile Include="CMM\Web\Mvc\InvaildControllerNameException.cs" />
+    <Compile Include="CMM\Web\Css\Meta\UrlType.cs" />
+    <Compile Include="CMM\Web\Css\Meta\CombinedType.cs" />
+    <Compile Include="CMM\Web\Css\Meta\SizeType.cs" />
+    <Compile Include="CMM\Web\Css\AtRule.cs" />
+    <Compile Include="CMM\ComponentContainer.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Parser\TokenItems.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Parser\TokemItemsEnumerator.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Parser\ParseState.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Parser\IIFShortCircuitState.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Parser\Token.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\CalculateExpression.cs" />
+    <Compile Include="CMM\Web\Mvc\Paging\PagerHelper.cs" />
+    <Compile Include="CMM\Web\Mvc\Grid\GridCommand.cs" />
+    <Compile Include="CMM\ComponentModel\DataAnnotations\CMMCompareAttribute.cs" />
+    <Compile Include="System\ServiceModel\Web\JSONPMessageProperty.cs" />
+    <Compile Include="System\ServiceModel\Web\JSONPEncoderFactory.cs" />
+    <Compile Include="CMM\IoC\IActivatorContext.cs" />
+    <Compile Include="CMM\Web\ResourceStatus.cs" />
+    <Compile Include="CMM\Web\Mvc\Html\ValidationExtensions.cs" />
+    <Compile Include="CMM\Web\Css\Selector.cs" />
+    <Compile Include="CMM\Web\Css\Meta\BackgroundShorthandRule.cs" />
+    <Compile Include="CMM\Text\FormattedTextWriter.cs" />
+    <Compile Include="CMM\Dynamic\DynamicDictionary.cs" />
+    <Compile Include="CMM\Drawing\Filters\BoxFilter.cs" />
+    <Compile Include="CMM\Web\Mvc\Html\RadioButtonListExtensions.cs" />
+    <Compile Include="CMM\Web\Mvc\Grid\IItemColumnRender.cs" />
+    <Compile Include="CMM\Web\Mvc\Menu\IMenuItemInitializer.cs" />
+    <Compile Include="CMM\Web\Mvc\Menu\DefaultMenuItemInitializer.cs" />
+    <Compile Include="CMM\Web\Mvc\Grid\PageSizeCommand.cs" />
+    <Compile Include="CMM\Web\HttpSessionStateBaseWrapper.cs" />
+    <Compile Include="System\ServiceModel\Web\JSONPBindingElement.cs" />
+    <Compile Include="CMM\IoC\PerRequestLifetimeManager.cs" />
+    <Compile Include="CMM\Web\Url\UrlUtility.cs" />
+    <Compile Include="CMM\Web\Mvc\WebResourceLoader\Configuration\ReferenceCollection.cs" />
+    <Compile Include="CMM\Web\Mvc\Menu\Configuration\RouteValuesElement.cs" />
+    <Compile Include="CMM\Web\Mvc\Html\LabelExtensions.cs" />
+    <Compile Include="CMM\Web\Css\SelectorCombinator.cs" />
+    <Compile Include="CMM\Web\Css\Declaration.cs" />
+    <Compile Include="CMM\Settings.cs" />
+    <Compile Include="CMM\Web\TrustLevelUtility.cs" />
+    <Compile Include="CMM\Web\Mvc\UrlResult.cs" />
+    <Compile Include="CMM\Web\Mvc\RouteValuesHelpers.cs" />
+    <Compile Include="CMM\Web\Mvc\Grid\GridModel.cs" />
+    <Compile Include="CMM\Web\Mvc\Grid\IGridActionVisibleArbiter.cs" />
+    <Compile Include="CMM\Web\Mvc\Grid\IGridActionRouteValuesGetter.cs" />
+    <Compile Include="CMM\Web\Mvc\Grid\GridAction.cs" />
+    <Compile Include="CMM\Web\Mvc\AreaHelpers.cs" />
+    <Compile Include="CMM\IoC\IObjectFacotry.cs" />
+    <Compile Include="CMM\IoC\ITypeEnumerator.cs" />
+    <Compile Include="CMM\IoC\AssemblyExtensions.cs" />
+    <Compile Include="CMM\IoC\IRequestContext.cs" />
+    <Compile Include="CMM\Extensions\DictionaryExtensions.cs" />
+    <Compile Include="CMM\Domain\TransactionContext.cs" />
+    <Compile Include="CMM\Data\DataType.cs" />
+    <Compile Include="CMM\Data\DataTypeHelper.cs" />
+    <Compile Include="CMM\Collections\ComparedResult.cs" />
+    <Compile Include="CMM\Web\Mvc\ViewContextExtensions.cs" />
+    <Compile Include="CMM\Web\Mvc\CMMCompareAttributeAdapter.cs" />
+    <Compile Include="CMM\Web\Mvc\Html\HtmlExtensions.cs" />
+    <Compile Include="CMM\Globalization\DirectoryCreateException.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Support\ExQueue!1.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Support\ExQueueEnumerator!1.cs" />
+    <Compile Include="CMM\Drawing\WebPageCapture.cs" />
+    <Compile Include="CMM\Drawing\WebPageCapturedEventArgs.cs" />
+    <Compile Include="CMM\Web\Mvc\Html\HtmlTextbox.cs" />
+    <Compile Include="System\ServiceModel\Web\JsonpBindingExtension.cs" />
+    <Compile Include="CMM\Runtime\Serialization\DataContractSerializationHelper.cs" />
+    <Compile Include="CMM\Globalization\ElementRepository.cs" />
+    <Compile Include="CMM\Web\Mvc\WebResourceLoader\WebResourceController.cs" />
+    <Compile Include="CMM\Web\Mvc\Routing\RouteChildElement.cs" />
+    <Compile Include="CMM\Web\Mvc\ControllerExtensions.cs" />
+    <Compile Include="CMM\Web\Css\Property.cs" />
+    <Compile Include="CMM\Null.cs" />
+    <Compile Include="CMM\DefaultExportAttribute.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Parser\TokenGroup.cs" />
+    <Compile Include="CMM\Web\Mvc\Grid\GridAttribute.cs" />
+    <Compile Include="CMM\Web\ContentDispositionUtil.cs" />
+    <Compile Include="CMM\Web\HttpResponseExtensions.cs" />
+    <Compile Include="CMM\Web\Mvc\Html\HtmlHidden.cs" />
+    <Compile Include="System\Linq\Dynamic\DynamicQueryable.cs" />
+    <Compile Include="System\Linq\Dynamic\DynamicClass.cs" />
+    <Compile Include="System\Linq\Dynamic\DynamicProperty.cs" />
+    <Compile Include="System\Linq\Dynamic\DynamicExpression.cs" />
+    <Compile Include="System\Linq\Dynamic\DynamicOrdering.cs" />
+    <Compile Include="System\Linq\Dynamic\Signature.cs" />
+    <Compile Include="System\Linq\Dynamic\ClassFactory.cs" />
+    <Compile Include="System\Linq\Dynamic\ParseException.cs" />
+    <Compile Include="System\Linq\Dynamic\ExpressionParser.cs" />
+    <Compile Include="System\Linq\Dynamic\Res.cs" />
+    <Compile Include="CMM\IoC\MissingContractException.cs" />
+    <Compile Include="CMM\IoC\WebReqeustContext.cs" />
+    <Compile Include="CMM\Web\Mvc\DataAnnotationsModelValidatorProvider.cs" />
+    <Compile Include="CMM\Web\Mvc\Routing\RouteElementCollection.cs" />
+    <Compile Include="CMM\Web\Mvc\Routing\IgnoreRouteCollection.cs" />
+    <Compile Include="CMM\Web\Css\StyleContext.cs" />
+    <Compile Include="CMM\Web\Css\SimpleSelectorChain.cs" />
+    <Compile Include="CMM\Web\Css\SelectorGroup.cs" />
+    <Compile Include="CMM\Web\Css\InvalidStructureException.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Parser\Variables.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Parser\VariablesEnumerator.cs" />
+    <Compile Include="CMM\Drawing\CornersItem.cs" />
+    <Compile Include="CMM\Drawing\CornersLine.cs" />
+    <Compile Include="CMM\Drawing\CornersArc.cs" />
+    <Compile Include="CMM\Drawing\Corners.cs" />
+    <Compile Include="CMM\Drawing\GraphicsExtenions.cs" />
+    <Compile Include="CMM\Web\Mvc\Grid\GridExtensions.cs" />
+    <Compile Include="CMM\Web\Mvc\AutoCompleteController.cs" />
+    <Compile Include="CMM\Linq\PredicateBuilder.cs" />
+    <Compile Include="CMM\IoC\ObjectContainer.cs" />
+    <Compile Include="CMM\IoC\TypeEnumerator.cs" />
+    <Compile Include="CMM\Globalization\Repository\CacheElementRepository.cs" />
+    <Compile Include="CMM\Web\Mvc\WebResourceLoader\Configuration\FileCollection.cs" />
+    <Compile Include="CMM\Web\Css\StyleSheetReader.cs" />
+    <Compile Include="CMM\CallContext.cs" />
+    <Compile Include="CMM\Data\IRepository.cs" />
+    <Compile Include="CMM\Drawing\Filters\BlackAndWhiteFilter.cs" />
+    <Compile Include="CMM\ComponentModel\DataAnnotations\CMMRegularExpressionAttribute.cs" />
+    <Compile Include="CMM\Web\Mvc\Grid\GridColumnAttribute.cs" />
+    <Compile Include="CMM\Globalization\CurrencyInfo.cs" />
+    <Compile Include="CMM\ComponentModel\DataAnnotations\CMMRangeAttribute.cs" />
+    <Compile Include="CMM\Collections\ReadonlyNameValueCollection.cs" />
+    <Compile Include="CMM\Web\Mvc\CMMRangeAttributeAdapter.cs" />
+    <Compile Include="CMM\Web\Mvc\Routing\IgnoreRouteElement.cs" />
+    <Compile Include="CMM\Web\Css\Meta\PositionShorthandRule.cs" />
+    <Compile Include="CMM\Web\Css\Meta\BorderPositionShorthandRule.cs" />
+    <Compile Include="CMM\Web\Css\InvalidReadingCallException.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Parser\IIFShortCircuit.cs" />
+    <Compile Include="CMM\Drawing\Filters\RotateFilter.cs" />
+    <Compile Include="CMM\Web\Mvc\CMMModelMetadata.cs" />
+    <Compile Include="CMM\Web\Mvc\CMMDataAnnotationsModelValidatorProvider.cs" />
+    <Compile Include="CMM\ComponentModel\TypeDescriptorHelper.cs" />
+    <Compile Include="CMM\Web\Mvc\Grid\GridItem.cs" />
+    <Compile Include="CMM\Web\Mvc\ISelectListDataSource.cs" />
+    <Compile Include="CMM\Web\Mvc\SelectListExtensions.cs" />
+    <Compile Include="CMM\Web\Mvc\EmptySelectListDataSource.cs" />
+    <Compile Include="CMM\Web\Mvc\CultureSelectListDataSource.cs" />
+    <Compile Include="CMM\Web\Mvc\EnumTypeSelectListDataSource.cs" />
+    <Compile Include="CMM\Web\HttpServerUtilityBaseWrapper.cs" />
+    <Compile Include="CMM\IoC\ExportContext.cs" />
+    <Compile Include="CMM\IoC\LifetimeManagers.cs" />
+    <Compile Include="CMM\Domain\ITransactionContext.cs" />
+    <Compile Include="CMM\Web\HttpRequestBaseWrapper.cs" />
+    <Compile Include="CMM\Web\Mvc\WebResourceLoader\JSMinify.cs" />
+    <Compile Include="CMM\Web\Mvc\Routing\RouteConfigElement.cs" />
+    <Compile Include="CMM\Web\Css\Meta\LengthType.cs" />
+    <Compile Include="CMM\Web\Css\Meta\FontShorthandRule.cs" />
+    <Compile Include="CMM\StringExtensions.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Parser\Variable.cs" />
+    <Compile Include="CMM\Dynamic\Calculator\Evaluate\Evaluator.cs" />
+    <Compile Include="CMM\Drawing\Filters\SkewFilter.cs" />
+    <Compile Include="CMM\Drawing\Filters\Pipeline.cs" />
+    <Compile Include="CMM\Web\Mvc\Paging\PagerItem.cs" />
+    <Compile Include="CMM\Web\Mvc\Paging\PagerItemType.cs" />
+    <Compile Include="CMM\Web\Mvc\Paging\PagerBuilder.cs" />
+    <Compile Include="CMM\Web\Mvc\JsonpResult.cs" />
+    <Compile Include="CMM\Web\Mvc\JsonpResultContollerExtensions.cs" />
+    <Compile Include="CMM\Web\Mvc\ImageResult.cs" />
+    <Compile Include="CMM\IoC\CreateHandler.cs" />
+    <Compile Include="CMM\FileExtensions.cs" />
+    <Compile Include="CMM\Collections\EnumerableExtensions.cs" />
+    <Compile Include="CMM\Reflection\Properties.cs" />
+    <Compile Include="CMM\Reflection\PropertyExtensions.cs" />
+    <Compile Include="CMM\Drawing\Filters\ImageWatermarkFilter.cs" />
+    <Compile Include="CMM\Drawing\Corner.cs" />
+    <Compile Include="CMM\Web\Mvc\UrlHelperWrapper.cs" />
+    <Compile Include="CMM\Web\Mvc\UrlParameter!1.cs" />
+    <Compile Include="CMM\Web\Mvc\SelectListItemTree.cs" />
+    <Compile Include="CMM\Web\Mvc\SelectListItemTreeExtension.cs" />
+    <Compile Include="CMM\Web\Mvc\ModelMetadataExtensions.cs" />
+    <Compile Include="CMM\Web\Mvc\Html\TagBuilderUtility.cs" />
+    <Compile Include="CMM\Web\Mvc\WebResourceLoader\WebResourceException.cs" />
+    <Compile Include="CMM\Web\Mvc\WebResourceLoader\ConfigurationManager.cs" />
+    <Compile Include="CMM\Web\Mvc\ResourceHtmlHelper.cs" />
+    <Compile Include="CMM\Web\Mvc\Menu\Menu.cs" />
+    <Compile Include="CMM\Web\Mvc\FormHelperExtensions.cs" />
+    <Compile Include="CMM\Web\Css\SelectorType.cs" />
+    <Compile Include="CMM\Web\Css\SelectorReader.cs" />
+    <Compile Include="CMM\Web\Css\Meta\ShorthandType.cs" />
+    <Compile Include="CMM\Web\Css\Meta\ColorType.cs" />
+    <Compile Include="CMM\Reflection\MemberNotFoundException.cs" />
+    <Compile Include="CMM\IO\StreamExtensions.cs" />
+    <Compile Include="CMM\Globalization\Repository\XmlElementRepository.cs" />
+    <Compile Include="CMM\Globalization\Repository\ResXResourceFileHelper.cs" />
+    <Compile Include="CMM\Globalization\Repository\ResXResource.cs" />
+    <Compile Include="CMM\Globalization\LocalizeExtension.cs" />
+    <Compile Include="CMM\NodeTypeNotSupportException.cs" />
+    <Compile Include="CMM\Collections\CachableDictionary.cs" />
+    <Compile Include="CMM\Web\Mvc\UrlHelperEx.cs" />
+    <Compile Include="CMM\Web\Mvc\Paging\PageLinqExtensions.cs" />
+    <Compile Include="CMM\Web\Mvc\Grid\PageSizeAttribute.cs" />
+    <Compile Include="CMM\Web\HttpResponseBaseWrapper.cs" />
+    <Compile Include="CMM\Web\HttpBrowserCapabilitiesBaseWrapper.cs" />
+    <Compile Include="CMM\Job\JobExecutor.cs" />
+    <Compile Include="CMM\IoC\ObjectFactory.cs" />
+    <Compile Include="CMM\IoC\ContextContainer.cs" />
+    <Compile Include="CMM\Collections\Matrix.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="bin\Debug\" />
+    <Folder Include="bin\Release\" />
+  </ItemGroup>
+</Project>
