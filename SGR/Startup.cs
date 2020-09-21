@@ -43,7 +43,7 @@ namespace SGI
                           options.UseSqlServer(
                               Configuration.GetConnectionString("ApplicationConnection")));
 
-            services.AddRazorPages();
+            services.AddRazorPages().AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
             services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; }); ; //Habilita el modo Client-Server y errores detallados...
         
             services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
