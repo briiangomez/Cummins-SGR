@@ -1,0 +1,102 @@
+﻿@page "/addIncidencia"
+
+@inject Microsoft.AspNetCore.Components.NavigationManager navigationManager
+
+    <h2 style="text-align:center">
+        Formulario de Incidencia / Claim Form
+    </h2>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="Name" class="control-label">Fecha de esta solicitud / Date of this request:</label>
+                <input type="datetime" for="Name" class="form-control" value="@DateTime.Now.ToString()" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="Name" class="control-label">WC/OT:</label>
+                <input for="Name" class="form-control" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h3 style="text-align:center">
+                Datos del Cliente / Empresa
+            </h3>
+            <div class="form-group">
+                @*<label for="Name" class="control-label">Cliente / Client:</label>*@
+                <input for="Name" class="form-control" placeholder="Cliente / Client" />
+                <br />
+                @*<label for="Name" class="control-label">Teléfono / Phone:</label>*@
+                <input for="Name" class="form-control" placeholder="Teléfono / Phone:" />
+                <br />
+                @*<label for="Name" class="control-label">E-mail:</label>*@
+                <input for="Name" class="form-control" placeholder="E-mail" />
+                <label for="Name" class="control-label">Dirección / Address: </label>
+                <input for="Name" class="form-control" />
+                <label for="Name" class="control-label">Persona de Contacto / Contact Person: </label>
+                <input for="Name" class="form-control" />
+                <label for="Name" class="control-label">Teléfono / Phone:</label>
+                <input for="Name" class="form-control" />
+                <label for="Name" class="control-label">E-mail:</label>
+                <input for="Name" class="form-control" />
+                <label for="Name" class="control-label">Dirección de inspección / Inspection Address: </label>
+                <input for="Name" class="form-control" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h3 style="text-align:center">
+                Datos del Motor / Equipo
+            </h3>
+            <div class="form-group">
+                <label for="Name" class="control-label">Modelo Motor / Engine Model:</label>
+                <input for="Name" class="form-control" />
+                <label for="Name" class="control-label">Nro. de Motor (ESN):</label>
+                <input for="Name" class="form-control" />
+                <label for="Name" class="control-label">Hs o Km del Motor / Engine Hours or Km:</label>
+                <input for="Name" class="form-control" />
+                <label for="Name" class="control-label">Fecha de compra (Adjuntar factura) / Date of Purchase:</label>
+                <input for="Name" class="form-control" value="@DateTime.Now.ToString()" />
+                <label for="Name" class="control-label">Fecha de incio Garantía / Warranty Start Date: </label>
+                <input for="Name" class="form-control" />
+                <label for="Name" class="control-label">Fecha de falla / Failure date:</label>
+                <input for="Name" class="form-control" />
+                <label for="Name" class="control-label">Equipo / Equipment:</label>
+                <input for="Name" class="form-control" />
+                <label for="Name" class="control-label">Modelo Equipo / Equipment Model:</label>
+                <input for="Name" class="form-control" />
+            </div>
+        </div>
+        <div class="col-md-12">
+            <h3 style="text-align:center">
+                Reclamo del Cliente / Customer Complaint
+            </h3>
+            <div class="form-group">
+                <textarea class="form-control" cols="10" rows="10"></textarea>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class="form-group">
+                <h3 class="alert alert-warning" role="alert">
+                    Importante: De surgir del diagnóstico realizado por el personal técnico de Cummins que no se trata de una falla de producto cubierta por la garantía Cummins, los gastos del servicio serán a cargo del cliente.
+                </h3>
+            </div>
+            <div class="form-group" style="text-align:right">
+                <button type="button" class="btn btn-primary" @onclick="() => CreateArticle()">Crear Incidencia</button>
+                <button type="button" class="btn btn-danger" @onclick="() => Cancel()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+@code {
+    void CreateArticle()
+    {
+        
+        navigationManager.NavigateTo("/mapResult");
+    }
+
+    void Cancel()
+    {
+        navigationManager.NavigateTo("/incidencialist");
+    }
+}

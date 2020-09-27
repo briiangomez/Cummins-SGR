@@ -1,0 +1,31 @@
+﻿@page "/mapresult"
+
+<div class="card bg-light mb-3">
+    <div class="card-header">
+        <h4>Su incidencia ha sido cargada correctamente!!</h4>
+        <h4>A continuacion, le mostramos el Recorrido al Dealer mas Cercano</h4>
+    </div>
+    <div class="card-body">
+        @*<button class="btn btn-primary" @onclick="Consultar">Buscar Recorrido</button>
+            <br /><br />*@
+        <div class="card bg-info">
+            <div class="card-body text-white">
+                <h4 class="card-title">Recorrido óptimo: <b>@__recorrido_distancia Km.</b></h4>
+                @__recoriddo_ruta
+            </div>
+        </div>
+        <MapComponent Titulo="@__recoriddo_ruta" Serie="@__map_data" />
+    </div>
+</div>
+
+@code
+{
+    private string __recoriddo_ruta = "Distancia: La Plata - Buenos Aires - Dealer: CABA, Buenos Aires ";
+    private int __recorrido_distancia = 53;
+    private string __map_data = "[{id:'CABA - Buenos Aires',name:'CABA - Buenos Aires',lat: -34.62009948, lon: -58.43518051, color:'#5DADE2'}, {id:'La Plata, Buenos Aires',name:'La Plata, Buenos Aires',lat: -34.9206797, lon: -57.9537638, color:'#099909'},{id:'CABA - Buenos Aires',name:'CABA - Buenos Aires',lat: -34.62009948, lon: -58.43518051, color:'#5DADE2'}]";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+}
