@@ -103,9 +103,10 @@ namespace SGI
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapBlazorHub(); //Asocia Blazor Client-Server con SignalR desde el lado del servidor
-                endpoints.MapHub<HubConnector>("/connector");
+                endpoints.MapBlazorHub(); //Asocia Blazor Client-Server con SignalR desde el lado del servidor                
                 endpoints.MapFallbackToPage("/_Host");
+
+                //endpoints.MapHub<HubConnector>("/connector");
             });
         }
     }

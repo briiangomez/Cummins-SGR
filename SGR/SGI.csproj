@@ -6,7 +6,6 @@
   <ItemGroup>
     <Compile Remove="Areas\Survey\Controllers\SurveyReportChart.cs" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.30" />
     <PackageReference Include="log4net" Version="2.0.10" />
