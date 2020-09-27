@@ -8,6 +8,8 @@ namespace SGI.ApplicationCore.Entities
     {
         public string Nombre { get; set; }
 
+        public int IdFalla { get; set; }
+
         public long Codigo { get; set; }
 
         public string Observaciones { get; set; }

@@ -22,16 +22,18 @@ namespace SGI.ApplicationCore.Entities
         public float LongitudGps { get; set; }
         public string PathImagenes { get; set; }
         public int MostrarEnTv { get; set; }
+        public string Sintoma { get; set; }
+        public string ImagenComprobante { get; set; }
+        public bool EsGarantia { get; set; }
         public string Aux1 { get; set; }
         public string Aux2 { get; set; }
         public string Aux3 { get; set; }
         public string Aux4 { get; set; }
         public string Aux5 { get; set; }
         public IEnumerable<Cliente> Clientes { get; set; }
-
-        public IEnumerable<Estado> Estados { get; set; }
+        public IEnumerable<EstadoIncidencia> EstadoIncidencias { get; set; }
         public IEnumerable<EstadoGarantia> EstadoGarantias { get; set; }
-        public IEnumerable<Motor> Motores { get; set; }
+        public IEnumerable<MotorIncidencia> MotorIncidencias { get; set; }
         public IEnumerable<Falla> Fallas { get; set; }
         public Dealer Dealer { get; set; }
     }

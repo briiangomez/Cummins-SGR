@@ -48,8 +48,8 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="HtmlAgilityPack">
-      <HintPath>..\Solution\Site\Service\HtmlAgilityPack.dll</HintPath>
+    <Reference Include="HtmlAgilityPack, Version=1.11.24.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
+      <HintPath>..\packages\HtmlAgilityPack.1.11.24\lib\Net40\HtmlAgilityPack.dll</HintPath>
     </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
@@ -118,6 +118,9 @@
       <Project>{c2c66b90-870c-4b38-9394-8ff631b7d6ba}</Project>
       <Name>CMM</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

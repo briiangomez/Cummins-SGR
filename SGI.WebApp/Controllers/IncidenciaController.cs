@@ -17,13 +17,17 @@ namespace SGI.WebApp.Controllers
     [Route("api/[controller]")]
     //[Authorize]
     [ApiController]
-    public class IncidenciaController : BaseController<Incidencia>
+    public class IncidenciaController : Controller
     {
 
-        private readonly IncidenciaApiModelService _serviceC;
-        public IncidenciaController(IServiceBase<Incidencia> service, IMapper mapper, ILogger<IncidenciaController> logger, IncidenciaApiModelService serviceC) : base(service, mapper, logger)
+        private readonly IModelService<IncidenciaApi> _serviceC;
+        private ILogger<IncidenciaController> _logger;
+        private IMapper _mapper;
+        public IncidenciaController(IMapper mapper, ILogger<IncidenciaController> logger, IModelService<IncidenciaApi> serviceC) 
         {
+            _logger = logger;
             _serviceC = serviceC;
+            _mapper = mapper;
         }
 
 
@@ -39,7 +43,7 @@ namespace SGI.WebApp.Controllers
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex.Message, ex);
+                _logger.LogError(ex.Message, ex);
                 result = StatusCode((int)HttpStatusCode.InternalServerError, ex.Message);
             }
 
@@ -57,7 +61,7 @@ namespace SGI.WebApp.Controllers
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex.Message, ex);
+                _logger.LogError(ex.Message, ex);
                 result = StatusCode((int)HttpStatusCode.InternalServerError, ex.Message);
             }
 
@@ -76,71 +80,12 @@ namespace SGI.WebApp.Controllers
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex.Message, ex);
+                _logger.LogError(ex.Message, ex);
                 result = StatusCode((int)HttpStatusCode.InternalServerError, ex.Message);
             }
 
             return result;
         }
-
-        // GET api/Incidencia
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet]
-        public Task<ActionResult<IEnumerable<IncidenciaApiModel>>> Get([FromQuery] List<string> include = null, [FromQuery] string filterBy = "", [FromQuery] List<string> orderBy = null,
-            [FromQuery] bool desc = false) => Query<IncidenciaApiModel>(include, filterBy, orderBy, desc);
-
-        // GET api/Incidencia
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet("{page}/{pagesize}")]
-        public Task<ActionResult<PagedResultViewModel<IncidenciaApiModel>>> Get(int page, int pagesize, [FromQuery] List<string> include = null, [FromQuery] string filterBy = "", [FromQuery] List<string> orderBy = null,
-            [FromQuery] bool desc = false) => Query<IncidenciaApiModel>(page, pagesize, include, filterBy, orderBy, desc);
-
-        // GET api/Incidencia/5
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        [HttpGet("{id}")]
-        public Task<ActionResult<IncidenciaApiModel>> Get(Guid id, [FromQuery] List<string> include = null) => Query<IncidenciaApiModel>(id, include);
-
-        // POST api/Incidencia
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        [HttpPost]
-        public Task<ActionResult> Post([FromBody] IncidenciaApiModel value) => Insert(value);
-
-        // PUT api/Incidencia/5
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        [HttpPut("{id}")]
-        public Task<ActionResult> Put(Guid id, [FromBody] IncidenciaApiModel value) => Update(id, value);
-
-
-        // DELETE api/Incidencia/5
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        [HttpDelete("{id}")]
-        public Task<ActionResult> Delete(Guid id) => Drop(id);
-
-        protected override Expression<Func<Incidencia, bool>> BuildFilterExpression(string filterBy)
-         => (Incidencia x) => x.Descripcion.Contains(filterBy);
-
+ 
     }
 }

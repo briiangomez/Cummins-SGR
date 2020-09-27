@@ -15,13 +15,6 @@ namespace SGI.Infrastructure.Builders
 
             entityBuilder.Property(x => x.Codigo).HasColumnName("Codigo").HasColumnType("int").IsRequired().UseMySqlIdentityColumn();
             entityBuilder.Property(x => x.Descripcion).HasColumnName("Descripcion").HasColumnType("varchar(MAX)");
-            entityBuilder.Property(x => x.Fecha).HasColumnName("Fecha").HasColumnType("datetime").IsRequired().HasDefaultValueSql("getdate()");
-
-            entityBuilder
-                .HasOne(a => a.Incidencia)
-                .WithMany(b => b.Estados)
-                .HasForeignKey(c => c.IdIncidencia)
-                .OnDelete(DeleteBehavior.Cascade);
 
         }
     }

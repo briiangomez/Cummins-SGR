@@ -25,7 +25,7 @@
 </style>
 
 <div>
-    <a class="btn btn-primary" href='/adddealer'>Add</a>
+    <a class="btn btn-primary" href='/add-dealer'>Agregar Dealer</a>
 </div>
 <br />
 
@@ -35,6 +35,7 @@
 }
 else
 {
+    <label class="control-label col-md-9">Listado de Dealers</label>
     <div class="row col-md-3 pull-right">
         <input type="text" id="txtSearch" placeholder="Search dealers..." class="form-control" @bind="SearchTerm" @bind:event="oninput" />
     </div>
@@ -42,7 +43,11 @@ else
         <thead>
             <tr>
                 <th class="sort-th" @onclick="@(() => SortTable("LocationCode"))">
-                    Code
+                    Location Code
+                    <span class="fa @(SetSortIcon("LocationCode"))"></span>
+                </th>
+                <th class="sort-th" @onclick="@(() => SortTable("LocationCode"))">
+                    Distributor Code
                     <span class="fa @(SetSortIcon("LocationCode"))"></span>
                 </th>
                 <th class="sort-th" @onclick="@(() => SortTable("Name"))">

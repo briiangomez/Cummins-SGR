@@ -137,21 +137,36 @@ namespace SGI.WebApp
             services.AddScoped<IUnitOfWork, SGIAppUnitOfWork>();
             services.AddScoped<IRepository<Incidencia>, Repository<Incidencia>>();
             services.AddScoped<IRepository<Dealer>, Repository<Dealer>>();
+            services.AddScoped<IRepository<Falla>, Repository<Falla>>();
+            services.AddScoped<IRepository<Estado>, Repository<Estado>>();
+            services.AddScoped<IRepository<EstadoGarantia>, Repository<EstadoGarantia>>();
+            services.AddScoped<IRepository<Motor>, Repository<Motor>>();
+            services.AddScoped<IRepository<MotorIncidencia>, Repository<MotorIncidencia>>();
+            services.AddScoped<IRepository<EstadoIncidencia>, Repository<EstadoIncidencia>>();
+            services.AddScoped<IRepository<Cliente>, Repository<Cliente>>();
 
             services.AddScoped<IServiceBase<Incidencia>, ServiceBase<Incidencia>>();
             services.AddScoped<IServiceBase<Dealer>, ServiceBase<Dealer>>();
+            services.AddScoped<IServiceBase<Falla>, ServiceBase<Falla>>();
+            services.AddScoped<IServiceBase<Estado>, ServiceBase<Estado>>();
+            services.AddScoped<IServiceBase<EstadoGarantia>, ServiceBase<EstadoGarantia>>();
+            services.AddScoped<IServiceBase<Motor>, ServiceBase<Motor>>();
+            services.AddScoped<IServiceBase<Cliente>, ServiceBase<Cliente>>();
             services.AddScoped<IRepository<Permission>, Repository<Permission>>();
             services.AddScoped<IRepository<Role>, Repository<Role>>();
             services.AddScoped<IRepository<RolePermission>, Repository<RolePermission>>();
             services.AddScoped<IRepository<User>, Repository<User>>();
             services.AddScoped<IRepository<UserRole>, Repository<UserRole>>();
-
-
+            services.AddScoped<IRepository<IncidenciaApi>, Repository<IncidenciaApi>>();
+            services.AddScoped<IServiceBase<IncidenciaApi>, ServiceBase<IncidenciaApi>>();
+            services.AddScoped<IModelService<IncidenciaApi>, IncidenciaApiModelService<IncidenciaApi>>();
             services.AddScoped<IServiceBase<User>, ServiceBase<User>>();
             services.AddScoped<IServiceBase<Permission>, ServiceBase<Permission>>();
             services.AddScoped<IServiceBase<Role>, ServiceBase<Role>>();
             services.AddScoped<IServiceBase<RolePermission>, ServiceBase<RolePermission>>();
             services.AddScoped<IServiceBase<UserRole>, ServiceBase<UserRole>>();
+            services.AddScoped<IServiceBase<MotorIncidencia>, ServiceBase<MotorIncidencia>>();
+            services.AddScoped<IServiceBase<EstadoIncidencia>, ServiceBase<EstadoIncidencia>>();
             //services.AddHttpClient<IAuthService, AuthService>(client =>
             //{
             //    client.BaseAddress = new Uri(Configuration["Jwt:BaseAddress"]);

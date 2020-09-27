@@ -65,6 +65,9 @@ namespace SGI.Infrastructure.Migrations
                     Aux1 = table.Column<string>(type: "varchar(MAX)", nullable: false),
                     Aux2 = table.Column<string>(type: "varchar(MAX)", nullable: false),
                     Aux3 = table.Column<string>(type: "varchar(MAX)", nullable: false),
+                    Sintoma = table.Column<string>(type: "varchar(MAX)", nullable: false),
+                    ImagenComprobante = table.Column<string>(type: "varchar(MAX)", nullable: false),
+                    EsGarantia = table.Column<bool>(type: "bit", nullable: false),
                     Aux4 = table.Column<string>(type: "varchar(MAX)", nullable: false),
                     Aux5 = table.Column<string>(type: "varchar(MAX)", nullable: false),
                     IdDealer = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
@@ -94,25 +97,13 @@ namespace SGI.Infrastructure.Migrations
                     Modified = table.Column<DateTime>(type: "datetime", nullable: true),
                     Deleted = table.Column<DateTime>(type: "datetime", nullable: true),
                     Codigo = table.Column<int>(type: "int", nullable: false).Annotation("SqlServer:Identity", "1, 1"),
-                    Descripcion = table.Column<string>(type: "varchar(MAX)", nullable: false),
-                    Fecha = table.Column<DateTime>(type: "datetime", nullable: false, defaultValueSql: "getdate()"),
-                    IdIncidencia = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    Descripcion = table.Column<string>(type: "varchar(MAX)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Estados", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Estados_Incidencias_IdIncidencia",
-                        column: x => x.IdIncidencia,
-                        principalTable: "Incidencias",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Estados_IdIncidencia",
-                table: "Estados",
-                column: "IdIncidencia");
 
             migrationBuilder.CreateTable(
                 name: "EstadoGarantia",
@@ -184,32 +175,103 @@ namespace SGI.Infrastructure.Migrations
                     NumeroChasis = table.Column<string>(type: "varchar(MAX)", nullable: false),
                     Modelo = table.Column<string>(type: "varchar(MAX)", nullable: false),
                     HsKm = table.Column<int>(type: "int", nullable: false),
-                    FechaCompra = table.Column<DateTime>(type: "datetime", nullable: true),
-                    FechaInicioGarantia = table.Column<DateTime>(type: "datetime", nullable: true),
-                    FechaFalla = table.Column<DateTime>(type: "datetime", nullable: true),
                     Equipo = table.Column<string>(type: "varchar(MAX)", nullable: false),
-                    ModeloEquipo = table.Column<string>(type: "varchar(MAX)", nullable: false),
-                    IdIncidencia = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    ModeloEquipo = table.Column<string>(type: "varchar(MAX)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Motor", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "MotorIncidencia",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWID()"),
+                    Created = table.Column<DateTime>(type: "datetime", nullable: false, defaultValueSql: "getdate()"),
+                    Modified = table.Column<DateTime>(type: "datetime", nullable: true),
+                    Deleted = table.Column<DateTime>(type: "datetime", nullable: true),
+                    FechaCompra = table.Column<DateTime>(type: "datetime", nullable: true),
+                    FechaInicioGarantia = table.Column<DateTime>(type: "datetime", nullable: true),
+                    FechaFalla = table.Column<DateTime>(type: "datetime", nullable: true),
+                    MotorId = table.Column<Guid>(nullable: false),
+                    IncidenciaId = table.Column<Guid>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MotorIncidencia", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Motor_Incidencias_IdIncidencia",
-                        column: x => x.IdIncidencia,
+                        name: "FK_MotorIncidencia_Incidencias_IncidenciaId",
+                        column: x => x.IncidenciaId,
                         principalTable: "Incidencias",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_MotorIncidencia_Motor_MotorId",
+                        column: x => x.MotorId,
+                        principalTable: "Motor",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EstadoIncidencia",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWID()"),
+                    Created = table.Column<DateTime>(type: "datetime", nullable: false, defaultValueSql: "getdate()"),
+                    Modified = table.Column<DateTime>(type: "datetime", nullable: true),
+                    Deleted = table.Column<DateTime>(type: "datetime", nullable: true),
+                    IncidenciaId = table.Column<Guid>(nullable: false),
+                    EstadoId = table.Column<Guid>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EstadoIncidencia", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EstadoIncidencia_Incidencias_IncidenciaId",
+                        column: x => x.IncidenciaId,
+                        principalTable: "Incidencias",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_EstadoIncidencia_Estados_EstadoId",
+                        column: x => x.EstadoId,
+                        principalTable: "Estados",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Motor_IdIncidencia",
-                table: "Motor",
-                column: "IdIncidencia");
+                name: "IX_MotorIncidencia_MotorId",
+                table: "MotorIncidencia",
+                column: "MotorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MotorIncidencia_IncidenciaId",
+                table: "MotorIncidencia",
+                column: "IncidenciaId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EstadoIncidencia_EstadoId",
+                table: "EstadoIncidencia",
+                column: "EstadoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EstadoIncidencia_IncidenciaId",
+                table: "EstadoIncidencia",
+                column: "IncidenciaId");
+
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "MotorIncidencia");
+
+            migrationBuilder.DropTable(
+                name: "EstadoIncidencia");
+
             migrationBuilder.DropTable(
                 name: "Motor");
 

@@ -18,6 +18,12 @@ using Microsoft.AspNetCore.Components.Authorization;
 using BlazorAppAuth.Areas.Identity;
 using SGI.Entities;
 using Connector;
+using SGI.ApplicationCore.Interfaces;
+using SGI.Infrastructure.Repositories;
+using SGI.ApplicationCore.Entities;
+using SGI.ApplicationCore.Services;
+using SGI.Infrastructure;
+using SGI.Infrastructure.UnitOfWorks;
 
 namespace SGI
 {
@@ -45,13 +51,31 @@ namespace SGI
 
             services.AddRazorPages().AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
             services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; }); ; //Habilita el modo Client-Server y errores detallados...
-        
+
+
+            services.AddDbContext<SGIApplicationDataContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("ApplicationConnection")).EnableSensitiveDataLogging());
+            services.AddScoped<IUnitOfWork, SGIAppUnitOfWork>();
+
             services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
             //Article and Category as service  
             services.AddScoped<IManager<Article>, ArticleManager>(); //Scoped/singleton/transient
             services.AddScoped<IManager<Category>, CategoryManager>();
             //Register dapper in scope  
             services.AddScoped<IDapperManager, DapperManager>();
+            services.AddScoped<IRepository<Incidencia>, Repository<Incidencia>>();
+            services.AddScoped<IRepository<Dealer>, Repository<Dealer>>();
+            services.AddScoped<IRepository<Falla>, Repository<Falla>>();
+            services.AddScoped<IRepository<Estado>, Repository<Estado>>();
+            services.AddScoped<IRepository<EstadoGarantia>, Repository<EstadoGarantia>>();
+            services.AddScoped<IRepository<Motor>, Repository<Motor>>();
+            services.AddScoped<IRepository<Cliente>, Repository<Cliente>>();
+            services.AddScoped<IServiceBase<Incidencia>, ServiceBase<Incidencia>>();
+            services.AddScoped<IServiceBase<Dealer>, ServiceBase<Dealer>>();
+            services.AddScoped<IServiceBase<Falla>, ServiceBase<Falla>>();
+            services.AddScoped<IServiceBase<Estado>, ServiceBase<Estado>>();
+            services.AddScoped<IServiceBase<EstadoGarantia>, ServiceBase<EstadoGarantia>>();
+            services.AddScoped<IServiceBase<Motor>, ServiceBase<Motor>>();
+            services.AddScoped<IServiceBase<Cliente>, ServiceBase<Cliente>>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -22,8 +22,14 @@ namespace SGI.ApplicationCore.Entities
         public long latitudGps { get; set; }
         public long longitudGps { get; set; }
         public string PathImagenes { get; set; }
+        public string Equipo { get; set; }
+        public string ModeloEquipo { get; set; }
+        public string ModeloMotor { get; set; }
         public string numeroChasis { get; set; }
         public string numeroMotor { get; set; }
+        public DateTime? fechaCompra { get; set; }
+        public DateTime? fechaInicioGarantia { get; set; }
+        public DateTime? fechaFalla { get; set; }
         public string configuracionCorta { get; set; }
         public DateTime? fechaPreEntrega { get; set; }
         public int horasTractor { get; set; }
@@ -52,6 +58,10 @@ namespace SGI.ApplicationCore.Entities
         public string nombreEstadoGarantia { get; set; }
         public string observacionesGarantia { get; set; }
         public string observacionesProveedor { get; set; }
+        public string ObservacionesIncidencia { get; set; }
+        public string Sintoma { get; set; }
+        public string ImagenComprobante { get; set; }
+        public bool EsGarantia { get; set; }
         public int mostrarEnTv { get; set; }
     }
 }

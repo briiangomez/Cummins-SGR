@@ -1,6 +1,32 @@
 ﻿@page "/testmap"
 @inject IJSRuntime js
 
-@code {
+    <div class="form-group">
+        <label>Location:</label>
+        <div class="form-group mb-4">
+            <input id="autocomplete" @onfocus="(async () => await GeoLocate())" class="form-control shadow-sm" placeholder="Address *" />
+        </div>
+        <input type="text" class="form-control" id="search_input" @onfocus="() => CambiarAutoComplete()" placeholder="Type address..." />
+        <input type="hidden" id="loc_lat" />
+        <input type="hidden" id="loc_long" />
+    </div>
 
+<!-- Display latitude and longitude -->
+<div class="latlong-view">
+    <p><b>Latitude:</b> <span id="latitude_view"></span></p>
+    <p><b>Longitude:</b> <span id="longitude_view"></span></p>
+</div>
+
+@code
+{
+    
+    async Task CambiarAutoComplete()
+    {
+        await js.InvokeVoidAsync("googleAddressLookup.initAutocomplete");
+    }
+
+    private async Task GeoLocate()
+    {
+        await js.InvokeVoidAsync("googleAddressLookup.geolocate");
+    }
 }

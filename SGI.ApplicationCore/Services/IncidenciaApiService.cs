@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace SGI.ApplicationCore.Services
 {
-    public class IncidenciaApiModelService
+    public class IncidenciaApiModelService<T> : IModelService<IncidenciaApi> where T : BaseEntity
     {
         private readonly ILogger<ServiceBase<IncidenciaApi>> _logger;
         protected readonly IRepository<Incidencia> _repository;
@@ -21,12 +21,15 @@ namespace SGI.ApplicationCore.Services
         protected readonly IRepository<EstadoGarantia> _EstadoGarantiarepository;
         protected readonly IRepository<Estado> _Estadorepository;
         protected readonly IRepository<Motor> _MotorRepository;
+        protected readonly IRepository<EstadoIncidencia> _EstadoIncidenciarepository;
+        protected readonly IRepository<MotorIncidencia> _MotorIncidenciaRepository;
         protected readonly IRepository<Dealer> _DealerRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public IncidenciaApiModelService(ILogger<ServiceBase<IncidenciaApi>> logger, IRepository<Incidencia> repository, IRepository<Falla> Fallarepository,
             IRepository<Cliente> Clienterepository, IRepository<EstadoGarantia> EstadoGarantiarepository, IRepository<Estado> Estadorepository,
-            IRepository<Motor> MotorRepository, IRepository<Dealer> DealerRepository,IUnitOfWork unitOfWork)
+            IRepository<Motor> MotorRepository, IRepository<Dealer> DealerRepository, IRepository<EstadoIncidencia> EstadoIncidenciarepository,
+            IRepository<MotorIncidencia> MotorIncidenciaRepository, IUnitOfWork unitOfWork)
         {
             _logger = logger;
             _repository = repository;
@@ -36,6 +39,8 @@ namespace SGI.ApplicationCore.Services
             _Estadorepository = Estadorepository;
             _MotorRepository = MotorRepository;
             _DealerRepository = DealerRepository;
+            _EstadoIncidenciarepository = EstadoIncidenciarepository;
+            _MotorIncidenciaRepository = MotorIncidenciaRepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -112,10 +117,34 @@ namespace SGI.ApplicationCore.Services
             inc.LatitudGps = entity.latitudGps;
             inc.LongitudGps = entity.latitudGps;
             inc.PathImagenes = entity.PathImagenes;
-            mot.Id = Guid.NewGuid();
-            mot.IdIncidencia = inc.Id;
-            //Terminar 20/9
             _repository.Insert(inc);
+            mot = _MotorRepository.GetAll(null, o => o.NumeroChasis == entity.numeroChasis && o.NumeroMotor == entity.numeroMotor, null, false).FirstOrDefault();
+            if(mot == null)
+            {
+                mot = new Motor();
+                mot.Equipo = entity.Equipo;
+                mot.NumeroChasis = entity.numeroChasis;
+                mot.ModeloEquipo = entity.ModeloEquipo;
+                mot.NumeroMotor = entity.numeroMotor;
+                mot.HsKm = entity.horasTractor;
+                _MotorRepository.Insert(mot);
+            }
+            MotorIncidencia mots = new MotorIncidencia();
+            mots.IncidenciaId = inc.Id;
+            mots.MotorId = mot.Id;
+            if (entity.fechaCompra != null)
+            {
+                mots.FechaCompra = entity.fechaCompra.Value;
+            }
+            if (entity.fechaFalla != null)
+            {
+                mots.FechaFalla = entity.fechaFalla.Value;
+            }
+            if (entity.fechaInicioGarantia != null)
+            {
+                mots.FechaInicioGarantia = entity.fechaInicioGarantia.Value;
+            }
+            _MotorIncidenciaRepository.Insert(mots);
             _unitOfWork.SaveChanges();
             return inc.Id;
         }
@@ -133,11 +162,13 @@ namespace SGI.ApplicationCore.Services
             IncidenciaApi incidencia = new IncidenciaApi();
             try
             {
-                var mot = _MotorRepository.GetAll(null, o => o.IdIncidencia == inc.Id, null, false).FirstOrDefault();
+                var motInc = _MotorIncidenciaRepository.GetAll(null, o => o.IncidenciaId == inc.Id, null, false).FirstOrDefault();
+                var mot = _MotorRepository.GetAll(null, o => o.Id == motInc.MotorId, null, false).FirstOrDefault();
                 var falla = _Fallarepository.GetAll(null,o => o.IdIncidencia == inc.Id,null,false).FirstOrDefault();
                 var cliente = _Clienterepository.GetAll(null, o => o.IdIncidencia == inc.Id, null, false).FirstOrDefault();
                 var estadoG = _EstadoGarantiarepository.GetAll(null, o => o.IdIncidencia == inc.Id, null, false).FirstOrDefault();
-                var estado = _Estadorepository.GetAll(null, o => o.IdIncidencia == inc.Id, null, false).FirstOrDefault();
+                var estInc = _EstadoIncidenciarepository.GetAll(null, o => o.IncidenciaId == inc.Id, new List<string> { "Fecha" }, true).FirstOrDefault();
+                var estado = _Estadorepository.GetAll(null, o => o.Id == estInc.Id,null,false).FirstOrDefault();
                 var dealer = _DealerRepository.Get(inc.IdDealer, null);
                 incidencia.Id = inc.Id;
                 incidencia.fechaIncidencia = inc.FechaIncidencia;
@@ -176,7 +207,7 @@ namespace SGI.ApplicationCore.Services
                 incidencia.observacionesFalla = falla.Observaciones;
                 incidencia.idEstadoIncidencia = estado.Codigo;
                 incidencia.nombreEstadoIncidencia = estado.Descripcion;
-                incidencia.fechaEstadoIncidencia = estado.Fecha.Value;
+                incidencia.fechaEstadoIncidencia = estInc.Fecha;
                 incidencia.idEstadoGarantia = estadoG.Codigo;
                 incidencia.nombreEstadoGarantia = estadoG.Nombre;
                 incidencia.observacionesGarantia = estadoG.ObservacionesGarantia;
@@ -288,6 +319,46 @@ namespace SGI.ApplicationCore.Services
         }
 
         public Task UpdateAsync(Guid id, IncidenciaApi entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        public PagedResult<T> GetPaged(int page, int pagesize, List<string> include = null, bool desc = false, Expression<Func<T, bool>> predicate = null, List<string> orderBy = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PagedResult<T>> GetPagedAsync(int page, int pagesize, List<string> include = null, bool desc = false, Expression<Func<T, bool>> predicate = null, List<string> orderBy = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public T[] GetAll(List<string> include = null, Expression<Func<T, bool>> predicate = null, List<string> orderBy = null, bool desc = false)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<T[]> GetAllAsync(List<string> include = null, Expression<Func<T, bool>> predicate = null, List<string> orderBy = null, bool desc = false)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Guid Insert(T entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Guid> InsertAsync(T entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Update(Guid id, T entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task UpdateAsync(Guid id, T entity)
         {
             throw new NotImplementedException();
         }

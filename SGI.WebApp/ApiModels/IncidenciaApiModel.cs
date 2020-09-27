@@ -52,5 +52,8 @@ namespace SGI.WebApp.ApiModels
         public string ObservacionesGarantia { get; set; }
         public string ObservacionesProveedor { get; set; }
         public int? MostrarEnTv { get; set; }
+        public string Sintoma { get; set; }
+        public string ImagenComprobante { get; set; }
+        public bool EsGarantia { get; set; }
     }
 }

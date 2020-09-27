@@ -31,11 +31,24 @@
 
     <script src="_framework/blazor.server.js"></script> <!--Habilita SignalR desde el lado del cliente-->
     <script src="~/exampleJsInterop.js"></script>
-    <script src="~/MapComponent.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    @*<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places&key=AIzaSyCBhlrEoE5ndgXMCeI7zyq0dK4MJksa8Ak"></script>
+        <script src="~/MapComponent.js"></script>*@
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCBhlrEoE5ndgXMCeI7zyq0dK4MJksa8Ak&libraries=places&callback=initAutocomplete" async defer></script>
+    <script src="~/js/googleAddressLookup.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.4.4/proj4.js"></script>
     <script src="https://code.highcharts.com/maps/highmaps.js"></script>
     <script src="https://code.highcharts.com/maps/modules/exporting.js"></script>
     <script src="https://code.highcharts.com/maps/modules/offline-exporting.js"></script>
     <script src="https://code.highcharts.com/mapdata/countries/ar/ar-all.js"></script>
+    <script src="_framework/blazor.server.js"></script>
+    <script>
+        window.MyJSMethods =
+        {
+            myMethod: function (element) {
+                window.alert(element.id);
+            }
+        };
+    </script>
 </body>
 </html>
