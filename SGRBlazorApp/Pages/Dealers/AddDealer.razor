@@ -1,0 +1,260 @@
+﻿@page "/addDealer"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@using SGRBlazorApp.Shared
+@inject ISgrService<Dealer> bookStoresService
+@inject IUserService userService
+@inject ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navigationManager
+@implements IDisposable
+@using System.Reactive.Linq;
+@using System.Reactive.Subjects
+@using SGRBlazorApp.Services
+@inject GeocodingService GeocodingService
+<div class="col-12">
+    <h3><b>Enter Dealer Information</b></h3>
+    <hr />
+
+    <ServerValidations IsVisible="IsVisible" Result="Result">
+        @RecordName
+    </ServerValidations>
+
+    <EditForm Model="@Dealer" OnValidSubmit="@SaveDealer">
+        @*<DataAnnotationsValidator />*@
+
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Nombre :</label>
+            <input class="form-control col-3" @bind="Dealer.Name" placeholder="Nombre" />
+            &nbsp;<ValidationMessage For="@(() => Dealer.Name)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Codigo Dealer :</label>
+            <InputText class="form-control col-3" @bind-Value="Dealer.LocationCode" placeholder="Codigo Dealer" />
+            &nbsp;<ValidationMessage For="@(() => Dealer.LocationCode)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Codigo Distribuidor :</label>
+            <InputText class="form-control col-3" @bind-Value="Dealer.DistributorCode" placeholder="Codigo Distribuidor" />
+            &nbsp;<ValidationMessage For="@(() => Dealer.DistributorCode)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Pais :</label>
+            <InputText class="form-control col-3" @bind-Value="Dealer.Country" placeholder="Pais" />
+            &nbsp;<ValidationMessage For="@(() => Dealer.Country)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Provincia/Estado :</label>
+            <InputText class="form-control col-3" @bind-Value="Dealer.State" placeholder="Provincia/Estado" />
+            &nbsp;<ValidationMessage For="@(() => Dealer.State)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Ciudad :</label>
+            <InputText class="form-control col-3" @bind-Value="Dealer.City" placeholder="Ciudad" />
+            &nbsp;<ValidationMessage For="@(() => Dealer.City)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Direccion :</label>
+            <InputText class="form-control col-3" @bind-Value="Dealer.Address" placeholder="Direccion" />
+            &nbsp;<ValidationMessage For="@(() => Dealer.Address)" />
+            <Radzen.Blazor.RadzenTextBox @bind-Value="@(Dealer.Address)" Placeholder="Address:" Name="Address" style="width: 25%" @oninput="onTextChanged"></Radzen.Blazor.RadzenTextBox>
+            <InputNumber class="form-control col-3" @bind-Value="Dealer.LatitudGps" Style="visibility:hidden" Name="LatitudGps" placeholder="State" />
+            <InputNumber class="form-control col-3" @bind-Value="Dealer.LongitudGps" Style="visibility:hidden" Name="LongitudGps" placeholder="State" />
+            <br />
+            @if (IsLoading)
+            {
+                <Radzen.Blazor.RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="margin: 100%"></Radzen.Blazor.RadzenProgressBar>
+            }
+
+            @if (Results.Length > 0)
+            {
+                <Radzen.Blazor.RadzenGrid Data="Results" RowSelect="@OnRowSelect" TItem="GeocodingResult">
+                    <Columns>
+                        <Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="FormattedAddress" Title="Address">
+                            <FooterTemplate>
+                                Total Results: <b>@Results.Count()</b>
+                            </FooterTemplate>
+                        </Radzen.Blazor.RadzenGridColumn>
+                    </Columns>
+                </Radzen.Blazor.RadzenGrid>
+            }
+
+
+            @if (showMap)
+            {
+                <br />
+                <Radzen.Blazor.RadzenGoogleMap Zoom="@zoom"
+                                               style="height:400px"
+                                               ApiKey="AIzaSyCBhlrEoE5ndgXMCeI7zyq0dK4MJksa8Ak"
+                                               Center="@(posMap)"
+                                               MapClick="@MapClick">
+                    <Markers>
+                        @if (pos != null)
+                        {
+                            <Radzen.Blazor.RadzenGoogleMapMarker Title="@Address" Label="@Address" Position="@(pos)" />
+                        }
+                    </Markers>
+                </Radzen.Blazor.RadzenGoogleMap>
+            }
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Telefono :</label>
+            <InputText class="form-control col-3" @bind-Value="Dealer.Phone" placeholder="Telefono" />
+            &nbsp;<ValidationMessage For="@(() => Dealer.Phone)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Codigo Postal :</label>
+            <InputText class="form-control col-3" @bind-Value="Dealer.Zip" placeholder="Codigo Postal" />
+            &nbsp;<ValidationMessage For="@(() => Dealer.Zip)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Email :</label>
+            <InputText class="form-control col-3" @bind-Value="Dealer.Email" placeholder="Phone" />
+            &nbsp;<ValidationMessage For="@(() => Dealer.Email)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Pagina Web :</label>
+            <InputText class="form-control col-3" @bind-Value="Dealer.Website" placeholder="Pagina Web" />
+            &nbsp;<ValidationMessage For="@(() => Dealer.Website)" />
+        </div>
+        <div class="col-12 row">
+            <span class="col-2"></span>
+            <input type="submit" class="col-1 btn btn-primary" value="Guardar" />
+            <span>&nbsp;</span>
+            <a class="col-1 btn btn-primary" href="/dealers">Cancelar</a>
+        </div>
+    </EditForm>
+</div>
+<br />
+
+
+@code
+{
+    public Dealer Dealer { get; set; }
+    public bool IsVisible { get; set; }
+    public bool Result { get; set; }
+    public string RecordName { get; set; }
+
+    Subject<string> addressSubject = new Subject<string>();
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Dealers - OnInitialized");
+        base.OnInitialized();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("Dealers - OnInitializedAsync");
+
+        Dealer = new Dealer();
+
+        await base.OnInitializedAsync();
+
+        addressSubject
+            .Throttle(TimeSpan.FromMilliseconds(300))
+            .DistinctUntilChanged()
+            .Subscribe(OnAddressChanged);
+    }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Dealers - Dispose");
+    }
+
+    private async Task SaveDealer()
+    {
+        if (Dealer.Id == Guid.Empty)
+            await bookStoresService.SaveAsync("Dealer/CreateDealer", Dealer);
+        else
+            await bookStoresService.UpdateAsync("Dealer/UpdateDealer", Dealer.Id, Dealer);
+
+        Result = true;
+        IsVisible = true;
+
+        var firstName = Dealer.LocationCode;
+        var lastName = Dealer.Name;
+
+        RecordName = firstName + " " + lastName;
+
+        Dealer = new Dealer();
+
+        navigationManager.NavigateTo("/dealers");
+    }
+
+    int zoom = 5;
+
+    bool showMap;
+
+    public GoogleMapPosition pos;
+
+    public GoogleMapPosition posMap = new GoogleMapPosition() { Lat = -34.29403345819787, Lng = -64.03364269523182 };
+
+    public double? latitud;
+
+    public double? longitud;
+
+    Dictionary<DateTime, string> events = new Dictionary<DateTime, string>();
+
+    void MapClick(GoogleMapClickEventArgs args)
+    {
+        events.Add(DateTime.Now, $"Map clicked at Lat: {args.Position.Lat}, Lng: {args.Position.Lng}");
+        StateHasChanged();
+    }
+
+
+    public string Address { get; set; }
+
+    public string GeoLocation { get; set; }
+
+    public bool IsLoading { get; set; }
+
+    private GeocodingResult[] Results { get; set; } = new GeocodingResult[0];
+
+    void onTextChanged(ChangeEventArgs args)
+    {
+        addressSubject.OnNext(args.Value.ToString());
+    }
+
+
+    private void OnRowSelect(GeocodingResult row)
+    {
+        Address = row.FormattedAddress;
+        GeoLocation = $"Lat:{row.Geometry.Location.Lat}, Lng: {row.Geometry.Location.Lng}";
+        Results = new GeocodingResult[0];
+        pos = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
+        posMap = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
+        Dealer.LatitudGps = (long)row.Geometry.Location.Lat;
+        Dealer.LongitudGps = (long)row.Geometry.Location.Lng;
+        zoom = 16;
+        showMap = true;
+        StateHasChanged();
+    }
+
+    private async void OnAddressChanged(string address)
+    {
+        Address = address;
+        IsLoading = true;
+        GeoLocation = "";
+        await InvokeAsync(() => StateHasChanged());
+
+        var response = await GeocodingService.FindAsync(address);
+        Results = response.Results;
+
+        IsLoading = false;
+
+        await InvokeAsync(() => StateHasChanged());
+    }
+}

@@ -1,0 +1,48 @@
+﻿@page "/fallas"
+@layout MainLayout
+@inherits Sgi.Pages.FallasComponent
+
+@using Radzen
+@using Radzen.Blazor
+@using Sgi.Models.SgiCore
+<RadzenContent Container="main">
+  <ChildContent>
+    <RadzenHeading Size="H1" Text="Fallas">
+    </RadzenHeading>
+    <div class="row">
+      <div class="col-md-12">
+        <RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px" Text="Add" Click="@Button0Click">
+        </RadzenButton>
+        <RadzenGrid @ref="grid0" AllowFiltering="true" AllowPaging="true" AllowSorting="true" Data="@getFallasResult" TItem="Sgi.Models.SgiCore.Falla" RowSelect="@Grid0RowSelect">
+          <Columns>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.Falla" Property="Id" Title="Id">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.Falla" Property="Created" FormatString="{0:dd/MM/yyyy}" Title="Created">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.Falla" Property="Modified" FormatString="{0:dd/MM/yyyy}" Title="Modified">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.Falla" Property="Deleted" FormatString="{0:dd/MM/yyyy}" Title="Deleted">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.Falla" Property="IdFalla" Title="Id Falla">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.Falla" Property="Codigo" Title="Codigo">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.Falla" Property="Observaciones" Title="Observaciones">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.Falla" Property="IdIncidencia" SortProperty="Incidencia.ConfiguracionCorta" FilterProperty="Incidencia.ConfiguracionCorta" Title="Incidencia">
+              <Template Context="data">
+              @(data.Incidencia?.ConfiguracionCorta)
+              </Template>
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.Falla" Filterable="false" Sortable="false" Width="70px" TextAlign="TextAlign.Center">
+              <Template Context="sgiModelsSgiCoreFalla">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@((args) =>GridDeleteButtonClick(args, sgiModelsSgiCoreFalla))" @onclick:stopPropagation="true">
+                </RadzenButton>
+              </Template>
+            </RadzenGridColumn>
+          </Columns>
+        </RadzenGrid>
+      </div>
+    </div>
+  </ChildContent>
+</RadzenContent>

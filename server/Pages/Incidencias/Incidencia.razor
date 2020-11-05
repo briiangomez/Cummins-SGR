@@ -1,0 +1,37 @@
+﻿@page "/incidencia"
+@layout MainLayout
+@inherits Sgi.Pages.IncidenciaComponent
+
+@using Radzen
+@using Radzen.Blazor
+@using Sgi.Models.SgiCore
+<RadzenContent Container="main">
+  <ChildContent>
+    <RadzenHeading Size="H1" Text="Reclamos">
+    </RadzenHeading>
+    <div class="row">
+      <div class="col-md-12">
+        <RadzenGrid @ref="grid0" AllowFiltering="true" AllowPaging="true" AllowSorting="true" Data="@getIncidenciaResult" TItem="Sgi.Models.IncidenciaApi" RowSelect="@Grid0RowSelect">
+          <Columns>
+            <RadzenGridColumn TItem="Sgi.Models.IncidenciaApi" Property="numeroIncidencia" Title="WO">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.IncidenciaApi" Property="fechaIncidencia" FormatString="{0:dd/MM/yyyy}" Title="Fecha Incidencia">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.IncidenciaApi" Property="nombreContacto" Title="Cliente">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.IncidenciaApi" Property="domicilioContacto" Title="Domicilio Cliente">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.IncidenciaApi" Property="Equipo" Title="Equipo">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.IncidenciaApi" Property="ModeloEquipo" Title="Modelo Equipo">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.IncidenciaApi" Property="DireccionInspeccion" Title="Dirección de inspección">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.IncidenciaApi" Property="nombreEstadoIncidencia" Title="Estado">
+            </RadzenGridColumn>
+          </Columns>
+        </RadzenGrid>
+      </div>
+    </div>
+  </ChildContent>
+</RadzenContent>

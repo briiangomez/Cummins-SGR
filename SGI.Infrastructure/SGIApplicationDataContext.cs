@@ -28,6 +28,7 @@ namespace SGI.Infrastructure
         {
             base.OnModelCreating(modelBuilder);
             _ = new DealerBuilder(modelBuilder.Entity<Dealer>());
+            _ = new ClienteBuilder(modelBuilder.Entity<Cliente>());
             _ = new MotorBuilder(modelBuilder.Entity<Motor>());
             _ = new EstadoGarantiaBuilder(modelBuilder.Entity<EstadoGarantia>());
             _ = new EstadoBuilder(modelBuilder.Entity<Estado>());

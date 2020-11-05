@@ -1,0 +1,288 @@
+﻿@page "/edit-dealer/{Id}"
+@layout MainLayout
+@inherits Sgi.Pages.EditDealerComponent
+
+@using Radzen
+@using Radzen.Blazor
+@using Sgi.Models.SgiCore
+@using System.Reactive.Linq;
+@using System.Reactive.Subjects
+@using Sgi.Services
+@inject GeocodingService GeocodingService
+<RadzenContent Container="main">
+    <ChildContent>
+        <div class="row">
+            <div class="col-md-12">
+                <RadzenTemplateForm TItem="Sgi.Models.SgiCore.Dealer" Data="@dealer" Visible="@(dealer != null)" Submit="@Form0Submit">
+                    <ChildContent>
+                        <div style="margin-bottom: 1rem" class="row">
+                            <div class="col-md-3">
+                                <RadzenLabel Text="Name" Component="Name" style="width: 100%">
+                                </RadzenLabel>
+                            </div>
+                            <div class="col-md-9">
+                                <RadzenTextBox MaxLength="200" style="display: block; width: 100%" @bind-Value="@(dealer.Name)" Name="Name">
+                                </RadzenTextBox>
+                                <RadzenRequiredValidator Component="Name" Text="Name is required" style="position: absolute">
+                                </RadzenRequiredValidator>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem" class="row">
+                            <div class="col-md-3">
+                                <RadzenLabel Text="Location Code" Component="LocationCode" style="width: 100%">
+                                </RadzenLabel>
+                            </div>
+                            <div class="col-md-9">
+                                <RadzenTextBox MaxLength="200" style="width: 100%" @bind-Value="@(dealer.LocationCode)" Name="LocationCode">
+                                </RadzenTextBox>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem" class="row">
+                            <div class="col-md-3">
+                                <RadzenLabel Text="Distributor Code" Component="DistributorCode" style="width: 100%">
+                                </RadzenLabel>
+                            </div>
+                            <div class="col-md-9">
+                                <RadzenTextBox MaxLength="200" style="width: 100%" @bind-Value="@(dealer.DistributorCode)" Name="DistributorCode">
+                                </RadzenTextBox>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem" class="row">
+                            <div class="col-md-3">
+                                <RadzenLabel Text="Country" Component="Country" style="width: 100%">
+                                </RadzenLabel>
+                            </div>
+                            <div class="col-md-9">
+                                <RadzenTextBox MaxLength="200" style="width: 100%" @bind-Value="@(dealer.Country)" Name="Country">
+                                </RadzenTextBox>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem" class="row">
+                            <div class="col-md-3">
+                                <RadzenLabel Text="State" Component="State" style="width: 100%">
+                                </RadzenLabel>
+                            </div>
+                            <div class="col-md-9">
+                                <RadzenTextBox MaxLength="200" style="width: 100%" @bind-Value="@(dealer.State)" Name="State">
+                                </RadzenTextBox>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem" class="row">
+                            <div class="col-md-3">
+                                <RadzenLabel Text="City" Component="City" style="width: 100%">
+                                </RadzenLabel>
+                            </div>
+                            <div class="col-md-9">
+                                <RadzenTextBox MaxLength="200" style="width: 100%" @bind-Value="@(dealer.City)" Name="City">
+                                </RadzenTextBox>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem" class="row">
+                            <div class="col-md-3">
+                                <RadzenLabel Text="Address" Component="Address" style="width: 100%">
+                                </RadzenLabel>
+                            </div>
+                            <div class="col-md-9">
+                                <Radzen.Blazor.RadzenTextBox @bind-Value="@(dealer.Address)" Name="Address" style="width: 100%" @oninput="onTextChanged"></Radzen.Blazor.RadzenTextBox>
+                                <RadzenNumeric style="width: 100%" @bind-Value="@(dealer.LatitudGps)" Visible="false" Name="LatitudGps">
+                                </RadzenNumeric>
+                                <RadzenNumeric style="width: 100%" @bind-Value="@(dealer.LongitudGps)" Visible="false" Name="LongitudGps">
+                                </RadzenNumeric>
+                                <br />
+                                @if (IsLoading)
+                                {
+                                    <Radzen.Blazor.RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="margin: 20px"></Radzen.Blazor.RadzenProgressBar>
+                                }
+
+                                @if (Results.Length > 0)
+                                {
+                                    <Radzen.Blazor.RadzenGrid Data="Results" RowSelect="@OnRowSelect" TItem="GeocodingResult">
+                                        <Columns>
+                                            <Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="FormattedAddress" Title="Address">
+                                                <FooterTemplate>
+                                                    Total Results: <b>@Results.Count()</b>
+                                                </FooterTemplate>
+                                            </Radzen.Blazor.RadzenGridColumn>
+                                            @*<Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="Geometry.Location.Lat" Title="Latitude" />
+                                                <Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="Geometry.Location.Lng" Title="Longitude" />*@
+                                        </Columns>
+                                    </Radzen.Blazor.RadzenGrid>
+                                }
+
+
+                                @if (showMap)
+                                {
+                                    <br />
+                                    <Radzen.Blazor.RadzenGoogleMap Zoom="@zoom"
+                                                                   style="height:400px"
+                                                                   ApiKey="AIzaSyCBhlrEoE5ndgXMCeI7zyq0dK4MJksa8Ak"
+                                                                   Center="@(posMap)"
+                                                                   MapClick="@MapClick">
+                                        <Markers>
+                                            @if (pos != null)
+                                            {
+                                                <Radzen.Blazor.RadzenGoogleMapMarker Title="@Address" Label="@Address" Position="@(pos)" />
+                                            }
+                                        </Markers>
+                                    </Radzen.Blazor.RadzenGoogleMap>
+                                }
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem" class="row">
+                            <div class="col-md-3">
+                                <RadzenLabel Text="Phone" Component="Phone" style="width: 100%">
+                                </RadzenLabel>
+                            </div>
+                            <div class="col-md-9">
+                                <RadzenTextBox MaxLength="200" style="width: 100%" @bind-Value="@(dealer.Phone)" Name="Phone">
+                                </RadzenTextBox>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem" class="row">
+                            <div class="col-md-3">
+                                <RadzenLabel Text="Fax" Component="Fax" style="width: 100%">
+                                </RadzenLabel>
+                            </div>
+                            <div class="col-md-9">
+                                <RadzenTextBox MaxLength="200" style="width: 100%" @bind-Value="@(dealer.Fax)" Name="Fax">
+                                </RadzenTextBox>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem" class="row">
+                            <div class="col-md-3">
+                                <RadzenLabel Text="Zip" Component="Zip" style="width: 100%">
+                                </RadzenLabel>
+                            </div>
+                            <div class="col-md-9">
+                                <RadzenTextBox MaxLength="200" style="width: 100%" @bind-Value="@(dealer.Zip)" Name="Zip">
+                                </RadzenTextBox>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem" class="row">
+                            <div class="col-md-3">
+                                <RadzenLabel Text="Email" Component="Email" style="width: 100%">
+                                </RadzenLabel>
+                            </div>
+                            <div class="col-md-9">
+                                <RadzenTextBox MaxLength="200" style="width: 100%" @bind-Value="@(dealer.Email)" Name="Email">
+                                </RadzenTextBox>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem" class="row">
+                            <div class="col-md-3">
+                                <RadzenLabel Text="Website" Component="Website" style="width: 100%">
+                                </RadzenLabel>
+                            </div>
+                            <div class="col-md-9">
+                                <RadzenTextBox style="width: 100%" @bind-Value="@(dealer.Website)" Name="Website">
+                                </RadzenTextBox>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem" class="row">
+                            <div class="col-md-3">
+                                <RadzenLabel Text="Skip Longitude" Component="SkipLongitude" style="width: 100%">
+                                </RadzenLabel>
+                            </div>
+                            <div class="col-md-9">
+                                <RadzenTextBox style="width: 100%" @bind-Value="@(dealer.SkipLongitude)" Name="SkipLongitude">
+                                </RadzenTextBox>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col offset-sm-3">
+                                <RadzenButton ButtonType="ButtonType.Submit" Icon="save" Text="Save" ButtonStyle="ButtonStyle.Primary">
+                                </RadzenButton>
+                                <RadzenButton ButtonStyle="ButtonStyle.Light" Text="Cancel" Click="@Button2Click">
+                                </RadzenButton>
+                            </div>
+                        </div>
+                    </ChildContent>
+                </RadzenTemplateForm>
+            </div>
+        </div>
+    </ChildContent>
+</RadzenContent>
+
+@code {
+
+    int zoom = 5;
+
+    bool showMap;
+
+    public GoogleMapPosition pos;
+
+    public GoogleMapPosition posMap;
+
+    public double? latitud;
+
+    public double? longitud;
+
+    Dictionary<DateTime, string> events = new Dictionary<DateTime, string>();
+
+    void MapClick(GoogleMapClickEventArgs args)
+    {
+        events.Add(DateTime.Now, $"Map clicked at Lat: {args.Position.Lat}, Lng: {args.Position.Lng}");
+        StateHasChanged();
+    }
+
+
+    Subject<string> addressSubject = new Subject<string>();
+
+    public string Address { get; set; }
+
+    public string GeoLocation { get; set; }
+
+    public bool IsLoading { get; set; }
+
+    private GeocodingResult[] Results { get; set; } = new GeocodingResult[0];
+
+    void onTextChanged(ChangeEventArgs args)
+    {
+        addressSubject.OnNext(args.Value.ToString());
+    }
+
+    protected override void OnInitialized()
+    {
+        addressSubject
+            .Throttle(TimeSpan.FromMilliseconds(300))
+            .DistinctUntilChanged()
+            .Subscribe(OnAddressChanged);
+
+        if(dealer != null && dealer.LatitudGps != null && dealer.LongitudGps != null)
+        {
+            pos = new GoogleMapPosition() { Lat = dealer.LatitudGps.Value, Lng = dealer.LongitudGps.Value };
+            posMap = new GoogleMapPosition() { Lat = dealer.LatitudGps.Value, Lng = dealer.LongitudGps.Value };
+            showMap = true;
+        }
+    }
+
+
+    private void OnRowSelect(GeocodingResult row)
+    {
+        Address = row.FormattedAddress;
+        GeoLocation = $"Lat:{row.Geometry.Location.Lat}, Lng: {row.Geometry.Location.Lng}";
+        Results = new GeocodingResult[0];
+        pos = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
+        posMap = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
+        dealer.LatitudGps = row.Geometry.Location.Lat;
+        dealer.LongitudGps = row.Geometry.Location.Lng;
+        zoom = 16;
+        showMap = true;
+        StateHasChanged();
+    }
+
+    private async void OnAddressChanged(string address)
+    {
+        Address = address;
+        IsLoading = true;
+        GeoLocation = "";
+        await InvokeAsync(() => StateHasChanged());
+
+        var response = await GeocodingService.FindAsync(address);
+        Results = response.Results;
+
+        IsLoading = false;
+
+        await InvokeAsync(() => StateHasChanged());
+    }
+}

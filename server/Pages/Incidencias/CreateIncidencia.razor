@@ -1,0 +1,33 @@
+﻿@page "/createIncidencia"
+
+@inject Microsoft.AspNetCore.Components.NavigationManager navigationManager
+@inject SgiCoreService SgiCore
+
+
+@*@code {
+
+    Sgi.Models.IncidenciaApi incidencia = new Models.IncidenciaApi();
+
+    void CreateArticle()
+    {
+        
+    }
+
+    protected async System.Threading.Tasks.Task Form0Submit(Sgi.Models.IncidenciaApi args)
+        {
+            try
+            {
+                var sgiCoreCreateIncidenciaResult = await SgiCore.CreateIncidencia(incidencia);
+                navigationManager.NavigateTo("/mapResult");
+            }
+            catch (System.Exception sgiCoreCreateIncidenciaException)
+            {
+                    NotificationService.Notify(NotificationSeverity.Error, $"Error", $"Unable to create new Incidencia!");
+            }
+        }
+
+    void Cancel()
+    {
+        navigationManager.NavigateTo("/incidencia");
+    }
+}*@

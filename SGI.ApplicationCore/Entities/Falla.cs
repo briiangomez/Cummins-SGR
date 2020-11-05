@@ -10,7 +10,7 @@ namespace SGI.ApplicationCore.Entities
 
         public int IdFalla { get; set; }
 
-        public long Codigo { get; set; }
+        public string Codigo { get; set; }
 
         public string Observaciones { get; set; }
 

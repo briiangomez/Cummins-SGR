@@ -1,0 +1,378 @@
+﻿@page "/Incidencias"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@using SGRBlazorApp.Shared
+@using System.Security.Claims
+@inject ISgrService<IncidenciaApi> bookStoresService
+@inject ISgrService<EstadoIncidencia> estadoIncidenciaService
+@inject ISgrService<Estado> estadoService
+@inject IUserService userService
+@inject ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navigationManager
+@implements IDisposable
+
+<div class="col-12">
+
+    <h3><b>Reclamos</b></h3>
+    <br />
+    <AuthorizeView Roles="Administrador,Fabricante" Policy="SeniorEmployee">
+        <Authorized>
+            <a class="btn btn-primary" style="text-underline-position:below; cursor:pointer; color:blue" href="/addIncidencia">Nuevo Reclamo</a>
+        </Authorized>
+    </AuthorizeView>
+    <br />
+    <SpinLoader IsLoading="isLoading">
+        <LoadingTemplate>
+            <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
+                <br /><br />
+                <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
+            </div>
+        </LoadingTemplate>
+        <ContentTemplate>
+            @if (filteredIncidenciaList != null)
+            {
+                <GridView Items="filteredIncidenciaList" ReloadList="IsGridViewFiltered">
+                    <GridColumns>
+                        <GridColumn ColumnTitle="Nro de WO/OT"
+                                    OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "numeroIncidencia"))"></GridColumn>
+                        <GridColumn ColumnTitle="Fecha de Reclamo"
+                                    OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "fechaIncidencia"))"></GridColumn>
+                        <GridColumn ColumnTitle="Cliente"
+                                    OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "nombreContacto"))"></GridColumn>
+                        <GridColumn ColumnTitle="Nro de Motor (ESN)"
+                                    OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "numeroMotor"))"></GridColumn>
+                        <GridColumn ColumnTitle="Nro de Chasis"
+                                    OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "Equipo"))"></GridColumn>
+                        <GridColumn ColumnTitle="Estado Actual"
+                                    OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "nombreEstadoIncidencia"))"></GridColumn>
+                        <GridColumn ColumnTitle="Sintoma"
+                                    OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "Sintoma"))"></GridColumn>
+                        <GridColumn ColumnTitle="EsGarantia"
+                                    OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "EsGarantia"))"></GridColumn>
+                        <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+                            <Authorized>
+                                <GridColumn ColumnTitle="Actions"></GridColumn>
+                            </Authorized>
+                        </AuthorizeView>
+                        <AuthorizeView Roles="Dealer" Policy="SeniorEmployee">
+                            <Authorized>
+                                <GridColumn ColumnTitle="Actions"></GridColumn>
+                            </Authorized>
+                        </AuthorizeView>
+                    </GridColumns>
+                    <GridRow Context="Incidencia">
+                        @*<td>
+                                <NavLink href=@string.Format("/Incidencias/Incidenciadetail/{0}", @Incidencia.Id)>
+                                    @Incidencia.Id
+                                </NavLink>
+                            </td>*@
+                        <td>@Incidencia.numeroIncidencia</td>
+                        <td>@Incidencia.fechaIncidencia</td>
+                        <td>@Incidencia.nombreContacto</td>
+                        <td>@Incidencia.numeroMotor</td>
+                        <td>@Incidencia.numeroChasis</td>
+                        <td>@Incidencia.nombreEstadoIncidencia</td>
+                        <td>@Incidencia.Sintoma</td>
+                        @if (Incidencia.EsGarantia)
+                            {
+                            <td>Si</td>
+                            }
+                            else
+                            {
+                            <td>No</td>
+                            }
+                        <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+                            <Authorized>
+                                <td>
+                                    <a class="btn btn-primary" style="text-underline-position:below; cursor:pointer; color:white;background-color:blue" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id)>Detalle</a>
+                                </td>
+                            </Authorized>
+                        </AuthorizeView>
+                        <AuthorizeView Roles="Dealer" Policy="SeniorEmployee">
+                            <Authorized>
+                                @if (Incidencia.nombreEstadoIncidencia == "Pendiente")
+                                    {
+                                    <td>
+                                        <a class="btn btn-success" @onclick="(() => AceptarIncidencia(Incidencia.Id))">Aceptar</a>
+                                        <a class="btn btn-primary" @onclick="(() => RechazarIncidencia(Incidencia.Id))">Rechazar</a>
+                                    </td>
+                                    }
+                                    else if (Incidencia.nombreEstadoIncidencia == "En Proceso")
+                                    {
+                                    <td>
+                                        <a class="btn btn-warning" @onclick="(() => EscalarIncidencia(Incidencia.Id))">Solicitar Asistencia</a>
+                                        <a class="btn btn-success" @onclick="(() => CerrarIncidencia(Incidencia.Id))">Cerrar</a>
+                                    </td>
+                                    }
+                                    @*else if (Incidencia.nombreEstadoIncidencia == "Rechazado")
+                                    {
+                                    <td>
+                                        <a class="btn btn-success" style="text-underline-position:below; cursor:pointer; color:blue" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id)>Detalle</a>
+                                    </td>
+                                    }*@
+                                    else
+                                    {
+                                    <td></td>
+                                    }
+                            </Authorized>
+                        </AuthorizeView>
+                    </GridRow>
+                </GridView>
+            }
+        </ContentTemplate>
+    </SpinLoader>
+</div>
+
+@code {
+
+    public IncidenciaApi Incidenciaa { get; set; }
+    public List<IncidenciaApi> IncidenciaList { get; set; }
+    public List<IncidenciaApi> filteredIncidenciaList { get; set; }
+    public List<Estado> estadosList { get; set; }
+    public string SelectedCity { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+
+    public User user1 { get; set; }
+    public RefreshRequest refreshRequest { get; set; }
+
+    public bool IsVisible { get; set; }
+    public bool Result { get; set; }
+    public string RecordName { get; set; }
+    public string[] Cities { get; set; }
+    public bool IsGridViewFiltered { get; set; }
+    bool isLoading = true;
+    bool IsUserAuthenticated;
+    bool IsDealer;
+
+    ElementReference firstNameTextBox;
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Incidencias - OnInitialized");
+        base.OnInitialized();
+    }
+
+    private async Task AceptarIncidencia(Guid ClienteId)
+    {
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea confirmar que Acepta la Incidencia?", TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            //var estadoo = estadosList.FirstOrDefault(o => o.Descripcion == "En Proceso");
+            //EstadoIncidencia estado = new EstadoIncidencia();
+            //estado.IncidenciaId = ClienteId;
+            //estado.EstadoId = estadoo.Id;
+            //estado.Created = DateTime.Now;
+            //estado.IdUser = user1.Id;
+            //await estadoIncidenciaService.SaveAsync("EstadoIncidencia/CreateEstadoIncidencia/", estado);
+            navigationManager.NavigateTo("/aceptarIncidencia/" + ClienteId.ToString());
+        }
+        //throw new Exception("DeleteCliente");
+    }
+
+    private async Task RechazarIncidencia(Guid ClienteId)
+    {
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea confirmar que Rechaza la Incidencia?", TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            //EstadoIncidencia estado = new EstadoIncidencia();
+            //estado.IncidenciaId = ClienteId;
+            //estado.EstadoId = estadoService.GetAllAsync("Estados/GetEstados").Result.ToList().FirstOrDefault(o => o.Descripcion == "Rechazado").Id;
+            //estado.Created = DateTime.Now;
+            //await estadoIncidenciaService.SaveAsync("EstadoIncidencia/CreateEstadoIncidencia/", estado);
+            navigationManager.NavigateTo("/rechazoIncidencia/" + ClienteId.ToString());
+        }
+        //throw new Exception("DeleteCliente");
+    }
+
+    private async Task EscalarIncidencia(Guid ClienteId)
+    {
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea solicitar asistencia para este Reclamo?", TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            //EstadoIncidencia estado = new EstadoIncidencia();
+            //estado.IncidenciaId = ClienteId;
+            //estado.EstadoId = estadoService.GetAllAsync("Estados/GetEstados").Result.ToList().FirstOrDefault(o => o.Descripcion == "Rechazado").Id;
+            //estado.Created = DateTime.Now;
+            //await estadoIncidenciaService.SaveAsync("EstadoIncidencia/CreateEstadoIncidencia/", estado);
+            navigationManager.NavigateTo("/escalarIncidencia/" + ClienteId.ToString());
+        }
+        //throw new Exception("DeleteCliente");
+    }
+
+    private async Task CerrarIncidencia(Guid ClienteId)
+    {
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea Cerrar este Reclamo?", TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            //EstadoIncidencia estado = new EstadoIncidencia();
+            //estado.IncidenciaId = ClienteId;
+            //estado.EstadoId = estadoService.GetAllAsync("Estados/GetEstados").Result.ToList().FirstOrDefault(o => o.Descripcion == "Rechazado").Id;
+            //estado.Created = DateTime.Now;
+            //await estadoIncidenciaService.SaveAsync("EstadoIncidencia/CreateEstadoIncidencia/", estado);
+            navigationManager.NavigateTo("/cerrarIncidencia/" + ClienteId.ToString());
+        }
+        //throw new Exception("DeleteCliente");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("Incidencias - OnInitializedAsync");
+
+        Incidenciaa = new IncidenciaApi();
+        IncidenciaList = new List<IncidenciaApi>();
+        estadosList = new List<Estado>();
+
+        user = (await authenticationStateTask).User;
+
+
+
+        if (user.Identity.IsAuthenticated)
+            IsUserAuthenticated = true;
+
+        if (user.IsInRole("Dealer"))
+            IsDealer = true;
+
+        refreshRequest = new RefreshRequest();
+        refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+        refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+        user1 = await userService.RefreshTokenAsync(refreshRequest);
+
+        await base.OnInitializedAsync();
+    }
+
+    protected override void OnParametersSet()
+    {
+        Console.WriteLine("Incidencias - OnParametersSet");
+        base.OnParametersSet();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Console.WriteLine("Incidencias - OnParametersSetAsync");
+        await base.OnParametersSetAsync();
+    }
+
+    protected override bool ShouldRender()
+    {
+        base.ShouldRender();
+        Console.WriteLine("Incidencias - ShouldRender");
+        return true;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        Console.WriteLine("Incidencias - OnAfterRender - firstRender = " + firstRender);
+        base.OnAfterRender(firstRender);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Console.WriteLine("Incidencias - OnAfterRenderAsync - firstRender = " + firstRender);
+
+        if (firstRender)
+        {
+            await LoadIncidencias();
+
+            isLoading = false;
+            StateHasChanged();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Incidencias - Dispose");
+    }
+
+    private async Task LoadIncidencias()
+    {
+        await Task.Delay(500);
+        estadosList = await estadoService.GetAllAsync("Estados/GetEstados");
+        IncidenciaList = filteredIncidenciaList = await bookStoresService.GetAllAsync("Incidencia/GetIncidenciaApi");
+
+        if (IncidenciaList == null)
+        {
+
+            //RefreshRequest refreshRequest = new RefreshRequest();
+            //refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+            //refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+            //var user1 = await userService.RefreshTokenAsync(refreshRequest);
+            await localStorageService.SetItemAsync("accessToken", user1.AccessToken);
+
+            IncidenciaList = filteredIncidenciaList = await bookStoresService.GetAllAsync("Incidencias/GetIncidenciasApi");
+        }
+
+        if (IsDealer)
+        {
+
+            IncidenciaList = filteredIncidenciaList = IncidenciaList.Where(o => o.IdConcesionario == user1.IdDealer).ToList();
+        }
+
+        //if (IncidenciaList != null)
+        //    IncidenciaList = IncidenciaList.OrderByDescending(auth => auth.IncidenciaId).ToList();
+
+        StateHasChanged();
+    }
+
+
+
+    private async Task DeleteIncidencia(Guid IncidenciaId)
+    {
+        await bookStoresService.DeleteAsync("Incidencia/DeleteIncidencia/", IncidenciaId);
+        await LoadIncidencias();
+
+        //throw new Exception("DeleteIncidencia");
+    }
+
+    private void EditIncidencia(IncidenciaApi argIncidencia)
+    {
+        Incidenciaa = argIncidencia;
+    }
+
+    private void OnSelectCityChange(ChangeEventArgs changeEventArgs)
+    {
+        SelectedCity = (string)changeEventArgs.Value;
+    }
+
+    private void OnIncidenciaSearchTextChanged(ChangeEventArgs changeEventArgs, string columnTitle)
+    {
+        string searchText = changeEventArgs.Value.ToString();
+        IsGridViewFiltered = true;
+
+        switch (columnTitle)
+        {
+            case "numeroIncidencia":
+                filteredIncidenciaList = IncidenciaList.Where(auth => auth.numeroIncidencia.ToString().ToLower().Contains(searchText)).ToList();
+                break;
+            case "fechaIncidencia":
+                filteredIncidenciaList = IncidenciaList.Where(auth => auth.fechaIncidencia.ToString().ToLower().Contains(searchText)).ToList();
+                break;
+            case "nombreContacto":
+                filteredIncidenciaList = IncidenciaList.Where(auth => auth.nombreContacto.ToLower().Contains(searchText)).ToList();
+                break;
+            case "numeroMotor":
+                filteredIncidenciaList = IncidenciaList.Where(auth => auth.numeroMotor.ToLower().Contains(searchText)).ToList();
+                break;
+            case "Equipo":
+                filteredIncidenciaList = IncidenciaList.Where(auth => auth.Equipo.ToLower().Contains(searchText) || auth.ModeloEquipo.ToLower().Contains(searchText)).ToList();
+                break;
+            case "nombreEstadoIncidencia":
+                filteredIncidenciaList = IncidenciaList.Where(auth => auth.nombreEstadoIncidencia.ToLower().Contains(searchText)).ToList();
+                break;
+            case "Sintoma":
+                filteredIncidenciaList = IncidenciaList.Where(auth => auth.Sintoma.ToLower().Contains(searchText)).ToList();
+                break;
+            default:
+                Console.WriteLine("Default case");
+                break;
+        }
+    }
+
+}

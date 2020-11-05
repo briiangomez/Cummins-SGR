@@ -1,0 +1,47 @@
+﻿@page "/role-permissions"
+@layout MainLayout
+@inherits Sgi.Pages.RolePermissionsComponent
+
+@using Radzen
+@using Radzen.Blazor
+@using Sgi.Models.SgiCore
+<RadzenContent Container="main">
+  <ChildContent>
+    <RadzenHeading Size="H1" Text="Role Permissions">
+    </RadzenHeading>
+    <div class="row">
+      <div class="col-md-12">
+        <RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px" Text="Add" Click="@Button0Click">
+        </RadzenButton>
+        <RadzenGrid @ref="grid0" AllowFiltering="true" AllowPaging="true" AllowSorting="true" Data="@getRolePermissionsResult" TItem="Sgi.Models.SgiCore.RolePermission" RowSelect="@Grid0RowSelect">
+          <Columns>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.RolePermission" Property="Id" Title="Id">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.RolePermission" Property="Created" FormatString="{0:dd/MM/yyyy}" Title="Created">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.RolePermission" Property="Modified" FormatString="{0:dd/MM/yyyy}" Title="Modified">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.RolePermission" Property="Deleted" FormatString="{0:dd/MM/yyyy}" Title="Deleted">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.RolePermission" Property="RoleId" SortProperty="Role.code" FilterProperty="Role.code" Title="Role">
+              <Template Context="data">
+              @(data.Role?.code)
+              </Template>
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.RolePermission" Property="PermissionId" SortProperty="Permission.Name" FilterProperty="Permission.Name" Title="Permission">
+              <Template Context="data">
+              @(data.Permission?.Name)
+              </Template>
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.RolePermission" Filterable="false" Sortable="false" Width="70px" TextAlign="TextAlign.Center">
+              <Template Context="sgiModelsSgiCoreRolePermission">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@((args) =>GridDeleteButtonClick(args, sgiModelsSgiCoreRolePermission))" @onclick:stopPropagation="true">
+                </RadzenButton>
+              </Template>
+            </RadzenGridColumn>
+          </Columns>
+        </RadzenGrid>
+      </div>
+    </div>
+  </ChildContent>
+</RadzenContent>

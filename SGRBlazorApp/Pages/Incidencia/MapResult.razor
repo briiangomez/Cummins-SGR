@@ -1,0 +1,93 @@
+﻿@page "/mapresult/{Id:guid}"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Services
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@using SGRBlazorApp.Shared
+@inject ISgrService<Dealer> bookStoresService
+@inject IUserService userService
+@inject ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navigationManager
+@implements IDisposable
+<div class="card bg-light mb-3">
+    <div class="card-header">
+        <h4>Su incidencia ha sido cargada correctamente!!</h4>
+        <h4>A continuacion, le mostramos el Dealer mas Cercano asignado</h4>
+    </div>
+    @if (dealer != null)
+    {
+        <div class="card-body">
+            <div class="card bg-info">
+                <div class="card-body text-white">
+                    <h4 class="card-title">Dealer Asignado: <b>@dealer.Name - @dealer.Address, @dealer.City, @dealer.Country </b></h4>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <Radzen.Blazor.RadzenGoogleMap Zoom="16"
+                                               style="height:500px"
+                                               ApiKey="AIzaSyCBhlrEoE5ndgXMCeI7zyq0dK4MJksa8Ak"
+                                               Center="@(new GoogleMapPosition() { Lat = dealer.LatitudGps.Value, Lng = dealer.LongitudGps.Value })">
+                    <Markers>
+                        <Radzen.Blazor.RadzenGoogleMapMarker Title="@dealer.Name" Label="@dealer.Name" Position="@(new GoogleMapPosition() { Lat = dealer.LatitudGps.Value, Lng = dealer.LongitudGps.Value })" />
+
+                    </Markers>
+                </Radzen.Blazor.RadzenGoogleMap>
+            </div>
+        </div>
+    }
+</div>
+
+@code
+{
+    [Parameter]
+    public Guid Id { get; set; }
+
+    public Incidencia Incidencia { get; set; }
+    public IncidenciaApi IncidenciaApi { get; set; }
+    public List<IncidenciaApi> IncidenciaList { get; set; }
+    public List<EstadoIncidencia> estadoIncidencia { get; set; }
+    public string Observaciones { get; set; }
+    public Guid IdDealer { get; set; }
+    public List<Dealer> Dealers { get; set; }
+    public Dealer dealer { get; set; }
+
+    private string __recoriddo_ruta = "Centro Parts S.R.L. ";
+    private int __recorrido_distancia = 53;
+    private string __map_data = "[{id:'CABA - Buenos Aires',name:'CABA - Buenos Aires',lat: -34.62009948, lon: -58.43518051, color:'#5DADE2'}, {id:'La Plata, Buenos Aires',name:'La Plata, Buenos Aires',lat: -34.9206797, lon: -57.9537638, color:'#099909'},{id:'CABA - Buenos Aires',name:'CABA - Buenos Aires',lat: -34.62009948, lon: -58.43518051, color:'#5DADE2'}]";
+
+    bool isLoading = true;
+
+
+    protected async override void OnInitialized()
+    {
+        dealer = new Dealer();
+        dealer = await bookStoresService.GetByIdAsync("Dealer/GetDealer/", Id);
+        base.OnInitialized();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("Dealers - OnInitializedAsync");
+        dealer = new Dealer();
+        dealer = await bookStoresService.GetByIdAsync("Dealer/GetDealer/", Id);
+
+        await base.OnInitializedAsync();
+
+        //addressSubject
+        //    .Throttle(TimeSpan.FromMilliseconds(300))
+        //    .DistinctUntilChanged()
+        //    .Subscribe(OnAddressChanged);
+    }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Dealers - Dispose");
+    }
+
+
+
+}

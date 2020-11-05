@@ -1,0 +1,82 @@
+﻿@page  "/"
+@page "/index"
+@using System.Collections.ObjectModel
+@using Sgi.Data
+@using Blazored.LocalStorage
+@using System.Security.Claims
+@inject NavigationManager navigationManager
+@inject ILocalStorageService localStorageService
+@inject IAuthorizationService authorizationService
+<img src="Images/logo.png" width="200px" />
+
+
+<h2 style="text-align:center">Bienvenido a Cummins - SGI</h2>
+
+<h3></h3>
+
+<h5 style="margin-left:20px; color:black;text-align:center">Argentina - @DateTime.Now.Year</h5>
+
+<AuthorizeView>
+    <Authorized>
+        <div class="row-center">
+            <div class="navHome mTop40">
+                <div class="col-5">
+                    <a class="navHomeBtn" href="/incidencia">
+                        <div class="row-center text_center mBottom10">
+                            <img src="../../images/Icons/campana.png" alt="Configurar" height="50" />
+                        </div>
+                        <div class="btnText">
+                            <h3>Incidencias</h3>
+                            <h5>Gestioná todas las incidencias</h5>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-5">
+                    <a class="navHomeBtn" href="/dealers">
+                        <div class="row-center text_center mBottom10">
+                            <img src="../../images/Icons/templates.png" alt="Grupos" height="50" />
+                        </div>
+                        <div class="btnText">
+                            <h3>Dealers</h3>
+                            <h5>Gestioná los dealers cercanos</h5>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-5">
+                    <a class="navHomeBtn" href="/clientes">
+                        <div class="row-center text_center mBottom10">
+                            <img src="../../images/Icons/grupos.png" alt="Templates" height="50" />
+                        </div>
+                        <div class="btnText">
+                            <h3>Clientes</h3>
+                            <h5>Gestioná los clientes asociados</h5>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-5">
+                    <a class="navHomeBtn" href="/Campaign">
+                        <div class="row-center text_center mBottom10">
+                            <img src="../../images/Icons/reportes.png" alt="Campaña" height="50" />
+                        </div>
+                        <div class="btnText">
+                            <h3>Encuestas</h3>
+                            <h5>Gestioná tus encuestas de servicio</h5>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-5">
+                    <a class="navHomeBtn" href="/Report">
+                        <div class="row-center text_center mBottom10">
+                            <img src="../../images/Icons/configuracion.png" alt="Reportes" height="50" />
+                        </div>
+                        <div class="btnText">
+                            <h3>Configuración</h3>
+                            <h5>Configurá los anuncios y notificaciones</h5>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </Authorized>
+</AuthorizeView>

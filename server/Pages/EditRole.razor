@@ -1,0 +1,81 @@
+﻿@page "/edit-role/{Id}"
+@layout MainLayout
+@inherits Sgi.Pages.EditRoleComponent
+
+@using Radzen
+@using Radzen.Blazor
+@using Sgi.Models.SgiCore
+<RadzenContent Container="main">
+  <ChildContent>
+    <div class="row">
+      <div class="col-md-12">
+        <RadzenTemplateForm TItem="Sgi.Models.SgiCore.Role" Data="@role" Visible="@(role != null)" Submit="@Form0Submit">
+          <ChildContent>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Created" Component="Created" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(role.Created)" Name="Created">
+                </RadzenDatePicker>
+              </div>
+            </div>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Modified" Component="Modified" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(role.Modified)" Name="Modified">
+                </RadzenDatePicker>
+              </div>
+            </div>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Deleted" Component="Deleted" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(role.Deleted)" Name="Deleted">
+                </RadzenDatePicker>
+              </div>
+            </div>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Code" Component="code" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenTextBox MaxLength="100" style="display: block; width: 100%" @bind-Value="@(role.code)" Name="Code">
+                </RadzenTextBox>
+                <RadzenRequiredValidator Component="Code" Text="code is required" style="position: absolute">
+                </RadzenRequiredValidator>
+              </div>
+            </div>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Name" Component="name" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenTextBox MaxLength="100" style="display: block; width: 100%" @bind-Value="@(role.name)" Name="Name">
+                </RadzenTextBox>
+                <RadzenRequiredValidator Component="Name" Text="name is required" style="position: absolute">
+                </RadzenRequiredValidator>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col offset-sm-3">
+                <RadzenButton ButtonType="ButtonType.Submit" Icon="save" Text="Save" ButtonStyle="ButtonStyle.Primary">
+                </RadzenButton>
+                <RadzenButton ButtonStyle="ButtonStyle.Light" Text="Cancel" Click="@Button2Click">
+                </RadzenButton>
+              </div>
+            </div>
+          </ChildContent>
+        </RadzenTemplateForm>
+      </div>
+    </div>
+  </ChildContent>
+</RadzenContent>

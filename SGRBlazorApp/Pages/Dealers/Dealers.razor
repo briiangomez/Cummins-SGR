@@ -1,0 +1,249 @@
+﻿@page "/Dealers"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@using SGRBlazorApp.Shared
+@inject ISgrService<Dealer> bookStoresService
+@inject IUserService userService
+@inject ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+    <div class="col-12">
+
+        <h3><b>Dealers</b></h3>
+        <br />
+        <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+            <Authorized>
+                <a class="btn btn-primary" style="text-underline-position:below; cursor:pointer; color:blue" href="/addDealer">Nuevo Dealer</a>
+            </Authorized>
+        </AuthorizeView>
+        <br />
+        <SpinLoader IsLoading="isLoading">
+            <LoadingTemplate>
+                <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
+                    <br /><br />
+                    <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
+                </div>
+            </LoadingTemplate>
+            <ContentTemplate>
+                @if (filteredDealerList != null)
+                {
+                    <GridView Items="filteredDealerList" ReloadList="IsGridViewFiltered">
+                        <GridColumns>
+                            <GridColumn ColumnTitle="Nombre"
+                                        OnSearchTextChanged="@(e => OnDealerSearchTextChanged(e, "Name"))"></GridColumn>
+                            <GridColumn ColumnTitle="Codigo"
+                                        OnSearchTextChanged="@(e => OnDealerSearchTextChanged(e, "LocationCode"))"></GridColumn>
+                            <GridColumn ColumnTitle="Codigo Distribuidor"
+                                        OnSearchTextChanged="@(e => OnDealerSearchTextChanged(e, "DistributorCode"))"></GridColumn>
+                            <GridColumn ColumnTitle="Pais"
+                                        OnSearchTextChanged="@(e => OnDealerSearchTextChanged(e, "Country"))"></GridColumn>
+                            <GridColumn ColumnTitle="Provincia/Estado"
+                                        OnSearchTextChanged="@(e => OnDealerSearchTextChanged(e, "State"))"></GridColumn>
+                            <GridColumn ColumnTitle="Ciudad"
+                                        OnSearchTextChanged="@(e => OnDealerSearchTextChanged(e, "City"))"></GridColumn>
+                            <GridColumn ColumnTitle="Direccion"
+                                        OnSearchTextChanged="@(e => OnDealerSearchTextChanged(e, "Address"))"></GridColumn>
+                            <GridColumn ColumnTitle="Telefono"
+                                        OnSearchTextChanged="@(e => OnDealerSearchTextChanged(e, "Phone"))"></GridColumn>
+                            <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+                                <Authorized>
+                                    <GridColumn ColumnTitle="Actions"></GridColumn>
+                                </Authorized>
+                            </AuthorizeView>
+                        </GridColumns>
+                        <GridRow Context="Dealer">
+                            @*<td>
+                                <NavLink href=@string.Format("/Dealers/Dealerdetail/{0}", @Dealer.Id)>
+                                    @Dealer.Id
+                                </NavLink>
+                            </td>*@
+                            <td>@Dealer.Name</td>
+                            <td>@Dealer.LocationCode</td>
+                            <td>@Dealer.DistributorCode</td>
+                            <td>@Dealer.Country</td>
+                            <td>@Dealer.State</td>
+                            <td>@Dealer.City</td>
+                            <td>@Dealer.Address</td>
+                            <td>@Dealer.Phone</td>
+                            <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+                                <Authorized>
+                                    <th>
+                                        <a style="text-underline-position:below; cursor:pointer; color:blue" href=@string.Format("/editDealer/{0}", Dealer.Id)>Editar</a> |
+                                        <a style="text-underline-position:below; cursor:pointer; color:blue" @onclick="(() => DeleteDealer(Dealer.Id))">Eliminar</a>
+                                    </th>
+                                </Authorized>
+                            </AuthorizeView>
+                        </GridRow>
+                    </GridView>
+                }
+            </ContentTemplate>
+        </SpinLoader>
+    </div>
+
+@code {
+
+    public Dealer Dealer { get; set; }
+    public List<Dealer> DealerList { get; set; }
+    public List<Dealer> filteredDealerList { get; set; }
+    public string SelectedCity { get; set; }
+
+    public bool IsVisible { get; set; }
+    public bool Result { get; set; }
+    public string RecordName { get; set; }
+    public string[] Cities { get; set; }
+    public bool IsGridViewFiltered { get; set; }
+    bool isLoading = true;
+
+    ElementReference firstNameTextBox;
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Dealers - OnInitialized");
+        base.OnInitialized();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("Dealers - OnInitializedAsync");
+
+        Dealer = new Dealer();
+        DealerList = new List<Dealer>();
+        //DealerList = await DealerService.GetDealers();
+
+        await base.OnInitializedAsync();
+    }
+
+    protected override void OnParametersSet()
+    {
+        Console.WriteLine("Dealers - OnParametersSet");
+        base.OnParametersSet();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Console.WriteLine("Dealers - OnParametersSetAsync");
+        await base.OnParametersSetAsync();
+    }
+
+    protected override bool ShouldRender()
+    {
+        base.ShouldRender();
+        Console.WriteLine("Dealers - ShouldRender");
+
+        return true;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        Console.WriteLine("Dealers - OnAfterRender - firstRender = " + firstRender);
+        base.OnAfterRender(firstRender);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Console.WriteLine("Dealers - OnAfterRenderAsync - firstRender = " + firstRender);
+
+        if (firstRender)
+        {
+            await LoadDealers();
+
+            isLoading = false;
+            StateHasChanged();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Dealers - Dispose");
+    }
+
+    private async Task LoadDealers()
+    {
+        await Task.Delay(500);
+
+        DealerList = filteredDealerList = await bookStoresService.GetAllAsync("Dealer/GetDealer");
+
+        if (DealerList == null)
+        {
+
+            RefreshRequest refreshRequest = new RefreshRequest();
+            refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+            refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+            var user1 = await userService.RefreshTokenAsync(refreshRequest);
+            await localStorageService.SetItemAsync("accessToken", user1.AccessToken);
+
+            DealerList = filteredDealerList = await bookStoresService.GetAllAsync("Dealer/GetDealer");
+        }
+
+        //if (DealerList != null)
+        //    DealerList = DealerList.OrderByDescending(auth => auth.DealerId).ToList();
+
+        StateHasChanged();
+    }
+
+
+
+    private async Task DeleteDealer(Guid DealerId)
+    {
+        var confirmado = await JSRuntime.Confirmar("Atencion!","¿Desea eliminar el Dealer?",TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            await bookStoresService.DeleteAsync("Dealer/DeleteDealer/", DealerId);
+            await LoadDealers();
+        }
+        //throw new Exception("DeleteDealer");
+    }
+
+    private void EditDealer(Dealer argDealer)
+    {
+        Dealer = argDealer;
+    }
+
+    private void OnSelectCityChange(ChangeEventArgs changeEventArgs)
+    {
+        SelectedCity = (string)changeEventArgs.Value;
+    }
+
+    private void OnDealerSearchTextChanged(ChangeEventArgs changeEventArgs, string columnTitle)
+    {
+        string searchText = changeEventArgs.Value.ToString();
+        IsGridViewFiltered = true;
+
+        switch (columnTitle)
+        {
+            case "Name":
+                filteredDealerList = DealerList.Where(auth => auth.Name.ToLower().Contains(searchText)).ToList();
+                break;
+            case "LocationCode":
+                filteredDealerList = DealerList.Where(auth => auth.LocationCode.ToLower().Contains(searchText)).ToList();
+                break;
+            case "DistributorCode":
+                filteredDealerList = DealerList.Where(auth => auth.DistributorCode.ToLower().Contains(searchText)).ToList();
+                break;
+            case "Country":
+                filteredDealerList = DealerList.Where(auth => auth.Country.ToLower().Contains(searchText)).ToList();
+                break;
+            case "State":
+                filteredDealerList = DealerList.Where(auth => auth.State.ToLower().Contains(searchText)).ToList();
+                break;
+            case "City":
+                filteredDealerList = DealerList.Where(auth => auth.City.ToLower().Contains(searchText)).ToList();
+                break;
+            case "Address":
+                filteredDealerList = DealerList.Where(auth => auth.Address.ToLower().Contains(searchText)).ToList();
+                break;
+            case "Phone":
+                filteredDealerList = DealerList.Where(auth => auth.Phone.ToLower().Contains(searchText)).ToList();
+                break;
+            default:
+                Console.WriteLine("Default case");
+                break;
+        }
+    }
+
+}

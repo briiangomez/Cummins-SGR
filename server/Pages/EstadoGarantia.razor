@@ -1,0 +1,50 @@
+﻿@page "/estado-garantia"
+@layout MainLayout
+@inherits Sgi.Pages.EstadoGarantiaComponent
+
+@using Radzen
+@using Radzen.Blazor
+@using Sgi.Models.SgiCore
+<RadzenContent Container="main">
+  <ChildContent>
+    <RadzenHeading Size="H1" Text="Estado Garantia">
+    </RadzenHeading>
+    <div class="row">
+      <div class="col-md-12">
+        <RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px" Text="Add" Click="@Button0Click">
+        </RadzenButton>
+        <RadzenGrid @ref="grid0" AllowFiltering="true" AllowPaging="true" AllowSorting="true" Data="@getEstadoGarantiaResult" TItem="Sgi.Models.SgiCore.EstadoGarantium" RowSelect="@Grid0RowSelect">
+          <Columns>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.EstadoGarantium" Property="Id" Title="Id">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.EstadoGarantium" Property="Created" FormatString="{0:dd/MM/yyyy}" Title="Created">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.EstadoGarantium" Property="Modified" FormatString="{0:dd/MM/yyyy}" Title="Modified">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.EstadoGarantium" Property="Deleted" FormatString="{0:dd/MM/yyyy}" Title="Deleted">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.EstadoGarantium" Property="Codigo" Title="Codigo">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.EstadoGarantium" Property="Nombre" Title="Nombre">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.EstadoGarantium" Property="ObservacionesGarantia" Title="Observaciones Garantia">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.EstadoGarantium" Property="ObservacionesProveedor" Title="Observaciones Proveedor">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.EstadoGarantium" Property="IdIncidencia" SortProperty="Incidencia.ConfiguracionCorta" FilterProperty="Incidencia.ConfiguracionCorta" Title="Incidencia">
+              <Template Context="data">
+              @(data.Incidencia?.ConfiguracionCorta)
+              </Template>
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.EstadoGarantium" Filterable="false" Sortable="false" Width="70px" TextAlign="TextAlign.Center">
+              <Template Context="sgiModelsSgiCoreEstadoGarantium">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@((args) =>GridDeleteButtonClick(args, sgiModelsSgiCoreEstadoGarantium))" @onclick:stopPropagation="true">
+                </RadzenButton>
+              </Template>
+            </RadzenGridColumn>
+          </Columns>
+        </RadzenGrid>
+      </div>
+    </div>
+  </ChildContent>
+</RadzenContent>

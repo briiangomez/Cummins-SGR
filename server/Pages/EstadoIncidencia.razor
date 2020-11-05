@@ -1,0 +1,47 @@
+﻿@page "/estado-incidencia"
+@layout MainLayout
+@inherits Sgi.Pages.EstadoIncidenciaComponent
+
+@using Radzen
+@using Radzen.Blazor
+@using Sgi.Models.SgiCore
+<RadzenContent Container="main">
+  <ChildContent>
+    <RadzenHeading Size="H1" Text="Estado Incidencia">
+    </RadzenHeading>
+    <div class="row">
+      <div class="col-md-12">
+        <RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px" Text="Add" Click="@Button0Click">
+        </RadzenButton>
+        <RadzenGrid @ref="grid0" AllowFiltering="true" AllowPaging="true" AllowSorting="true" Data="@getEstadoIncidenciaResult" TItem="Sgi.Models.SgiCore.EstadoIncidencium" RowSelect="@Grid0RowSelect">
+          <Columns>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.EstadoIncidencium" Property="Id" Title="Id">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.EstadoIncidencium" Property="Created" FormatString="{0:dd/MM/yyyy}" Title="Created">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.EstadoIncidencium" Property="Modified" FormatString="{0:dd/MM/yyyy}" Title="Modified">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.EstadoIncidencium" Property="Deleted" FormatString="{0:dd/MM/yyyy}" Title="Deleted">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.EstadoIncidencium" Property="IncidenciaId" SortProperty="Incidencia.ConfiguracionCorta" FilterProperty="Incidencia.ConfiguracionCorta" Title="Incidencia">
+              <Template Context="data">
+              @(data.Incidencia?.ConfiguracionCorta)
+              </Template>
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.EstadoIncidencium" Property="EstadoId" SortProperty="Estado.Descripcion" FilterProperty="Estado.Descripcion" Title="Estado">
+              <Template Context="data">
+              @(data.Estado?.Descripcion)
+              </Template>
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.EstadoIncidencium" Filterable="false" Sortable="false" Width="70px" TextAlign="TextAlign.Center">
+              <Template Context="sgiModelsSgiCoreEstadoIncidencium">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@((args) =>GridDeleteButtonClick(args, sgiModelsSgiCoreEstadoIncidencium))" @onclick:stopPropagation="true">
+                </RadzenButton>
+              </Template>
+            </RadzenGridColumn>
+          </Columns>
+        </RadzenGrid>
+      </div>
+    </div>
+  </ChildContent>
+</RadzenContent>

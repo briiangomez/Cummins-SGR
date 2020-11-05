@@ -1,0 +1,39 @@
+﻿@page "/permissions"
+@layout MainLayout
+@inherits Sgi.Pages.PermissionsComponent
+
+@using Radzen
+@using Radzen.Blazor
+@using Sgi.Models.SgiCore
+<RadzenContent Container="main">
+  <ChildContent>
+    <RadzenHeading Size="H1" Text="Permissions">
+    </RadzenHeading>
+    <div class="row">
+      <div class="col-md-12">
+        <RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px" Text="Add" Click="@Button0Click">
+        </RadzenButton>
+        <RadzenGrid @ref="grid0" AllowFiltering="true" AllowPaging="true" AllowSorting="true" Data="@getPermissionsResult" TItem="Sgi.Models.SgiCore.Permission" RowSelect="@Grid0RowSelect">
+          <Columns>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.Permission" Property="Id" Title="Id">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.Permission" Property="Created" FormatString="{0:dd/MM/yyyy}" Title="Created">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.Permission" Property="Modified" FormatString="{0:dd/MM/yyyy}" Title="Modified">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.Permission" Property="Deleted" FormatString="{0:dd/MM/yyyy}" Title="Deleted">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.Permission" Property="Name" Title="Name">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="Sgi.Models.SgiCore.Permission" Filterable="false" Sortable="false" Width="70px" TextAlign="TextAlign.Center">
+              <Template Context="sgiModelsSgiCorePermission">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@((args) =>GridDeleteButtonClick(args, sgiModelsSgiCorePermission))" @onclick:stopPropagation="true">
+                </RadzenButton>
+              </Template>
+            </RadzenGridColumn>
+          </Columns>
+        </RadzenGrid>
+      </div>
+    </div>
+  </ChildContent>
+</RadzenContent>

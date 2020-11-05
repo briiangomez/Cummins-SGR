@@ -1,0 +1,241 @@
+﻿@page "/addincidencia"
+@layout MainLayout
+@inherits Sgi.Pages.AddIncidenciaComponent
+
+@using Radzen
+@using Radzen.Blazor
+@using Sgi.Models
+@using System.Reactive.Linq;
+@using System.Reactive.Subjects
+@using Sgi.Services
+@inject GeocodingService GeocodingService
+<h2 style="text-align:center">
+    Formulario de Reclamo / Claim Form
+</h2>
+<div class="row">
+    <RadzenTemplateForm Data="@incidencia" Visible="@(incidencia != null)" TItem="Sgi.Models.IncidenciaApi" Submit="@Form0Submit">
+        <ChildContent>
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Fecha de esta solicitud / Date of this request:</h4>
+                    <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(incidencia.fechaIncidencia)" Name="fechaIncidencia" Placeholder="">
+                    </RadzenDatePicker>
+                </div>
+                <div class="col-md-6">
+                    <h4>WC/OT:</h4>
+                    <RadzenNumeric TValue="long" @bind-Value="@(incidencia.numeroIncidencia)" Name="numeroIncidencia" style="width: 100%" Placeholder="WC/OT" Disabled="true" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Datos del Cliente / Empresa</h4>
+
+                    <div class="form-group">
+                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.nombreContacto)" Placeholder="Cliente / Client" Name="nombreContacto">
+                        </RadzenTextBox>
+                        <br /><br />
+                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.telefonoFijoContacto)" Placeholder="Teléfono / Phone:" Name="telefonoFijoContacto">
+                        </RadzenTextBox>
+                        <br /><br />
+                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.emailContacto)" Placeholder="Email:" Name="emailContacto">
+                        </RadzenTextBox>
+                        <br /><br />
+                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.domicilioContacto)" Placeholder="Dirección / Address:" Name="domicilioContacto">
+                        </RadzenTextBox>
+
+                        <br /><br />
+                        <RadzenTextBox style="width: 100%" Placeholder="Persona de Contacto / Contact Person:">
+                        </RadzenTextBox>
+                        <br /><br />
+                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.telefonoCelularContacto)" Placeholder="Teléfono / Phone:" Name="telefonoCelularContacto">
+                        </RadzenTextBox>
+                        <br /><br />
+                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.emailContacto)" Placeholder="Email:">
+                        </RadzenTextBox>
+                        <br /><br />
+                        <Radzen.Blazor.RadzenTextBox @bind-Value="@(incidencia.DireccionInspeccion)" Placeholder="Dirección de inspección / Inspection Address:" Name="DireccionInspeccion" style="width: 100%" @oninput="onTextChanged"></Radzen.Blazor.RadzenTextBox>
+                        <RadzenNumeric style="width: 100%" @bind-Value="@(incidencia.latitudGps)" Visible="false" Name="latitudGps">
+                        </RadzenNumeric>
+                        <RadzenNumeric style="width: 100%" @bind-Value="@(incidencia.longitudGps)" Visible="false" Name="longitudGps">
+                        </RadzenNumeric>
+                        <br />
+                        @if (IsLoading)
+                        {
+                            <Radzen.Blazor.RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="margin: 20px"></Radzen.Blazor.RadzenProgressBar>
+                        }
+
+                        @if (Results.Length > 0)
+                        {
+                            <Radzen.Blazor.RadzenGrid Data="Results" RowSelect="@OnRowSelect" TItem="GeocodingResult">
+                                <Columns>
+                                    <Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="FormattedAddress" Title="Address">
+                                        <FooterTemplate>
+                                            Total Results: <b>@Results.Count()</b>
+                                        </FooterTemplate>
+                                    </Radzen.Blazor.RadzenGridColumn>
+                                    @*<Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="Geometry.Location.Lat" Title="Latitude" />
+                    <Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="Geometry.Location.Lng" Title="Longitude" />*@
+                                </Columns>
+                            </Radzen.Blazor.RadzenGrid>
+                        }
+
+
+                        @if (showMap)
+                        {
+                            <br />
+                            <Radzen.Blazor.RadzenGoogleMap Zoom="@zoom"
+                                                           style="height:400px"
+                                                           ApiKey="AIzaSyCBhlrEoE5ndgXMCeI7zyq0dK4MJksa8Ak"
+                                                           Center="@(posMap)"
+                                                           MapClick="@MapClick">
+                                <Markers>
+                                    @if (pos != null)
+                                    {
+                                        <Radzen.Blazor.RadzenGoogleMapMarker Title="@Address" Label="@Address" Position="@(pos)" />
+                                    }
+                                </Markers>
+                            </Radzen.Blazor.RadzenGoogleMap>
+                        }
+                        <br /><br />
+                        <h3>Sintoma</h3>
+                        <RadzenDropDown @bind-Value="@(incidencia.Sintoma)" AllowClear="true" Placeholder="Seleccione Sintoma" Data="@sims" style="width: 100%;" TextProperty="Sintoma" ValueProperty="ID" Name="Sintoma">
+                        </RadzenDropDown>
+                        <br /><br />
+                        <h3>Es Garantia</h3>
+                        <RadzenCheckBox @bind-Value="@CheckBox1Value" Style="margin-bottom: 20px" TValue="bool" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h4>Datos del Motor / Equipo</h4>
+                    <div class="form-group">
+                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.ModeloMotor)" Placeholder="Modelo Motor / Engine Model:" Name="ModeloMotor">
+                        </RadzenTextBox>
+                        <br /><br />
+                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.numeroMotor)" Placeholder="Nro. de Motor (ESN):" Name="numeroMotor">
+                        </RadzenTextBox>
+                        <br /><br />
+                        <h3>Hs o Km del Motor / Engine Hours or Km:</h3>
+                        <RadzenNumeric style="display: block; width: 100%" @bind-Value="@(incidencia.horasTractor)" Placeholder="Hs o Km del Motor / Engine Hours or Km:" Name="horasTractor">
+                        </RadzenNumeric>
+                        <br /><br />
+                        <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(incidencia.fechaCompra)" Name="fechaCompra" Placeholder="Fecha de compra (Adjuntar factura) / Date of Purchase:">
+                        </RadzenDatePicker>
+                        <input type="file" for="Name" class="form-control" />
+                        <br /><br />
+                        <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(incidencia.fechaInicioGarantia)" Name="fechaInicioGarantia" Placeholder="Fecha de incio Garantía / Warranty Start Date:">
+                        </RadzenDatePicker>
+                        <br /><br />
+                        <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(incidencia.fechaFalla)" Name="fechaFalla" Placeholder="Fecha de falla / Failure date:">
+                        </RadzenDatePicker>
+                        <br /><br />
+                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.Equipo)" Placeholder="Equipo / Equipment:" Name="Equipo">
+                        </RadzenTextBox>
+                        <br /><br />
+                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.ModeloEquipo)" Placeholder="Modelo Equipo / Equipment Model:" Name="ModeloEquipo">
+                        </RadzenTextBox>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <h3 style="text-align:center">
+                    Reclamo del Cliente / Customer Complaint
+                </h3>
+                <div class="form-group">
+                    <textarea class="form-control" cols="10" rows="10"></textarea>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="form-group">
+                    <h3 class="alert alert-warning" role="alert">
+                        Importante: De surgir del diagnóstico realizado por el personal técnico de Cummins que no se trata de una falla de producto cubierta por la garantía Cummins, los gastos del servicio serán a cargo del cliente.
+                    </h3>
+                </div>
+                <div class="row">
+                    <div class="col offset-sm-3">
+                        <RadzenButton ButtonType="ButtonType.Submit" Icon="save" Text="Crear Incidencia" ButtonStyle="ButtonStyle.Primary">
+                        </RadzenButton>
+                        <RadzenButton ButtonStyle="ButtonStyle.Light" Text="Cancelar" Click="@Button2Click">
+                        </RadzenButton>
+                    </div>
+                </div>
+            </div>
+        </ChildContent>
+    </RadzenTemplateForm>
+</div>
+
+@code {
+
+    int zoom = 5;
+
+    bool showMap;
+
+    public GoogleMapPosition pos;
+
+    public GoogleMapPosition posMap = new GoogleMapPosition() { Lat = -34.29403345819787, Lng = -64.03364269523182 };
+
+    public double? latitud;
+
+    public double? longitud;
+
+    Dictionary<DateTime, string> events = new Dictionary<DateTime, string>();
+
+    void MapClick(GoogleMapClickEventArgs args)
+    {
+        events.Add(DateTime.Now, $"Map clicked at Lat: {args.Position.Lat}, Lng: {args.Position.Lng}");
+        StateHasChanged();
+    }
+
+
+    Subject<string> addressSubject = new Subject<string>();
+
+    public string Address { get; set; }
+
+    public string GeoLocation { get; set; }
+
+    public bool IsLoading { get; set; }
+
+    private GeocodingResult[] Results { get; set; } = new GeocodingResult[0];
+
+    void onTextChanged(ChangeEventArgs args)
+    {
+        addressSubject.OnNext(args.Value.ToString());
+    }
+
+    protected override void OnInitialized()
+    {
+        addressSubject
+            .Throttle(TimeSpan.FromMilliseconds(300))
+            .DistinctUntilChanged()
+            .Subscribe(OnAddressChanged);
+    }
+
+
+    private void OnRowSelect(GeocodingResult row)
+    {
+        Address = row.FormattedAddress;
+        GeoLocation = $"Lat:{row.Geometry.Location.Lat}, Lng: {row.Geometry.Location.Lng}";
+        Results = new GeocodingResult[0];
+        pos = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
+        posMap = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
+        incidencia.latitudGps = (long)row.Geometry.Location.Lat;
+        incidencia.longitudGps = (long)row.Geometry.Location.Lng;
+        zoom = 16;
+        showMap = true;
+        StateHasChanged();
+    }
+
+    private async void OnAddressChanged(string address)
+    {
+        Address = address;
+        IsLoading = true;
+        GeoLocation = "";
+        await InvokeAsync(() => StateHasChanged());
+
+        var response = await GeocodingService.FindAsync(address);
+        Results = response.Results;
+
+        IsLoading = false;
+
+        await InvokeAsync(() => StateHasChanged());
+    }
+}

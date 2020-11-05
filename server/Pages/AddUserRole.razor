@@ -1,0 +1,81 @@
+﻿@page "/add-user-role"
+@layout MainLayout
+@inherits Sgi.Pages.AddUserRoleComponent
+
+@using Radzen
+@using Radzen.Blazor
+@using Sgi.Models.SgiCore
+<RadzenContent Container="main">
+  <ChildContent>
+    <div class="row">
+      <div class="col-md-12">
+        <RadzenTemplateForm Data="@userrole" Visible="@(userrole != null)" TItem="Sgi.Models.SgiCore.UserRole" Submit="@Form0Submit">
+          <ChildContent>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Created" Component="Created" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(userrole.Created)" Name="Created">
+                </RadzenDatePicker>
+              </div>
+            </div>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Modified" Component="Modified" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(userrole.Modified)" Name="Modified">
+                </RadzenDatePicker>
+              </div>
+            </div>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Deleted" Component="Deleted" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(userrole.Deleted)" Name="Deleted">
+                </RadzenDatePicker>
+              </div>
+            </div>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="User" Component="UserId" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenDropDownDataGrid Data="@getUsersForUserIdResult" TextProperty="username" ValueProperty="Id" Placeholder="Choose User" ShowSearch="false" style="display: block; width: 100%" @bind-Value="@(userrole.UserId)" Name="UserId">
+                </RadzenDropDownDataGrid>
+                <RadzenRequiredValidator Component="UserId" Text="UserId is required" style="position: absolute">
+                </RadzenRequiredValidator>
+              </div>
+            </div>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Role" Component="RoleId" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenDropDownDataGrid Data="@getRolesForRoleIdResult" TextProperty="code" ValueProperty="Id" Placeholder="Choose Role" ShowSearch="false" style="display: block; width: 100%" @bind-Value="@(userrole.RoleId)" Name="RoleId">
+                </RadzenDropDownDataGrid>
+                <RadzenRequiredValidator Component="RoleId" Text="RoleId is required" style="position: absolute">
+                </RadzenRequiredValidator>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col offset-sm-3">
+                <RadzenButton ButtonType="ButtonType.Submit" Icon="save" Text="Save" ButtonStyle="ButtonStyle.Primary">
+                </RadzenButton>
+                <RadzenButton ButtonStyle="ButtonStyle.Light" Text="Cancel" Click="@Button2Click">
+                </RadzenButton>
+              </div>
+            </div>
+          </ChildContent>
+        </RadzenTemplateForm>
+      </div>
+    </div>
+  </ChildContent>
+</RadzenContent>

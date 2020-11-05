@@ -22,6 +22,7 @@ namespace SGI.ApplicationCore.Services
         protected readonly IRepository<Estado> _Estadorepository;
         protected readonly IRepository<Motor> _MotorRepository;
         protected readonly IRepository<EstadoIncidencia> _EstadoIncidenciarepository;
+        protected readonly IRepository<ClienteIncidencia> _ClienteIncidenciarepository;
         protected readonly IRepository<MotorIncidencia> _MotorIncidenciaRepository;
         protected readonly IRepository<Dealer> _DealerRepository;
         private readonly IUnitOfWork _unitOfWork;
@@ -29,7 +30,7 @@ namespace SGI.ApplicationCore.Services
         public IncidenciaApiModelService(ILogger<ServiceBase<IncidenciaApi>> logger, IRepository<Incidencia> repository, IRepository<Falla> Fallarepository,
             IRepository<Cliente> Clienterepository, IRepository<EstadoGarantia> EstadoGarantiarepository, IRepository<Estado> Estadorepository,
             IRepository<Motor> MotorRepository, IRepository<Dealer> DealerRepository, IRepository<EstadoIncidencia> EstadoIncidenciarepository,
-            IRepository<MotorIncidencia> MotorIncidenciaRepository, IUnitOfWork unitOfWork)
+            IRepository<MotorIncidencia> MotorIncidenciaRepository, IRepository<ClienteIncidencia> ClienteIncidenciarepository, IUnitOfWork unitOfWork)
         {
             _logger = logger;
             _repository = repository;
@@ -41,6 +42,7 @@ namespace SGI.ApplicationCore.Services
             _DealerRepository = DealerRepository;
             _EstadoIncidenciarepository = EstadoIncidenciarepository;
             _MotorIncidenciaRepository = MotorIncidenciaRepository;
+            _ClienteIncidenciarepository = ClienteIncidenciarepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -70,7 +72,7 @@ namespace SGI.ApplicationCore.Services
             var res = new List<IncidenciaApi>();
             try
             {
-                var reps = _repository.GetAll(null, o => o.FechaIncidencia >= desde && o.FechaIncidencia <= hasta, null, false).ToList();
+                var reps = _repository.GetAll().ToList();
 
                 foreach (var inc in reps)
                 {
@@ -165,7 +167,8 @@ namespace SGI.ApplicationCore.Services
                 var motInc = _MotorIncidenciaRepository.GetAll(null, o => o.IncidenciaId == inc.Id, null, false).FirstOrDefault();
                 var mot = _MotorRepository.GetAll(null, o => o.Id == motInc.MotorId, null, false).FirstOrDefault();
                 var falla = _Fallarepository.GetAll(null,o => o.IdIncidencia == inc.Id,null,false).FirstOrDefault();
-                var cliente = _Clienterepository.GetAll(null, o => o.IdIncidencia == inc.Id, null, false).FirstOrDefault();
+                var cliInc = _ClienteIncidenciarepository.GetAll(null, o => o.IncidenciaId == inc.Id, null, false).FirstOrDefault();
+                var cliente = _Clienterepository.GetAll(null, o => o.Id == cliInc.ClienteId, null, false).FirstOrDefault();
                 var estadoG = _EstadoGarantiarepository.GetAll(null, o => o.IdIncidencia == inc.Id, null, false).FirstOrDefault();
                 var estInc = _EstadoIncidenciarepository.GetAll(null, o => o.IncidenciaId == inc.Id, new List<string> { "Fecha" }, true).FirstOrDefault();
                 var estado = _Estadorepository.GetAll(null, o => o.Id == estInc.Id,null,false).FirstOrDefault();
@@ -193,16 +196,16 @@ namespace SGI.ApplicationCore.Services
                 incidencia.nombreConcesionario = dealer.Name;
                 incidencia.emailConcesionario = dealer.Email;
                 incidencia.telefonoConcesionario = dealer.Phone;
-                incidencia.tipoDniContacto = cliente.TipoDNIContacto;
-                incidencia.numeroDocumento = cliente.DNIContacto;
+                incidencia.tipoDniContacto = cliente.TipoDNI;
+                incidencia.numeroDocumento = cliente.DNI;
                 incidencia.domicilioContacto = cliente.Direccion;
                 incidencia.localidadContacto = cliente.Localidad;
                 incidencia.provinciaContacto = cliente.Provincia;
-                incidencia.telefonoFijoContacto = cliente.TelContacto;
-                incidencia.emailContacto = cliente.EmailContacto;
+                incidencia.telefonoFijoContacto = cliente.Telefono;
+                incidencia.emailContacto = cliente.Email;
                 incidencia.latitudGpsContacto = cliente.LatitudGpsContacto;
                 incidencia.longitudGpsContacto = cliente.LongitudGpsContacto;
-                incidencia.idFalla = falla.Codigo;
+                incidencia.idFalla = falla.IdFalla;
                 incidencia.nombreFalla = falla.Nombre;
                 incidencia.observacionesFalla = falla.Observaciones;
                 incidencia.idEstadoIncidencia = estado.Codigo;

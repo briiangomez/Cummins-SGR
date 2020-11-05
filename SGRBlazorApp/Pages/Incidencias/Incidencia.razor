@@ -1,0 +1,36 @@
+﻿@page "/incidencia"
+@layout MainLayout
+@inherits SGRBlazorApp.Pages.IncidenciaComponent
+
+@using Radzen
+@using Radzen.Blazor
+<RadzenContent Container="main">
+  <ChildContent>
+    <RadzenHeading Size="H1" Text="Reclamos">
+    </RadzenHeading>
+    <div class="row">
+      <div class="col-md-12">
+        <RadzenGrid @ref="grid0" AllowFiltering="true" AllowPaging="true" AllowSorting="true" Data="@getIncidenciaResult" TItem="SGRBlazorApp.Data.IncidenciaApi" RowSelect="@Grid0RowSelect">
+          <Columns>
+            <RadzenGridColumn TItem="SGRBlazorApp.Data.IncidenciaApi" Property="numeroIncidencia" Title="WO">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="SGRBlazorApp.Data.IncidenciaApi" Property="fechaIncidencia" FormatString="{0:dd/MM/yyyy}" Title="Fecha Incidencia">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="SGRBlazorApp.Data.IncidenciaApi" Property="nombreContacto" Title="Cliente">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="SGRBlazorApp.Data.IncidenciaApi" Property="domicilioContacto" Title="Domicilio Cliente">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="SGRBlazorApp.Data.IncidenciaApi" Property="Equipo" Title="Equipo">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="SGRBlazorApp.Data.IncidenciaApi" Property="ModeloEquipo" Title="Modelo Equipo">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="SGRBlazorApp.Data.IncidenciaApi" Property="DireccionInspeccion" Title="Dirección de inspección">
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="SGRBlazorApp.Data.IncidenciaApi" Property="nombreEstadoIncidencia" Title="Estado">
+            </RadzenGridColumn>
+          </Columns>
+        </RadzenGrid>
+      </div>
+    </div>
+  </ChildContent>
+</RadzenContent>

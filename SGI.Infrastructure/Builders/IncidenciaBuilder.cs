@@ -22,7 +22,7 @@ namespace SGI.Infrastructure.Builders
             entityBuilder.Property(x => x.FechaCierre).HasColumnName("FechaCierre").HasColumnType("datetime");
             entityBuilder.Property(x => x.NroReclamoConcesionario).HasColumnName("NroReclamoConcesionario").HasColumnType("int");
             entityBuilder.Property(x => x.NroReclamoCummins).HasColumnName("NroReclamoCummins").HasColumnType("int");
-            entityBuilder.Property(x => x.Descripcion).HasColumnName("Modelo").HasColumnType("varchar(MAX)");
+            entityBuilder.Property(x => x.Descripcion).HasColumnName("Descripcion").HasColumnType("varchar(MAX)");
             entityBuilder.Property(x => x.DireccionInspeccion).HasColumnName("DireccionInspeccion").HasColumnType("varchar(MAX)");
             entityBuilder.Property(x => x.LatitudGps).HasColumnName("LatitudGps").HasColumnType("float");
             entityBuilder.Property(x => x.LongitudGps).HasColumnName("LongitudGps").HasColumnType("float");

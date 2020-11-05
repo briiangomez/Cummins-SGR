@@ -1,0 +1,177 @@
+﻿@page "/addUser"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@using SGRBlazorApp.Shared
+@inject ISgrService<Dealer> dealerService
+@inject ISgrService<Role> roleService
+@inject IUserService userService
+@inject ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navigationManager
+@implements IDisposable
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject Blazored.LocalStorage.ILocalStorageService localStorageService
+<div class="col-12">
+
+    <EditForm Model="@user" OnValidSubmit="@RegisterUser">
+        <div>
+            <h3 style="font-weight:bold; color:#EF272C">Nuevo Usuario</h3>
+        </div>
+        <div>
+            <br />
+        </div>
+        <div class="col-12 row">
+            <input class="form-control col-12" @bind="user.EmailAddress" placeholder="Usuario"  required/>
+        </div>
+        <br />
+        <div class="col-12 row">
+            <input type="password" class="form-control col-12" @bind="user.Password" placeholder="Password" required/>
+        </div>
+        <br />
+        <div class="col-12 row">
+            <input type="password" class="form-control col-12" @bind="user.ConfirmPassword" placeholder="Confirmar password" required/>
+        </div>
+        <br />
+        <div class="col-12 row">
+            <input class="form-control col-12" @bind="user.FirstName" placeholder="Nombre" required/>
+        </div>
+        <br />
+        <div class="col-12 row">
+            <input  class="form-control col-12" @bind="user.LastName" placeholder="Apellido" required/>
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Rol :</label>
+            <select class="form-control col-10" @onchange="OnChangeEvent" name="IdRole" id="IdRole">
+                <option value="">Seleccione Rol...</option>
+                @if (Roles != null)
+                {
+                    foreach (var item in Roles)
+                    {
+                        <option value="@item.Id">@item.Descripcion</option>
+                    }
+                }
+            </select>
+            &nbsp;<ValidationMessage For="@(() => user.IdRole)" />
+        </div>
+        <br />
+        @if (isDealer)
+        {
+            <div class="col-12 row">
+                <label class="col-2 font-weight-bold">Dealer :</label>
+                <select class="form-control col-10" @onchange="OnChangeEvent2" name="IdDealer" id="IdDealer">
+                    <option value="">Seleccione Dealer...</option>
+                    @if (Dealers != null)
+                    {
+                        foreach (var item in Dealers)
+                        {
+                            <option value="@item.Id">@item.Name</option>
+                        }
+                    }
+                </select>
+                &nbsp;<ValidationMessage For="@(() => user.IdRole)" />
+            </div>
+        }
+        <br />
+        <div class="col-12 row">
+            <span class="col-12"></span>
+            <input type="submit" class="form-control col-6 btn btn-primary" value="Sign up" />
+            
+        </div>
+        <br />
+        <div class="col-12 row" style="text-align:left; font-weight:bold">
+            <span class="col-12">@LoginMesssage</span>
+        </div>
+    </EditForm>
+    </div>
+    <br />
+
+
+@code
+{
+        private User user;
+        public string LoginMesssage { get; set; }
+        public List<Role> Roles { get; set; }
+        
+        public bool isDealer { get; set; }
+        public string TipoDNI { get; set; }
+        public string RecordName { get; set; }
+        public Guid IdRole { get; set; }
+        public Guid IdDealer { get; set; }
+        public List<Dealer> Dealers { get; set; }
+
+        private void OnChangeEvent(ChangeEventArgs changeEventArgs)
+        {
+
+            if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Rol...")
+            {
+                IdRole = Guid.Parse((string)changeEventArgs.Value);
+                user.IdRole = IdRole;
+                if (Roles.FirstOrDefault(o => o.Id == IdRole).Descripcion == "Dealer")
+                {
+                    isDealer = true;
+                }
+                else
+                {
+                    isDealer = false;
+                    user.IdDealer = null;
+                }
+
+            }
+            else
+            {
+                isDealer = false;
+                user.IdDealer = null;
+            }
+        }
+
+        private void OnChangeEvent2(ChangeEventArgs changeEventArgs)
+        {
+            if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Dealer...")
+            {
+                IdDealer = Guid.Parse((string)changeEventArgs.Value);
+                user.IdDealer = IdDealer;
+            }
+            else
+            {
+                  user.IdDealer = null;
+            }
+        }
+
+        protected async override Task OnInitializedAsync()
+        {
+            user = new User();
+            isDealer = false;
+            Dealers = await dealerService.GetAllAsync("Dealer/GetDealer");
+            Roles = await roleService.GetAllAsync("Role/GetRole");
+            //return base.OnInitializedAsync();
+
+        }
+
+        public void Dispose()
+        {
+            Console.WriteLine("Users - Dispose");
+        }
+
+        private async Task<bool> RegisterUser()
+        {
+            //assume that user is valid
+            user.Source = "APPC";
+            var returnedUser = await userService.RegisterUserAsync(user);
+
+            if (returnedUser.EmailAddress != null)
+            {
+                //((CustomAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsAuthenticated(returnedUser);
+                NavigationManager.NavigateTo("/Usuarios");
+            }
+            else
+            {
+                LoginMesssage = "Error creando usuario, intente nuevamente";
+            }
+
+            return await Task.FromResult(true);
+        }
+    }

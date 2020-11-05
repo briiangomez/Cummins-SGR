@@ -1,0 +1,116 @@
+﻿@using System.Reactive.Linq;
+@using System.Reactive.Subjects
+@using SGRBlazorApp.Services
+@inject GeocodingService GeocodingService
+
+    <div class="row">
+        <div class="col-md-12">
+            <Radzen.Blazor.RadzenTextBox Placeholder="" style="width: 100%" @oninput="onTextChanged"></Radzen.Blazor.RadzenTextBox>
+            <br />
+            @if (IsLoading)
+            {
+                <Radzen.Blazor.RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="margin: 20px"></Radzen.Blazor.RadzenProgressBar>
+            }
+
+            @if (Results.Length > 0)
+            {
+                <Radzen.Blazor.RadzenGrid Data="Results" RowSelect="@OnRowSelect" TItem="GeocodingResult">
+                    <Columns>
+                        <Radzen.Blazor.RadzenGridColumn Width="100%" TItem="GeocodingResult" Property="FormattedAddress" >
+                            <FooterTemplate>
+                                Total Results: <b>@Results.Count()</b>
+                            </FooterTemplate>
+                        </Radzen.Blazor.RadzenGridColumn>
+                        @*<Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="Geometry.Location.Lat" Title="Latitude" />
+                        <Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="Geometry.Location.Lng" Title="Longitude" />*@
+                    </Columns>
+                </Radzen.Blazor.RadzenGrid>
+            }
+
+
+            <br />
+            <Radzen.Blazor.RadzenGoogleMap Zoom="@zoom"
+                                           style="height:500px"
+                                           ApiKey="AIzaSyCBhlrEoE5ndgXMCeI7zyq0dK4MJksa8Ak"
+                                           Center="@(posMap)"
+                                           MapClick="@MapClick">
+                <Markers>
+                    @if (pos != null)
+                    {
+                        <Radzen.Blazor.RadzenGoogleMapMarker Title="@Address" Label="@Address" Position="@(pos)" />
+                    }
+                </Markers>
+            </Radzen.Blazor.RadzenGoogleMap>
+        </div>
+    </div>
+            @code {
+
+                int zoom = 5;
+
+                bool showMadridMarker;
+
+                public GoogleMapPosition pos;
+
+                public GoogleMapPosition posMap = new GoogleMapPosition() { Lat = -34.29403345819787, Lng = -64.03364269523182 };
+
+                public string ciudad;
+
+                Dictionary<DateTime, string> events = new Dictionary<DateTime, string>();
+
+                void MapClick(GoogleMapClickEventArgs args)
+                {
+                    events.Add(DateTime.Now, $"Map clicked at Lat: {args.Position.Lat}, Lng: {args.Position.Lng}");
+                    StateHasChanged();
+                }
+
+
+                Subject<string> addressSubject = new Subject<string>();
+
+                public string Address { get; set; }
+
+                public string GeoLocation { get; set; }
+
+                public bool IsLoading { get; set; }
+
+                private GeocodingResult[] Results { get; set; } = new GeocodingResult[0];
+
+                void onTextChanged(ChangeEventArgs args)
+                {
+                    addressSubject.OnNext(args.Value.ToString());
+                }
+
+                protected override void OnInitialized()
+                {
+                    addressSubject
+                        .Throttle(TimeSpan.FromMilliseconds(300))
+                        .DistinctUntilChanged()
+                        .Subscribe(OnAddressChanged);
+                }
+
+
+                private void OnRowSelect(GeocodingResult row)
+                {
+                    Address = row.FormattedAddress;
+                    GeoLocation = $"Lat:{row.Geometry.Location.Lat}, Lng: {row.Geometry.Location.Lng}";
+                    Results = new GeocodingResult[0];
+                    pos = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
+                    posMap = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
+                    zoom = 16;
+                    StateHasChanged();
+                }
+
+                private async void OnAddressChanged(string address)
+                {
+                    Address = address;
+                    IsLoading = true;
+                    GeoLocation = "";
+                    await InvokeAsync(() => StateHasChanged());
+
+                    var response = await GeocodingService.FindAsync(address);
+                    Results = response.Results;
+
+                    IsLoading = false;
+
+                    await InvokeAsync(() => StateHasChanged());
+                }
+            }

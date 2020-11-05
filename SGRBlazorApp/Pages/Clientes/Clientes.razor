@@ -1,0 +1,233 @@
+﻿@page "/Clientes"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@using SGRBlazorApp.Shared
+@inject ISgrService<Cliente> bookStoresService
+@inject IUserService userService
+@inject ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<div class="col-12">
+
+    <h3><b>Listado de Clientes</b></h3>
+    <br />
+    <AuthorizeView  Roles="Administrador" Policy="SeniorEmployee">
+        <Authorized>
+            <a class="btn btn-primary" style="text-underline-position:below; cursor:pointer; color:blue" href="/addCliente">Nuevo Cliente</a>
+        </Authorized>
+    </AuthorizeView>
+    <br />
+    <SpinLoader IsLoading="isLoading">
+        <LoadingTemplate>
+            <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
+                <br /><br />
+                <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
+            </div>
+        </LoadingTemplate>
+        <ContentTemplate>
+            @if (filteredClienteList != null)
+            {
+                <GridView Items="filteredClienteList" ReloadList="IsGridViewFiltered">
+                    <GridColumns>
+                        <GridColumn ColumnTitle="Nombre"
+                                    OnSearchTextChanged="@(e => OnClienteSearchTextChanged(e, "Nombre"))"></GridColumn>
+                        <GridColumn ColumnTitle="DNI"
+                                    OnSearchTextChanged="@(e => OnClienteSearchTextChanged(e, "Dni"))"></GridColumn>
+                        <GridColumn ColumnTitle="Telefono"
+                                    OnSearchTextChanged="@(e => OnClienteSearchTextChanged(e, "Telefono"))"></GridColumn>
+                        <GridColumn ColumnTitle="Celular"
+                                    OnSearchTextChanged="@(e => OnClienteSearchTextChanged(e, "Celular"))"></GridColumn>
+                        <GridColumn ColumnTitle="Direccion"
+                                    OnSearchTextChanged="@(e => OnClienteSearchTextChanged(e, "Direccion"))"></GridColumn>
+                        <GridColumn ColumnTitle="Email"
+                                    OnSearchTextChanged="@(e => OnClienteSearchTextChanged(e, "Email"))"></GridColumn>
+
+                        <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+                            <Authorized>
+                                <GridColumn ColumnTitle="Actions"></GridColumn>
+                            </Authorized>
+                        </AuthorizeView>
+                    </GridColumns>
+                    <GridRow Context="Cliente">
+                        <td>@Cliente.Nombre</td>
+                        <td>@Cliente.Dni</td>
+                        <td>@Cliente.Telefono</td>
+                        <td>@Cliente.Celular</td>
+                        <td>@Cliente.Direccion</td>
+                        <td>@Cliente.Email</td>
+                        <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+                            <Authorized>
+                                <th>
+                                    <a style="text-underline-position:below; cursor:pointer; color:blue" href=@string.Format("/editCliente/{0}", Cliente.Id)>Editar</a> |
+                                    <a style="text-underline-position:below; cursor:pointer; color:blue" @onclick="(() => DeleteCliente(Cliente.Id))">Eliminar</a>
+                                </th>
+                            </Authorized>
+                        </AuthorizeView>
+                    </GridRow>
+                </GridView>
+            }
+        </ContentTemplate>
+    </SpinLoader>
+</div>
+
+@code {
+
+    public Cliente Cliente { get; set; }
+    public List<Cliente> ClienteList { get; set; }
+    public List<Cliente> filteredClienteList { get; set; }
+    public string SelectedCity { get; set; }
+
+    public bool IsVisible { get; set; }
+    public bool Result { get; set; }
+    public string RecordName { get; set; }
+    public string[] Cities { get; set; }
+    public bool IsGridViewFiltered { get; set; }
+    bool isLoading = true;
+
+    ElementReference firstNameTextBox;
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Clientes - OnInitialized");
+        base.OnInitialized();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("Clientes - OnInitializedAsync");
+
+        Cliente = new Cliente();
+        ClienteList = new List<Cliente>();
+        //ClienteList = await ClienteService.GetClientes();
+
+        await base.OnInitializedAsync();
+    }
+
+    protected override void OnParametersSet()
+    {
+        Console.WriteLine("Clientes - OnParametersSet");
+        base.OnParametersSet();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Console.WriteLine("Clientes - OnParametersSetAsync");
+        await base.OnParametersSetAsync();
+    }
+
+    protected override bool ShouldRender()
+    {
+        base.ShouldRender();
+        Console.WriteLine("Clientes - ShouldRender");
+
+        return true;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        Console.WriteLine("Clientes - OnAfterRender - firstRender = " + firstRender);
+        base.OnAfterRender(firstRender);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Console.WriteLine("Clientes - OnAfterRenderAsync - firstRender = " + firstRender);
+
+        if (firstRender)
+        {
+            await LoadClientes();
+
+            isLoading = false;
+            StateHasChanged();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Clientes - Dispose");
+    }
+
+    private async Task LoadClientes()
+    {
+        await Task.Delay(500);
+
+        ClienteList = filteredClienteList = await bookStoresService.GetAllAsync("Clientes/GetClientes");
+
+        if (ClienteList == null)
+        {
+
+            RefreshRequest refreshRequest = new RefreshRequest();
+            refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+            refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+            var user1 = await userService.RefreshTokenAsync(refreshRequest);
+            await localStorageService.SetItemAsync("accessToken", user1.AccessToken);
+
+            ClienteList = filteredClienteList = await bookStoresService.GetAllAsync("Clientes/GetClientes");
+        }
+
+        //if (ClienteList != null)
+        //    ClienteList = ClienteList.OrderByDescending(auth => auth.ClienteId).ToList();
+
+        StateHasChanged();
+    }
+
+
+
+    private async Task DeleteCliente(Guid ClienteId)
+    {
+        var confirmado = await JSRuntime.Confirmar("Atencion!","¿Desea eliminar el Cliente?",TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            await bookStoresService.DeleteAsync("Cliente/DeleteCliente/", ClienteId);
+            await LoadClientes();
+        }
+        //throw new Exception("DeleteCliente");
+    }
+
+    private void EditCliente(Cliente argCliente)
+    {
+        Cliente = argCliente;
+    }
+
+    private void OnSelectCityChange(ChangeEventArgs changeEventArgs)
+    {
+        SelectedCity = (string)changeEventArgs.Value;
+    }
+
+    private void OnClienteSearchTextChanged(ChangeEventArgs changeEventArgs, string columnTitle)
+    {
+        string searchText = changeEventArgs.Value.ToString();
+        IsGridViewFiltered = true;
+
+        switch (columnTitle)
+        {
+            case "Nombre":
+                filteredClienteList = ClienteList.Where(auth => auth.Nombre.ToLower().Contains(searchText)).ToList();
+                break;
+            case "DNI":
+                filteredClienteList = ClienteList.Where(auth => auth.Dni.ToLower().Contains(searchText)).ToList();
+                break;
+            case "Telefono":
+                filteredClienteList = ClienteList.Where(auth => auth.Telefono.ToLower().Contains(searchText)).ToList();
+                break;
+            case "Celular":
+                filteredClienteList = ClienteList.Where(auth => auth.Celular.ToLower().Contains(searchText)).ToList();
+                break;
+            case "Direccion":
+                filteredClienteList = ClienteList.Where(auth => auth.Direccion.ToLower().Contains(searchText)).ToList();
+                break;
+            case "Email":
+                filteredClienteList = ClienteList.Where(auth => auth.Email.ToLower().Contains(searchText)).ToList();
+                break;
+            default:
+                Console.WriteLine("Default case");
+                break;
+        }
+    }
+
+}

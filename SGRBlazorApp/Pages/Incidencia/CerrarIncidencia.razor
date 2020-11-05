@@ -1,0 +1,157 @@
+﻿@page "/cerrarIncidencia/{Id:guid}"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@using SGRBlazorApp.Shared
+@using System.Security.Claims
+@inject ISgrService<Incidencia> bookStoresService
+@inject ISgrService<IncidenciaApi> incidenciaApiService
+@inject ISgrService<Dealer> dealerService
+@inject ISgrService<Estado> estadoService
+@inject ISgrService<EstadoIncidencia> estadoIncidenciaService
+@inject IUserService userService
+@inject ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navigationManager
+@implements IDisposable
+@using System.Reactive.Linq;
+@using System.Reactive.Subjects
+@using SGRBlazorApp.Services
+@inject GeocodingService GeocodingService
+
+    <div class="col-12">
+        <h3><b>Informacion del Reclamo Nro @Incidencia.NumeroIncidencia</b></h3>
+        <hr />
+
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Estado Actual:</label>
+            <input class="form-control col-3" value="@IncidenciaApi.nombreEstadoIncidencia" readonly />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Equipo:</label>
+            <input class="form-control col-3" value="@IncidenciaApi.numeroMotor" readonly />
+        </div>
+        <br />
+        <h3><b>Ud ha solicitado Asistencia desde Cummins, por favor, a continuacion ingrese el detalle de la misma. Muchas gracias!</b></h3>
+        <br />
+        <div class="col-12 row">
+            <span class="col-2"></span>
+            <textarea class="form-control" cols="10" rows="10" @bind="@Observaciones"></textarea>
+        </div>
+        <div class="col-12 row">
+            <h3>Informe Tecnico (Adjuntar):</h3>
+            <input type="file" for="Name" class="form-control" />
+        </div>
+        <div class="col-12 row">
+            <h3>Documentacion (Adjuntar):</h3>
+            <input type="file" for="Name" class="form-control" />
+        </div>
+        <div class="col-12 row">
+            <h3>Imagenes (Adjuntar) - Opcional:</h3>
+            <input type="file" for="Name" class="form-control" />
+        </div>
+        <div class="col-12 row">
+            <span class="col-2"></span>
+            <a class="col-1 btn btn-success" @onclick="(() => RechazarIncidencia(Incidencia.Id))">Cerrar </a>
+            <span>&nbsp;</span>
+            <a class="col-1 btn btn-primary" href="/Incidencias">Cancelar</a>
+        </div>
+    </div>
+
+@code
+{
+    [Parameter]
+    public Guid Id { get; set; }
+    public Incidencia Incidencia { get; set; }
+    public IncidenciaApi IncidenciaApi { get; set; }
+    public List<IncidenciaApi> IncidenciaList { get; set; }
+    public List<EstadoIncidencia> estadoIncidencia { get; set; }
+    public List<Estado> estadosList { get; set; }
+    public string Observaciones { get; set; }
+    public Guid IdDealer { get; set; }
+    public List<Dealer> Dealers { get; set; }
+    public Dealer dealer { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+    bool IsUserAuthenticated;
+    bool IsDealer;
+
+    public User user1 { get; set; }
+    public RefreshRequest refreshRequest { get; set; }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Motors - Dispose");
+    }
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Clientes - OnInitialized");
+        base.OnInitialized();
+    }
+
+    private void OnChangeEvent2(ChangeEventArgs changeEventArgs)
+    {
+        if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Dealer...")
+        {
+            IdDealer = Guid.Parse((string)changeEventArgs.Value);
+            Incidencia.IdDealer = IdDealer;
+        }
+        //else
+        //{
+        //      Incidencia.IdDealer = null;
+        //}
+    }
+
+    private async Task RechazarIncidencia(Guid ClienteId)
+    {
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea confirmar el cierre del Reclamo?", TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            EstadoIncidencia estado = new EstadoIncidencia();
+            estado.IncidenciaId = ClienteId;
+            estado.EstadoId = estadosList.FirstOrDefault(o => o.Descripcion == "Cerrado").Id;
+            estado.Created = DateTime.Now;
+            estado.IdUser = user1.Id;
+            estado.Observacion = Observaciones;
+            await estadoIncidenciaService.SaveAsync("EstadoIncidencia/CreateEstadoIncidencia/", estado);
+            navigationManager.NavigateTo("/Incidencias");
+        }
+        //throw new Exception("DeleteCliente");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("Clientes - OnInitializedAsync");
+        Incidencia = new Incidencia();
+        IncidenciaApi = new IncidenciaApi();
+        Incidencia = await bookStoresService.GetByIdAsync("Incidencia/GetIncidencia/", Id);
+        IncidenciaList = await incidenciaApiService.GetAllAsync("Incidencia/GetIncidenciaApi");
+        IncidenciaApi = IncidenciaList.FirstOrDefault(o => o.Id == Id);
+        Dealers = await dealerService.GetAllAsync("Dealer/GetDealer");
+        dealer = Dealers.FirstOrDefault(o => o.Id == Incidencia.IdDealer.Value);
+        estadosList = new List<Estado>();
+        estadosList = await estadoService.GetAllAsync("Estados/GetEstados");
+
+        user = (await authenticationStateTask).User;
+
+
+
+        if (user.Identity.IsAuthenticated)
+            IsUserAuthenticated = true;
+
+        if (user.IsInRole("Dealer"))
+            IsDealer = true;
+
+        refreshRequest = new RefreshRequest();
+        refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+        refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+        user1 = await userService.RefreshTokenAsync(refreshRequest);
+
+        await base.OnInitializedAsync();
+    }
+}

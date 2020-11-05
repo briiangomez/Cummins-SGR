@@ -1,0 +1,81 @@
+﻿@page "/edit-estado-incidencium/{Id}"
+@layout MainLayout
+@inherits Sgi.Pages.EditEstadoIncidenciumComponent
+
+@using Radzen
+@using Radzen.Blazor
+@using Sgi.Models.SgiCore
+<RadzenContent Container="main">
+  <ChildContent>
+    <div class="row">
+      <div class="col-md-12">
+        <RadzenTemplateForm TItem="Sgi.Models.SgiCore.EstadoIncidencium" Data="@estadoincidencium" Visible="@(estadoincidencium != null)" Submit="@Form0Submit">
+          <ChildContent>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Created" Component="Created" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(estadoincidencium.Created)" Name="Created">
+                </RadzenDatePicker>
+              </div>
+            </div>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Modified" Component="Modified" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(estadoincidencium.Modified)" Name="Modified">
+                </RadzenDatePicker>
+              </div>
+            </div>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Deleted" Component="Deleted" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(estadoincidencium.Deleted)" Name="Deleted">
+                </RadzenDatePicker>
+              </div>
+            </div>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Incidencia" Component="IncidenciaId" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenDropDownDataGrid Data="@getIncidenciaForIncidenciaIdResult" TextProperty="ConfiguracionCorta" ValueProperty="Id" Placeholder="Choose Incidencium" ShowSearch="false" style="display: block; width: 100%" @bind-Value="@(estadoincidencium.IncidenciaId)" Name="IncidenciaId">
+                </RadzenDropDownDataGrid>
+                <RadzenRequiredValidator Component="IncidenciaId" Text="IncidenciaId is required" style="position: absolute">
+                </RadzenRequiredValidator>
+              </div>
+            </div>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Estado" Component="EstadoId" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenDropDownDataGrid Data="@getEstadosForEstadoIdResult" TextProperty="Descripcion" ValueProperty="Id" Placeholder="Choose Estado" ShowSearch="false" style="display: block; width: 100%" @bind-Value="@(estadoincidencium.EstadoId)" Name="EstadoId">
+                </RadzenDropDownDataGrid>
+                <RadzenRequiredValidator Component="EstadoId" Text="EstadoId is required" style="position: absolute">
+                </RadzenRequiredValidator>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col offset-sm-3">
+                <RadzenButton ButtonType="ButtonType.Submit" Icon="save" Text="Save" ButtonStyle="ButtonStyle.Primary">
+                </RadzenButton>
+                <RadzenButton ButtonStyle="ButtonStyle.Light" Text="Cancel" Click="@Button2Click">
+                </RadzenButton>
+              </div>
+            </div>
+          </ChildContent>
+        </RadzenTemplateForm>
+      </div>
+    </div>
+  </ChildContent>
+</RadzenContent>

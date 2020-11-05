@@ -1,0 +1,44 @@
+﻿@page "/"
+@namespace SGRBlazorApp.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@using Radzen
+@using EmbeddedBlazorContent;
+
+<!DOCTYPE html>
+<html lang="en">
+@Html.EmbeddedBlazorContent()
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cummins-SGR</title>
+    <base href="~/" />
+    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <link href="css/site.css" rel="stylesheet" />
+    <link href="css/style.css" rel="stylesheet" />
+    <link href="~/assets/css/styles.css" rel="stylesheet" />
+    <script src="~/js/Utilidades.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link href="_content/BlazorPro.Spinkit/spinkit.min.css" rel="stylesheet" />
+</head>
+<body>
+    <app>
+        @(await Html.RenderComponentAsync<App>(RenderMode.Server))
+
+    </app>
+
+    <script src="_framework/blazor.server.js"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
+    <script src="~/js/site.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCBhlrEoE5ndgXMCeI7zyq0dK4MJksa8Ak" async defer></script>
+    <script src="~/js/googleAddressLookup.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <script>
+        window.MyJSMethods =
+        {
+            myMethod: function (element) {
+                window.alert(element.id);
+            }
+        };
+    </script>
+</body>
+</html>

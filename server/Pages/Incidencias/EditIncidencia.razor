@@ -1,0 +1,39 @@
+﻿@page "/edit-incidencia/{Id}"
+@layout MainLayout
+@inherits Sgi.Pages.EditIncidenciaComponent
+
+@using Radzen
+@using Radzen.Blazor
+@using Sgi.Models.SgiCore
+<RadzenContent Container="main">
+  <ChildContent>
+    <div class="row">
+      <div class="col-md-12">
+        <RadzenTemplateForm TItem="Sgi.Models.SgiCore.Incidencia" Data="@incidencia" Visible="@(incidencia != null)" Submit="@Form0Submit">
+          <ChildContent>
+            <div class="row">
+                @if (incidencia.Aux1 == "En Proceso")
+                {
+                    <div class="col offset-sm-3">
+                        <RadzenButton ButtonType="ButtonType.Submit" Icon="save" Text="Aceptar" ButtonStyle="ButtonStyle.Success">
+                        </RadzenButton>
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Text="Rechazar" Click="@Button2Click">
+                        </RadzenButton>
+                    </div>
+                }
+                else
+                {
+                    <div class="col offset-sm-3">
+                        <RadzenButton ButtonType="ButtonType.Submit" Icon="save" Text="Cerrar Reclamo" ButtonStyle="ButtonStyle.Success">
+                        </RadzenButton>
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Text="Cancelar" Click="@Button2Click">
+                        </RadzenButton>
+                    </div>
+                }
+            </div>
+          </ChildContent>
+        </RadzenTemplateForm>
+      </div>
+    </div>
+  </ChildContent>
+</RadzenContent>

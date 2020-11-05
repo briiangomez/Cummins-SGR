@@ -30,6 +30,9 @@ using SGI.ApplicationCore.Options;
 using SGI.ApplicationCore.Services;
 using SGI.Infrastructure;
 using SGI.ApplicationCore.Entities;
+using Microsoft.AspNetCore.Components.Authorization;
+using SGI.Infrastructure.Services;
+using SGI.Infrastructure.Interfaces;
 
 namespace SGI.WebApp
 {
@@ -124,8 +127,6 @@ namespace SGI.WebApp
 
             });
 
-
-
             services.AddDbContext<SGIApplicationDataContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("SGIApplication")).EnableSensitiveDataLogging());
             services.Configure<JwtOption>(Configuration.GetSection("Jwt"));
             services.Configure<AppOption>(Configuration.GetSection("AppOption"));
@@ -143,6 +144,7 @@ namespace SGI.WebApp
             services.AddScoped<IRepository<Motor>, Repository<Motor>>();
             services.AddScoped<IRepository<MotorIncidencia>, Repository<MotorIncidencia>>();
             services.AddScoped<IRepository<EstadoIncidencia>, Repository<EstadoIncidencia>>();
+            services.AddScoped<IRepository<ClienteIncidencia>, Repository<ClienteIncidencia>>();
             services.AddScoped<IRepository<Cliente>, Repository<Cliente>>();
 
             services.AddScoped<IServiceBase<Incidencia>, ServiceBase<Incidencia>>();
@@ -167,6 +169,7 @@ namespace SGI.WebApp
             services.AddScoped<IServiceBase<UserRole>, ServiceBase<UserRole>>();
             services.AddScoped<IServiceBase<MotorIncidencia>, ServiceBase<MotorIncidencia>>();
             services.AddScoped<IServiceBase<EstadoIncidencia>, ServiceBase<EstadoIncidencia>>();
+            services.AddScoped<IServiceBase<ClienteIncidencia>, ServiceBase<ClienteIncidencia>>();
             //services.AddHttpClient<IAuthService, AuthService>(client =>
             //{
             //    client.BaseAddress = new Uri(Configuration["Jwt:BaseAddress"]);

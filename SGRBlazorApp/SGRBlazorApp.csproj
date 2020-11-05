@@ -1,0 +1,173 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Pages\Incidencias\**" />
+    <Content Remove="Pages\Incidencias\**" />
+    <EmbeddedResource Remove="Pages\Incidencias\**" />
+    <None Remove="Pages\Incidencias\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Services\AuthorService.cs" />
+    <Compile Remove="Services\IAuthorService.cs" />
+    <Compile Remove="Services\IPublisherService.cs" />
+    <Compile Remove="Services\PublisherService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Pages\AuthorDetail.razor" />
+    <Content Remove="Pages\Authors - Copy.razor" />
+    <Content Remove="Pages\Publishers.razor" />
+    <Content Remove="Shared\GridView - Copy.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\css\bootstrap\bootstrap.min.css.map" />
+    <None Include="wwwroot\css\devextreme\fonts\Roboto-300.woff2" />
+    <None Include="wwwroot\css\devextreme\fonts\Roboto-400.woff2" />
+    <None Include="wwwroot\css\devextreme\fonts\Roboto-500.woff2" />
+    <None Include="wwwroot\css\devextreme\fonts\Roboto-700.woff2" />
+    <None Include="wwwroot\css\devextreme\icons\dxicons.woff2" />
+    <None Include="wwwroot\css\devextreme\icons\dxiconsios.woff2" />
+    <None Include="wwwroot\css\devextreme\icons\dxiconsmaterial.woff2" />
+    <None Include="wwwroot\css\open-iconic\FONT-LICENSE" />
+    <None Include="wwwroot\css\open-iconic\font\fonts\open-iconic.svg" />
+    <None Include="wwwroot\css\open-iconic\ICON-LICENSE" />
+    <None Include="wwwroot\css\open-iconic\README.md" />
+    <None Include="wwwroot\css\site.css.back" />
+    <None Include="wwwroot\fonts\CircularStd-Bold.woff2" />
+    <None Include="wwwroot\fonts\CircularStd-Book.woff2" />
+    <None Include="wwwroot\fonts\CircularStd-Medium.woff2" />
+    <None Include="wwwroot\js\devextreme\aspnet\dx.aspnet.data.js" />
+    <None Include="wwwroot\js\devextreme\aspnet\dx.aspnet.mvc.js" />
+    <None Include="wwwroot\js\devextreme\bootstrap.js" />
+    <None Include="wwwroot\js\devextreme\bootstrap.min.js" />
+    <None Include="wwwroot\js\devextreme\cldr.js" />
+    <None Include="wwwroot\js\devextreme\cldr.min.js" />
+    <None Include="wwwroot\js\devextreme\cldr\event.js" />
+    <None Include="wwwroot\js\devextreme\cldr\event.min.js" />
+    <None Include="wwwroot\js\devextreme\cldr\supplemental.js" />
+    <None Include="wwwroot\js\devextreme\cldr\supplemental.min.js" />
+    <None Include="wwwroot\js\devextreme\cldr\unresolved.js" />
+    <None Include="wwwroot\js\devextreme\cldr\unresolved.min.js" />
+    <None Include="wwwroot\js\devextreme\dx-diagram.js" />
+    <None Include="wwwroot\js\devextreme\dx-diagram.min.js" />
+    <None Include="wwwroot\js\devextreme\dx-gantt.js" />
+    <None Include="wwwroot\js\devextreme\dx-gantt.min.js" />
+    <None Include="wwwroot\js\devextreme\dx.all.debug.js" />
+    <None Include="wwwroot\js\devextreme\dx.all.js" />
+    <None Include="wwwroot\js\devextreme\dx.viz-web.debug.js" />
+    <None Include="wwwroot\js\devextreme\dx.viz-web.js" />
+    <None Include="wwwroot\js\devextreme\dx.viz.debug.js" />
+    <None Include="wwwroot\js\devextreme\dx.viz.js" />
+    <None Include="wwwroot\js\devextreme\dx.web.debug.js" />
+    <None Include="wwwroot\js\devextreme\dx.web.js" />
+    <None Include="wwwroot\js\devextreme\globalize.js" />
+    <None Include="wwwroot\js\devextreme\globalize.min.js" />
+    <None Include="wwwroot\js\devextreme\globalize\currency.js" />
+    <None Include="wwwroot\js\devextreme\globalize\currency.min.js" />
+    <None Include="wwwroot\js\devextreme\globalize\date.js" />
+    <None Include="wwwroot\js\devextreme\globalize\date.min.js" />
+    <None Include="wwwroot\js\devextreme\globalize\message.js" />
+    <None Include="wwwroot\js\devextreme\globalize\message.min.js" />
+    <None Include="wwwroot\js\devextreme\globalize\number.js" />
+    <None Include="wwwroot\js\devextreme\globalize\number.min.js" />
+    <None Include="wwwroot\js\devextreme\jquery.js" />
+    <None Include="wwwroot\js\devextreme\jquery.min.js" />
+    <None Include="wwwroot\js\devextreme\jszip.js" />
+    <None Include="wwwroot\js\devextreme\jszip.min.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.cs.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.de.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.el.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.en.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.es.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.fi.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.fr.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.hu.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.it.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.ja.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.nl.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.pt.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.ru.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.sl.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.sv.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.tr.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.vi.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.zh.js" />
+    <None Include="wwwroot\js\devextreme\vectormap-data\africa.js" />
+    <None Include="wwwroot\js\devextreme\vectormap-data\canada.js" />
+    <None Include="wwwroot\js\devextreme\vectormap-data\eurasia.js" />
+    <None Include="wwwroot\js\devextreme\vectormap-data\europe.js" />
+    <None Include="wwwroot\js\devextreme\vectormap-data\usa.js" />
+    <None Include="wwwroot\js\devextreme\vectormap-data\world.js" />
+    <None Include="wwwroot\js\devextreme\vectormap-utils\dx.vectormaputils.debug.js" />
+    <None Include="wwwroot\js\devextreme\vectormap-utils\dx.vectormaputils.js" />
+    <None Include="wwwroot\js\devextreme\vectormap-utils\dx.vectormaputils.node.js" />
+    <None Include="wwwroot\js\googleAddressLookup.js" />
+    <None Include="wwwroot\js\site.js" />
+    <None Include="wwwroot\scripts\survey\builder\button\colorPickerButton.js" />
+    <None Include="wwwroot\scripts\survey\builder\button\imageButton.js" />
+    <None Include="wwwroot\scripts\survey\builder\colorPicker\colorPicker.js" />
+    <None Include="wwwroot\scripts\survey\builder\comboInput\comboInput.js" />
+    <None Include="wwwroot\scripts\survey\builder\comboInput\fontFamilyCombo.js" />
+    <None Include="wwwroot\scripts\survey\builder\comboInput\fontSizeCombo.js" />
+    <None Include="wwwroot\scripts\survey\builder\core\corebase.js" />
+    <None Include="wwwroot\scripts\survey\builder\core\csstool.js" />
+    <None Include="wwwroot\scripts\survey\builder\core\pickerPanel.js" />
+    <None Include="wwwroot\scripts\survey\builder\core\redoundoCore.js" />
+    <None Include="wwwroot\scripts\survey\builder\field\baseField.js" />
+    <None Include="wwwroot\scripts\survey\builder\field\baseSnippets.js" />
+    <None Include="wwwroot\scripts\survey\builder\field\checkList.js" />
+    <None Include="wwwroot\scripts\survey\builder\field\combobox.js" />
+    <None Include="wwwroot\scripts\survey\builder\field\copyright.js" />
+    <None Include="wwwroot\scripts\survey\builder\field\formInfo.js" />
+    <None Include="wwwroot\scripts\survey\builder\field\greeting.js" />
+    <None Include="wwwroot\scripts\survey\builder\field\listBox.js" />
+    <None Include="wwwroot\scripts\survey\builder\field\pageBreak.js" />
+    <None Include="wwwroot\scripts\survey\builder\field\radioList.js" />
+    <None Include="wwwroot\scripts\survey\builder\field\rateItems - Copia.js" />
+    <None Include="wwwroot\scripts\survey\builder\field\rateItems.js" />
+    <None Include="wwwroot\scripts\survey\builder\field\textArea.js" />
+    <None Include="wwwroot\scripts\survey\builder\field\textBox.js" />
+    <None Include="wwwroot\scripts\survey\builder\field\textLabel.js" />
+    <None Include="wwwroot\scripts\survey\builder\field\thanks.js" />
+    <None Include="wwwroot\scripts\survey\builder\group\group.js" />
+    <None Include="wwwroot\scripts\survey\builder\index.js" />
+    <None Include="wwwroot\scripts\survey\builder\listPicker\fontFamilyPicker.js" />
+    <None Include="wwwroot\scripts\survey\builder\listPicker\fontSizePicker.js" />
+    <None Include="wwwroot\scripts\survey\builder\listPicker\listPicker.js" />
+    <None Include="wwwroot\scripts\survey\builder\message\message.js" />
+    <None Include="wwwroot\scripts\survey\builder\nest.js" />
+    <None Include="wwwroot\scripts\survey\builder\reference\jquery-1.4.2.js" />
+    <None Include="wwwroot\scripts\survey\builder\reference\jquery-ui\jquery.ui.core.js" />
+    <None Include="wwwroot\scripts\survey\builder\reference\jquery-ui\jquery.ui.mouse.js" />
+    <None Include="wwwroot\scripts\survey\builder\reference\jquery-ui\jquery.ui.sortable.js" />
+    <None Include="wwwroot\scripts\survey\builder\reference\jquery-ui\jquery.ui.widget.js" />
+    <None Include="wwwroot\scripts\survey\builder\resizer\resizer.js" />
+    <None Include="wwwroot\scripts\survey\builder\tab\tab.js" />
+    <None Include="wwwroot\scripts\survey\builder\tip\tip.js" />
+    <None Include="wwwroot\scripts\survey\builder\toolbar\toolbar.js" />
+    <None Include="wwwroot\scripts\survey\runtime\index.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazored.LocalStorage" Version="2.1.5" />
+    <PackageReference Include="BlazorPro.Spinkit" Version="1.2.0" />
+    <PackageReference Include="EmbeddedBlazorContent" Version="1.10.0" />
+    <PackageReference Include="Microsoft.Azure.SignalR" Version="1.4.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Radzen.Blazor" Version="2.15.11" />
+    <PackageReference Include="SweetAlert" Version="1.0.0" />
+    <PackageReference Include="System.Reactive" Version="4.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CuriousDriveRazorLibrary\CuriousDriveRazorLibrary\CuriousDriveRazorLibrary.csproj" />
+  </ItemGroup>
+
+</Project>

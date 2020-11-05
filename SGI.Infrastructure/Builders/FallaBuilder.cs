@@ -13,7 +13,8 @@ namespace SGI.Infrastructure.Builders
         {
             entityBuilder.ToTable("Falla");
 
-            entityBuilder.Property(x => x.Codigo).HasColumnName("Codigo").HasColumnType("bigint").IsRequired().UseMySqlIdentityColumn();
+            entityBuilder.Property(x => x.Codigo).HasColumnName("Codigo").HasColumnType("varchar(100)");
+            entityBuilder.Property(x => x.IdFalla).HasColumnName("IdFalla").HasColumnType("int");
             entityBuilder.Property(x => x.Observaciones).HasColumnName("Address").HasColumnType("varchar(MAX)");
 
             entityBuilder

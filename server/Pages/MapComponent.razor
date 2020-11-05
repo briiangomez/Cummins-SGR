@@ -1,0 +1,39 @@
+﻿@page "/mapacomponente"
+@inject IJSRuntime JSRuntime
+
+
+<div id="mapcontainer"></div>
+
+
+@code {
+
+    class SerieItem
+    {
+        public string id { get; set; }
+        public string color { get; set; }
+        public double lat { get; set; }
+        public double lon { get; set; }
+    }
+
+    List<SerieItem> __items = new List<SerieItem>();
+
+    protected override Task OnInitializedAsync()
+    {
+        return base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var s = Newtonsoft.Json.JsonConvert.DeserializeObject<List<SerieItem>>(Serie);
+        await JSRuntime.InvokeVoidAsync("Parcial2MapComp.setMappointData", Titulo, s);
+        //"[{name:'Ciudad Autonoma',lat: -34.6, lon: -58.45}]");
+        //return base.OnAfterRenderAsync(firstRender);
+    }
+
+    [Parameter]
+    public string Titulo { get; set; } = "Componente Mapa";
+
+    [Parameter]
+    public string Serie { get; set; } = "[]";
+
+}

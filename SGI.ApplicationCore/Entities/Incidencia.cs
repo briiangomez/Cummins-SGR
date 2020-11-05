@@ -30,7 +30,7 @@ namespace SGI.ApplicationCore.Entities
         public string Aux3 { get; set; }
         public string Aux4 { get; set; }
         public string Aux5 { get; set; }
-        public IEnumerable<Cliente> Clientes { get; set; }
+        public IEnumerable<ClienteIncidencia> ClienteIncidencia { get; set; }
         public IEnumerable<EstadoIncidencia> EstadoIncidencias { get; set; }
         public IEnumerable<EstadoGarantia> EstadoGarantias { get; set; }
         public IEnumerable<MotorIncidencia> MotorIncidencias { get; set; }

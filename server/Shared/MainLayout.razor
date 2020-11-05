@@ -1,0 +1,54 @@
+﻿@inherits Sgi.Layouts.MainLayoutComponent
+
+@using Radzen
+@using Radzen.Blazor
+@using Sgi.Models.SgiCore
+<RadzenDialog />
+<RadzenNotification />
+<RadzenTooltip />
+
+<RadzenHeader>
+    <ChildContent>
+        <div class="row justify-content-start align-items-center">
+            <div class="col-md-6 d-flex align-items-center">
+                <RadzenSidebarToggle Click="@SidebarToggle0Click">
+                </RadzenSidebarToggle>
+                <RadzenLabel Text="Cummins-SGI">
+                </RadzenLabel>
+            </div>
+            <div class="col-md-6 text-lg-right">
+            </div>
+        </div>
+    </ChildContent>
+</RadzenHeader>
+<RadzenBody @ref="body0">
+    <ChildContent>
+        <RadzenContentContainer Name="main">
+            @Body
+        </RadzenContentContainer>
+    </ChildContent>
+</RadzenBody>
+        <RadzenSidebar @ref="sidebar0">
+            <ChildContent>
+                <RadzenPanelMenu style="height: 100%">
+                    <ChildContent>
+                        <RadzenPanelMenuItem Icon="home" Text="Inicio" Path="index">
+                        </RadzenPanelMenuItem>
+                        <RadzenPanelMenuItem Icon="person" Text="Clientes" Path="clientes">
+                        </RadzenPanelMenuItem>
+                        <RadzenPanelMenuItem Icon="build" Text="Dealers" Path="dealers">
+                        </RadzenPanelMenuItem>
+                        <RadzenPanelMenuItem Icon="add_circle_outline" Text="Crear Reclamo" Path="addincidencia">
+                        </RadzenPanelMenuItem>
+                        <RadzenPanelMenuItem Icon="build" Text="Reclamos" Path="incidencia">
+                        </RadzenPanelMenuItem>
+                    </ChildContent>
+                </RadzenPanelMenu>
+            </ChildContent>
+        </RadzenSidebar>
+        <RadzenFooter>
+            <ChildContent>
+                <RadzenLabel Text="Cummins-SGI, Copyright Ⓒ 2020">
+                </RadzenLabel>
+            </ChildContent>
+        </RadzenFooter>

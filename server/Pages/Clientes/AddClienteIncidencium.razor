@@ -1,0 +1,81 @@
+﻿@page "/add-cliente-incidencium"
+@layout MainLayout
+@inherits Sgi.Pages.AddClienteIncidenciumComponent
+
+@using Radzen
+@using Radzen.Blazor
+@using Sgi.Models.SgiCore
+<RadzenContent Container="main">
+  <ChildContent>
+    <div class="row">
+      <div class="col-md-12">
+        <RadzenTemplateForm Data="@clienteincidencium" Visible="@(clienteincidencium != null)" TItem="Sgi.Models.SgiCore.ClienteIncidencium" Submit="@Form0Submit">
+          <ChildContent>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Created" Component="Created" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(clienteincidencium.Created)" Name="Created">
+                </RadzenDatePicker>
+              </div>
+            </div>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Modified" Component="Modified" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(clienteincidencium.Modified)" Name="Modified">
+                </RadzenDatePicker>
+              </div>
+            </div>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Deleted" Component="Deleted" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(clienteincidencium.Deleted)" Name="Deleted">
+                </RadzenDatePicker>
+              </div>
+            </div>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Cliente" Component="ClienteId" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenDropDownDataGrid Data="@getClientesForClienteIdResult" TextProperty="Nombre" ValueProperty="Id" Placeholder="Choose Cliente" ShowSearch="false" style="display: block; width: 100%" @bind-Value="@(clienteincidencium.ClienteId)" Name="ClienteId">
+                </RadzenDropDownDataGrid>
+                <RadzenRequiredValidator Component="ClienteId" Text="ClienteId is required" style="position: absolute">
+                </RadzenRequiredValidator>
+              </div>
+            </div>
+            <div style="margin-bottom: 1rem" class="row">
+              <div class="col-md-3">
+                <RadzenLabel Text="Incidencia" Component="IncidenciaId" style="width: 100%">
+                </RadzenLabel>
+              </div>
+              <div class="col-md-9">
+                <RadzenDropDownDataGrid Data="@getIncidenciaForIncidenciaIdResult" TextProperty="ConfiguracionCorta" ValueProperty="Id" Placeholder="Choose Incidencium" ShowSearch="false" style="display: block; width: 100%" @bind-Value="@(clienteincidencium.IncidenciaId)" Name="IncidenciaId">
+                </RadzenDropDownDataGrid>
+                <RadzenRequiredValidator Component="IncidenciaId" Text="IncidenciaId is required" style="position: absolute">
+                </RadzenRequiredValidator>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col offset-sm-3">
+                <RadzenButton ButtonType="ButtonType.Submit" Icon="save" Text="Save" ButtonStyle="ButtonStyle.Primary">
+                </RadzenButton>
+                <RadzenButton ButtonStyle="ButtonStyle.Light" Text="Cancel" Click="@Button2Click">
+                </RadzenButton>
+              </div>
+            </div>
+          </ChildContent>
+        </RadzenTemplateForm>
+      </div>
+    </div>
+  </ChildContent>
+</RadzenContent>

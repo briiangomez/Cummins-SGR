@@ -1,0 +1,42 @@
+﻿@page "/mapresult"
+
+<div class="card bg-light mb-3">
+    <div class="card-header">
+        <h4>Su incidencia ha sido cargada correctamente!!</h4>
+        <h4>A continuacion, le mostramos el Dealer mas Cercano asignado</h4>
+    </div>
+    <div class="card-body">
+        @*<button class="btn btn-primary" @onclick="Consultar">Buscar Recorrido</button>
+            <br /><br />*@
+        <div class="card bg-info">
+            <div class="card-body text-white">
+                <h4 class="card-title">Dealer Asignado: <b>@__recoriddo_ruta </b></h4>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <Radzen.Blazor.RadzenGoogleMap Zoom="16"
+                                           style="height:500px"
+                                           ApiKey="AIzaSyCBhlrEoE5ndgXMCeI7zyq0dK4MJksa8Ak"
+                                           Center="@(new GoogleMapPosition() { Lat = -36.9046772, Lng = -60.3059486 })">
+                <Markers>
+                    <Radzen.Blazor.RadzenGoogleMapMarker Title="Centro Parts S.R.L. " Label="Centro Parts S.R.L. " Position="@(new GoogleMapPosition() { Lat = -36.9046772, Lng = -60.3059486 })" />
+
+                </Markers>
+            </Radzen.Blazor.RadzenGoogleMap>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    private string __recoriddo_ruta = "Centro Parts S.R.L. ";
+    private int __recorrido_distancia = 53;
+    private string __map_data = "[{id:'CABA - Buenos Aires',name:'CABA - Buenos Aires',lat: -34.62009948, lon: -58.43518051, color:'#5DADE2'}, {id:'La Plata, Buenos Aires',name:'La Plata, Buenos Aires',lat: -34.9206797, lon: -57.9537638, color:'#099909'},{id:'CABA - Buenos Aires',name:'CABA - Buenos Aires',lat: -34.62009948, lon: -58.43518051, color:'#5DADE2'}]";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+}
