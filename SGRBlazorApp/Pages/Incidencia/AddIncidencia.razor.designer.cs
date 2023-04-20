@@ -10,6 +10,11 @@ using Radzen.Blazor;
 using SGRBlazorApp.Services;
 using SGRBlazorApp.Data;
 using SGRBlazorApp.Interfaces;
+using BlazorInputFile;
+using System.Globalization;
+using SGR.Models.Models;
+using SGRBlazorApp.Helpers;
+using SGR.Models;
 
 namespace SGRBlazorApp.Pages
 {
@@ -27,8 +32,15 @@ namespace SGRBlazorApp.Pages
         {
         }
 
+        public List<IFileListEntry> files = new List<IFileListEntry>();
+
+        public List<string> ArchivoCompra = new List<string>();
+
         [Inject]
         protected IJSRuntime JSRuntime { get; set; }
+
+        [Inject]
+        public IFileUpload fileUpload { get; set; }
 
 
         [Inject]
@@ -38,22 +50,42 @@ namespace SGRBlazorApp.Pages
         ISgrService<Dealer> dealerService { get; set; }
 
         [Inject]
-        ISgrService<Sintomas> sintomaService { get; set; }
+        ISgrService<SGR.Models.Models.Motor> motorService { get; set; }
 
         [Inject]
-        ISgrService<SGRBlazorApp.Data.Incidencia> incidenciaService { get; set; }
+        ISgrService<MotorDealer> motordealerService { get; set; }
+
+        [Inject]
+        ISgrService<Sintoma> sintomaService { get; set; }
+
+        [Inject]
+        ISgrService<ImagenesIncidencium> imagenesService { get; set; }
+
+        [Inject]
+        ISgrService<SGR.Models.Models.Incidencia> incidenciaService { get; set; }
+
+        public List<SGR.Models.Models.Motor> MotoresList { get; set; }
+
+        public double? Latitud { get; set; }
+
+        public string Direc = String.Empty;
+
+        public double? Longitud { get; set; }
+
 
         [Inject]
         ISgrService<SGRBlazorApp.Data.IncidenciaApi> incidenciaApiService { get; set; }
 
         public bool CheckBox1Value { get; set; }
 
-        public List<SGRBlazorApp.Data.Sintomas> sims { get; set; }
+        public List<SGR.Models.Models.Sintoma> sims { get; set; }
 
-        IEnumerable<SGRBlazorApp.Data.Dealer> _getDealersForIdDealerResult;
+        IEnumerable<SGR.Models.Models.Dealer> _getDealersForIdDealerResult;
+
+        IEnumerable<SGR.Models.Models.MotorDealer> _getMotorsDealers { get; set; }
 
         public Dictionary<Guid, double> distances = new Dictionary<Guid, double>();
-        protected IEnumerable<SGRBlazorApp.Data.Dealer> getDealersForIdDealerResult
+        protected IEnumerable<SGR.Models.Models.Dealer> getDealersForIdDealerResult
         {
             get
             {
@@ -72,23 +104,7 @@ namespace SGRBlazorApp.Pages
         }
 
         SGRBlazorApp.Data.IncidenciaApi _incidencia;
-        protected SGRBlazorApp.Data.IncidenciaApi incidencia
-        {
-            get
-            {
-                return _incidencia;
-            }
-            set
-            {
-                if (!object.Equals(_incidencia, value))
-                {
-                    var args = new PropertyChangedEventArgs(){ Name = "incidencia", NewValue = value, OldValue = _incidencia };
-                    _incidencia = value;
-                    OnPropertyChanged(args);
-                    Reload();
-                }
-            }
-        }
+        public SGRBlazorApp.Data.IncidenciaApi incidencia { get; set; }
 
         protected override async System.Threading.Tasks.Task OnInitializedAsync()
         {
@@ -96,7 +112,10 @@ namespace SGRBlazorApp.Pages
         }
         protected async System.Threading.Tasks.Task Load()
         {
+            var CertificacionList = await motordealerService.GetAllAsync("MotorDealer/GetMotorDealer");
             var sgiCoreGetDealersResult = await dealerService.GetAllAsync("Dealer/GetDealer");
+            MotoresList = await motorService.GetAllAsync("Motor/GetMotor");
+            _getMotorsDealers = CertificacionList;
             getDealersForIdDealerResult = sgiCoreGetDealersResult;
             var incids = await incidenciaApiService.GetAllAsync("Incidencia/GetIncidenciaApi");
             incidencia = new SGRBlazorApp.Data.IncidenciaApi(){};
@@ -124,25 +143,78 @@ namespace SGRBlazorApp.Pages
         {
             try
             {
+                
+                string lat = await JSRuntime.InvokeAsync<string>("getValue", "Lat");
+                string longi = await JSRuntime.InvokeAsync<string>("getValue", "Long");
+                string dire = await JSRuntime.InvokeAsync<string>("getValue", "Dir");
+                args.DireccionInspeccion = dire;
+                NumberFormatInfo formatProvider = new NumberFormatInfo();
+                formatProvider.NumberDecimalSeparator = ".";
+                formatProvider.NumberGroupSeparator = ",";
+                formatProvider.NumberGroupSizes = new int[] { 2 };
+                args.latitudGps = Convert.ToDouble(lat, formatProvider);
+                args.longitudGps = Convert.ToDouble(longi, formatProvider);
+                args.EsGarantia = CheckBox1Value;
+                MotoresList = MotoresList.Where(o => o.Codigo == args.ModeloMotor).ToList();
                 distances = GetDistances(args.latitudGps, args.longitudGps);
-                if(distances.Count > 0)
+                if(distances.Count > 0 && CheckBox1Value)
                 {
                     args.IdConcesionario = distances.OrderBy(o => o.Value).FirstOrDefault().Key;
                     args.nombreConcesionario = getDealersForIdDealerResult.FirstOrDefault(o => o.Id == args.IdConcesionario.Value).Name;
                     args.codigoConcesionario = getDealersForIdDealerResult.FirstOrDefault(o => o.Id == args.IdConcesionario.Value).LocationCode;
                 }
+                else
+                {
+                    args.nombreConcesionario = getDealersForIdDealerResult.FirstOrDefault(o => o.Id == args.IdConcesionario.Value).Name;
+                    args.codigoConcesionario = getDealersForIdDealerResult.FirstOrDefault(o => o.Id == args.IdConcesionario.Value).LocationCode;
+                }
+                if(CheckBox1Value)
+                {
+                    args.idEstadoIncidencia = 0;
+                }
+                else
+                {
+                    args.idEstadoIncidencia = 1;
+                }
+                if (files.Count == 0)
+                    throw new Exception("El archivo es obligatorio");
+                var incids = await incidenciaApiService.GetAllAsync("Incidencia/GetIncidenciaApi");
+                args.numeroIncidencia = incids.Count() + 1;
                 var sgiCoreCreateIncidenciaResult = await incidenciaApiService.SaveAsync("Incidencia/CrearIncidencia",args);
+                if (sgiCoreCreateIncidenciaResult.Id == Guid.Empty)
+                    throw new Exception("Ocurrio un error generando el Reclamo, por favor intente nuevamente!");
+                if (ArchivoCompra.Count > 0)
+                {
+                    foreach (var item in ArchivoCompra)
+                    {
+                        //string path = await fileUpload.Upload(item, sgiCoreCreateIncidenciaResult.Id.ToString());
+                        ImagenesIncidencium img = new ImagenesIncidencium();
+                        img.Imagen = item;
+                        img.Tipo = "Factura de Compra";
+                        img.IncidenciaId = sgiCoreCreateIncidenciaResult.Id;
+                        await imagenesService.SaveAsync("ImagenesIncidencia/CreateImagenesIncidencia", img);
+                    }
+                }
+                else
+                {
+                    throw new Exception("El archivo es obligatorio");
+                }
+
                 navigationManager.NavigateTo("/incidenciaDetail/" + sgiCoreCreateIncidenciaResult.Id.ToString());
             }
-            catch (System.Exception sgiCoreCreateIncidenciaException)
+            catch (System.Exception ex)
             {
-                    //NotificationService.Notify(NotificationSeverity.Error, $"Error", $"Unable to create new Incidencia!");
+                Logger.AddLine(String.Format("Error Crear Incidencia - {0}-{1}-{2}", DateTime.Now.ToString(), ex.Message, ex.StackTrace));
+                await JSRuntime.MostrarMensaje("Error!", ex.Message, TipoMensajeSweetAlert.error);
             }
         }
 
         public Dictionary<Guid,double> GetDistances(double lat, double lon)
         {
             Dictionary<Guid, double> diss = new Dictionary<Guid, double>();
+            Guid idMotor = MotoresList.FirstOrDefault().Id;
+            var dealerss = _getMotorsDealers.Where(o => o.MotorId == idMotor).Select(o => o.DealerId).ToList();
+            getDealersForIdDealerResult = getDealersForIdDealerResult.Where(o => dealerss.Contains(o.Id)).ToList();
             foreach (var item in getDealersForIdDealerResult.ToList())
             {
                 if(item.LongitudGps != null && item.LatitudGps != null)

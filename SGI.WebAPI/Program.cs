@@ -20,11 +20,13 @@ namespace SGIWebApi
             {
                 var host = BuildWebHost(args);
 
+                
+
                 if (args != null && args.Length > 0)
                 {
                     logger.Log(NLog.LogLevel.Trace, $"arguments received: { string.Join(' ', args) }");
                 }
-
+                
                 host.Run();
             }
             catch (Exception ex)
@@ -49,7 +51,8 @@ namespace SGIWebApi
                  {
                      logging.ClearProviders();
                  })
-                .UseNLog();  // NLog: setup NLog for Dependency injection
+                .UseNLog(); // NLog: setup NLog for Dependency injection
+                   
 
         public static IWebHost BuildWebHost(string[] args) =>
                CreateWebHostBuilder(args)

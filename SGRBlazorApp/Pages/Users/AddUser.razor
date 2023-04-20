@@ -5,6 +5,7 @@
 @using Blazored.LocalStorage
 @using SGRBlazorApp.Shared
 @inject ISgrService<Dealer> dealerService
+@inject ISgrService<Oem> OemService
 @inject ISgrService<Role> roleService
 @inject IUserService userService
 @inject ILocalStorageService localStorageService
@@ -24,32 +25,37 @@
             <br />
         </div>
         <div class="col-12 row">
-            <input class="form-control col-12" @bind="user.EmailAddress" placeholder="Usuario"  required/>
+            <label class="col-4 font-weight-bold">Usuario :</label>
+            <input class="form-control col-8" @bind="user.EmailAddress" placeholder="Usuario" required />
         </div>
         <br />
         <div class="col-12 row">
-            <input type="password" class="form-control col-12" @bind="user.Password" placeholder="Password" required/>
+            <label class="col-4 font-weight-bold">Password :</label>
+            <input type="password" class="form-control col-8" @bind="user.Password" placeholder="Password" required />
         </div>
         <br />
         <div class="col-12 row">
-            <input type="password" class="form-control col-12" @bind="user.ConfirmPassword" placeholder="Confirmar password" required/>
+            <label class="col-4 font-weight-bold">Confirmar password :</label>
+            <input type="password" class="form-control col-8" @bind="user.ConfirmPassword" placeholder="Confirmar password" required />
         </div>
         <br />
         <div class="col-12 row">
-            <input class="form-control col-12" @bind="user.FirstName" placeholder="Nombre" required/>
+            <label class="col-4 font-weight-bold">Nombre :</label>
+            <input class="form-control col-8" @bind="user.FirstName" placeholder="Nombre" required />
         </div>
         <br />
         <div class="col-12 row">
-            <input  class="form-control col-12" @bind="user.LastName" placeholder="Apellido" required/>
+            <label class="col-4 font-weight-bold">Apellido :</label>
+            <input class="form-control col-8" @bind="user.LastName" placeholder="Apellido" required />
         </div>
         <br />
         <div class="col-12 row">
-            <label class="col-2 font-weight-bold">Rol :</label>
-            <select class="form-control col-10" @onchange="OnChangeEvent" name="IdRole" id="IdRole">
+            <label class="col-4 font-weight-bold">Rol :</label>
+            <select class="form-control col-8" @onchange="OnChangeEvent" name="IdRole" id="IdRole">
                 <option value="">Seleccione Rol...</option>
                 @if (Roles != null)
                 {
-                    foreach (var item in Roles)
+                    foreach (var item in Roles.OrderBy(o => o.Descripcion))
                     {
                         <option value="@item.Id">@item.Descripcion</option>
                     }
@@ -61,12 +67,12 @@
         @if (isDealer)
         {
             <div class="col-12 row">
-                <label class="col-2 font-weight-bold">Dealer :</label>
-                <select class="form-control col-10" @onchange="OnChangeEvent2" name="IdDealer" id="IdDealer">
+                <label class="col-4 font-weight-bold">Dealer :</label>
+                <select class="form-control col-8" @onchange="OnChangeEvent2" name="IdDealer" id="IdDealer">
                     <option value="">Seleccione Dealer...</option>
                     @if (Dealers != null)
                     {
-                        foreach (var item in Dealers)
+                        foreach (var item in Dealers.OrderBy(o => o.Name))
                         {
                             <option value="@item.Id">@item.Name</option>
                         }
@@ -76,89 +82,159 @@
             </div>
         }
         <br />
+        @if (isOem)
+        {
+            <div class="col-12 row">
+                <label class="col-4 font-weight-bold">OEM :</label>
+                <select class="form-control col-8" @onchange="OnChangeEvent3" name="IdDealer" id="IdDealer">
+                    <option value="">Seleccione OEM...</option>
+                    @if (Dealers != null)
+                    {
+                        foreach (var item in Oems.OrderBy(o => o.Nombre))
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    }
+                </select>
+                &nbsp;<ValidationMessage For="@(() => user.IdRole)" />
+            </div>
+        }
+        <br />
         <div class="col-12 row">
-            <span class="col-12"></span>
-            <input type="submit" class="form-control col-6 btn btn-primary" value="Sign up" />
-            
+            <span class="col-2"></span>
+            <input type="submit" class="btn btn-success" value="Guardar" />
+            <span>&nbsp;</span>
+            <a style="background-color:red;color:white" class="btn btn-success" href="/Usuarios">Cancelar</a>
         </div>
         <br />
         <div class="col-12 row" style="text-align:left; font-weight:bold">
             <span class="col-12">@LoginMesssage</span>
         </div>
     </EditForm>
-    </div>
-    <br />
+</div>
+<br />
 
 
 @code
 {
-        private User user;
-        public string LoginMesssage { get; set; }
-        public List<Role> Roles { get; set; }
-        
-        public bool isDealer { get; set; }
-        public string TipoDNI { get; set; }
-        public string RecordName { get; set; }
-        public Guid IdRole { get; set; }
-        public Guid IdDealer { get; set; }
-        public List<Dealer> Dealers { get; set; }
+    private SGRBlazorApp.Data.User user;
+    public string LoginMesssage { get; set; }
+    public List<Role> Roles { get; set; }
 
-        private void OnChangeEvent(ChangeEventArgs changeEventArgs)
+    public bool isDealer { get; set; }
+    public string TipoDNI { get; set; }
+    public string RecordName { get; set; }
+    public Guid IdRole { get; set; }
+    public Guid IdDealer { get; set; }
+    public Guid IdOem { get; set; }
+    public bool isOem { get; set; }
+    public List<Dealer> Dealers { get; set; }
+    public List<Oem> Oems { get; set; }
+
+    private void OnChangeEvent(ChangeEventArgs changeEventArgs)
+    {
+
+        if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Rol...")
         {
-
-            if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Rol...")
+            IdRole = Guid.Parse((string)changeEventArgs.Value);
+            user.IdRole = IdRole;
+            if (Roles.FirstOrDefault(o => o.Id == IdRole).Descripcion == "Dealer" || Roles.FirstOrDefault(o => o.Id == IdRole).Descripcion == "Visualizador Dealer")
             {
-                IdRole = Guid.Parse((string)changeEventArgs.Value);
-                user.IdRole = IdRole;
-                if (Roles.FirstOrDefault(o => o.Id == IdRole).Descripcion == "Dealer")
-                {
-                    isDealer = true;
-                }
-                else
-                {
-                    isDealer = false;
-                    user.IdDealer = null;
-                }
-
+                isDealer = true;
             }
             else
             {
                 isDealer = false;
                 user.IdDealer = null;
             }
-        }
-
-        private void OnChangeEvent2(ChangeEventArgs changeEventArgs)
-        {
-            if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Dealer...")
+            if (Roles.FirstOrDefault(o => o.Id == IdRole).Descripcion == "OEM" || Roles.FirstOrDefault(o => o.Id == IdRole).Descripcion == "Visualizador OEM")
             {
-                IdDealer = Guid.Parse((string)changeEventArgs.Value);
-                user.IdDealer = IdDealer;
+                isOem = true;
             }
             else
             {
-                  user.IdDealer = null;
+                isOem = false;
+                user.IdOem = null;
             }
-        }
 
-        protected async override Task OnInitializedAsync()
+        }
+        else
         {
-            user = new User();
             isDealer = false;
-            Dealers = await dealerService.GetAllAsync("Dealer/GetDealer");
-            Roles = await roleService.GetAllAsync("Role/GetRole");
-            //return base.OnInitializedAsync();
-
+            user.IdDealer = null;
+            isOem = false;
+            user.IdOem = null;
         }
+    }
 
-        public void Dispose()
+    private void OnChangeEvent2(ChangeEventArgs changeEventArgs)
+    {
+        if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Dealer...")
         {
-            Console.WriteLine("Users - Dispose");
+            IdDealer = Guid.Parse((string)changeEventArgs.Value);
+            user.IdDealer = IdDealer;
         }
-
-        private async Task<bool> RegisterUser()
+        else
         {
-            //assume that user is valid
+            user.IdDealer = null;
+        }
+    }
+
+    private void OnChangeEvent3(ChangeEventArgs changeEventArgs)
+    {
+        if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione OEM...")
+        {
+            IdOem = Guid.Parse((string)changeEventArgs.Value);
+            user.IdOem = IdOem;
+        }
+        else
+        {
+            user.IdOem = null;
+        }
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal userr;
+
+    bool IsUserAuthenticated;
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        userr = (await authenticationStateTask).User;
+
+        if (!userr.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+        user = new SGRBlazorApp.Data.User();
+        isDealer = false;
+        isOem = false;
+        Dealers = await dealerService.GetAllAsync("Dealer/GetDealer");
+        Roles = await roleService.GetAllAsync("Role/GetRole");
+        Oems = await OemService.GetAllAsync("Oems/GetOems");
+        //return base.OnInitializedAsync();
+
+    }
+
+
+
+    public void Dispose()
+    {
+        Console.WriteLine("Users - Dispose");
+    }
+
+    private async Task<bool> RegisterUser()
+    {
+        //assume that user is valid
+        try
+        {
             user.Source = "APPC";
             var returnedUser = await userService.RegisterUserAsync(user);
 
@@ -174,4 +250,11 @@
 
             return await Task.FromResult(true);
         }
+        catch (Exception ex)
+        {
+            await JSRuntime.MostrarMensaje("Error!", "Ocurrio un error, por favor intente nuevamente!", TipoMensajeSweetAlert.error);
+            Logger.AddLine(String.Format("{0}-{1}-{2}", DateTime.Now.ToString(), ex.Message, ex.StackTrace));
+            return await Task.FromResult(false);
+        }
     }
+}

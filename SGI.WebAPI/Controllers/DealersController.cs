@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SGIWebApi.Models;
+using SGR.Models.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
+using SGIWebApi.Models;
 
 namespace SGIWebApi.Controllers
 {
@@ -38,7 +39,22 @@ namespace SGIWebApi.Controllers
         {
             try
             {
-                var result = await _context.Dealers.Where(o => o.Deleted == null).ToListAsync();
+                var result = await _context.Dealers.Where(o => o.Deleted == null).Include(o => o.MotorDealers).Include(o => o.Pais).Include(o => o.Provincia).ToListAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                return BadRequest(ex);
+            }
+        }
+
+        [HttpGet("GetDealerFull")]
+        public async Task<ActionResult<IEnumerable<Dealer>>> GetDealersAll()
+        {
+            try
+            {
+                var result = await _context.Dealers.Include(o => o.Pais).Include(o => o.Provincia).ToListAsync();
                 return Ok(result);
             }
             catch (Exception ex)
@@ -118,8 +134,34 @@ namespace SGIWebApi.Controllers
                 {
                     return BadRequest();
                 }
-
+                var certs = Dealer.Aux2;
+                Dealer.Aux2 = String.Empty;
                 _context.Entry(Dealer).State = EntityState.Modified;
+
+
+                foreach (var item in _context.MotorDealers.Where(o => o.DealerId == Dealer.Id))
+                {
+                    _context.MotorDealers.Remove(item);
+                }
+
+                
+                if (!String.IsNullOrEmpty(certs))
+                {
+                    var datos = certs.Split(',');
+                    foreach (var item in datos)
+                    {
+                        if (!String.IsNullOrEmpty(item))
+                        {
+                            Guid IdCer = _context.Motors.FirstOrDefault(o => o.Codigo == item).Id;
+                            MotorDealer cert = new MotorDealer();
+                            cert.Id = Guid.NewGuid();
+                            cert.Created = DateTime.Now;
+                            cert.DealerId = Dealer.Id;
+                            cert.MotorId = IdCer;
+                            _context.MotorDealers.Add(cert);
+                        }
+                    }
+                }
 
                 try
                 {
@@ -197,6 +239,33 @@ namespace SGIWebApi.Controllers
             }
 
         }
+
+        // DELETE: api/Dealer/5
+        [HttpDelete("ActivateDealer/{id}")]
+        public async Task<ActionResult<Dealer>> ActivateDealer(string accessToken, Guid id)
+        {
+            try
+            {
+                if (GetUserFromAccessToken(accessToken))
+                    throw new Exception("Invalid Token");
+                var Dealer = await _context.Dealers.FindAsync(id);
+                if (Dealer == null)
+                {
+                    return NotFound();
+                }
+                Dealer.Deleted = null;
+                _context.Entry(Dealer).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+                return Ok(Dealer);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                return BadRequest(ex);
+            }
+
+        }
+
 
         private bool DealerExists(Guid id)
         {

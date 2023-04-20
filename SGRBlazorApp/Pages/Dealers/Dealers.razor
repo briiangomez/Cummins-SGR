@@ -9,18 +9,118 @@
 @inject ILocalStorageService localStorageService
 @inject IJSRuntime JSRuntime
 @implements IDisposable
+@inject NavigationManager navigationManager
+@inject TooltipService tooltipService
 
-    <div class="col-12">
 
-        <h3><b>Dealers</b></h3>
-        <br />
-        <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
-            <Authorized>
-                <a class="btn btn-primary" style="text-underline-position:below; cursor:pointer; color:blue" href="/addDealer">Nuevo Dealer</a>
-            </Authorized>
-        </AuthorizeView>
-        <br />
-        <SpinLoader IsLoading="isLoading">
+<div class="col-12">
+
+    <h3><b>Dealers</b></h3>
+    <br />
+    <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+        <Authorized>
+            <a class="btn btn-primary" style="text-underline-position:below; cursor:pointer; " href="/addDealer">Nuevo Dealer</a>
+        </Authorized>
+    </AuthorizeView>
+    <br />
+    <br />
+
+    @if (isLoading)
+    {
+<RadzenDataGrid AllowFiltering="true" AllowColumnResize="true"
+                FilterMode="FilterMode.Simple" PageSize="20" AllowPaging="true" AllowSorting="true" Data="@DealerList.OrderBy(o => o.Name).ToList()" TItem="Dealer"
+                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                LogicalFilterOperator="LogicalFilterOperator.Or">
+    <Columns>
+        <RadzenDataGridColumn TItem="Dealer" Property="Name" Title="Nombre" />
+        <RadzenDataGridColumn TItem="Dealer" Property="LocationCode" Title="Codigo" />
+        <RadzenDataGridColumn TItem="Dealer" Property="Address" Title="Direccion" />
+        <RadzenDataGridColumn TItem="Dealer" Property="City" Title="Ciudad" />
+
+        @*<RadzenDataGridColumn TItem="Dealer" Property="State" Title="" />*@
+        <RadzenDataGridColumn TItem="Dealer" Title="Provincia / Estado" Property="Provincia.Nombre">
+            <Template Context="Equipo">
+                @if (Equipo.ProvinciaId != null)
+                {@(Equipo.Provincia.Nombre)}
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Dealer" Title="Pais" Property="Pais.Nombre">
+            <Template Context="Equipo">
+                @if (Equipo.PaisId != null)
+                {@(Equipo.Pais.Nombre)}
+            </Template>
+        </RadzenDataGridColumn>
+        @*<RadzenDataGridColumn TItem="Dealer" Property="Country" Title="Pais" />*@
+        <RadzenDataGridColumn TItem="Dealer" Property="Phone" Title="Telefono" />
+        <RadzenDataGridColumn TItem="Dealer" Context="sampleBlazorModelsSampleOrder" Filterable="false" Sortable="false" TextAlign="TextAlign.Left" Title="Editar" Width="100px">
+            <Template Context="Certificacion">
+                <RadzenButton Icon="edit" Size="ButtonSize.Medium" Click="@(args => EditRow(Certificacion.Id))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Dealer" Context="order" Filterable="false" Sortable="false" TextAlign="TextAlign.Left" Title="Activar/Desactivar" Width="150px">
+            <Template Context="Certificacion">
+                @if (Certificacion.Deleted == null)
+                {
+    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Medium" Click="@(args => DeleteDealer(Certificacion.Id))" @onclick:stopPropagation="true">
+    </RadzenButton> }
+                            else
+                            {
+    <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="done" Size="ButtonSize.Medium" Click="@(args => ActivarDealer(Certificacion.Id))" @onclick:stopPropagation="true">
+    </RadzenButton>}
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid> @*<table id="dealers" class="table" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>Nombre</th>
+                                                <th>Codigo</th>
+                                                <th>Codigo Distribuidor</th>
+                                                <th>Direccion</th>
+                                                <th>Ciudad</th>
+                                                <th>Provincia / Estado</th>
+                                                <th>Pais</th>
+                                                <th>Telefono</th>
+                                                <th style="width:15%"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var Dealer in DealerList)
+                                            {
+                            <tr>
+                                <td>@Dealer.Name</td>
+                                <td>@Dealer.LocationCode</td>
+                                <td>@Dealer.DistributorCode</td>
+                                <td>@Dealer.Address</td>
+                                <td>@Dealer.City</td>
+                                <td>@Dealer.State</td>
+                                <td>@Dealer.Country</td>
+                                <td>@Dealer.Phone</td>
+                                <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+                                    <Authorized>
+                                        <th>
+                                            <a class="btn btn-success" href=@string.Format("/editDealer/{0}", Dealer.Id)><i class="fa fa-pencil"></i></a>
+                                            @{ if (Dealer.Deleted == null)
+                                                {
+                        <a style="background-color:red;color:white" class="btn btn-success" @onclick="(() => DeleteDealer(Dealer.Id))"><i class="fa fa-remove"></i></a> }
+                    else
+                    {
+                    <a style="background-color:green;color:white" class="btn btn-success" @onclick="(() => ActivarDealer(Dealer.Id))"><i class="fa fa-check"></i></a> } }
+                                        </th>
+                                    </Authorized>
+                                </AuthorizeView>
+                            </tr>}
+                                        </tbody>
+                                    </table>*@ }
+else
+{
+<div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
+    <br /><br />
+    <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
+</div>}
+    @*<SpinLoader IsLoading="isLoading">
             <LoadingTemplate>
                 <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
                     <br /><br />
@@ -38,14 +138,14 @@
                                         OnSearchTextChanged="@(e => OnDealerSearchTextChanged(e, "LocationCode"))"></GridColumn>
                             <GridColumn ColumnTitle="Codigo Distribuidor"
                                         OnSearchTextChanged="@(e => OnDealerSearchTextChanged(e, "DistributorCode"))"></GridColumn>
-                            <GridColumn ColumnTitle="Pais"
-                                        OnSearchTextChanged="@(e => OnDealerSearchTextChanged(e, "Country"))"></GridColumn>
-                            <GridColumn ColumnTitle="Provincia/Estado"
-                                        OnSearchTextChanged="@(e => OnDealerSearchTextChanged(e, "State"))"></GridColumn>
-                            <GridColumn ColumnTitle="Ciudad"
-                                        OnSearchTextChanged="@(e => OnDealerSearchTextChanged(e, "City"))"></GridColumn>
                             <GridColumn ColumnTitle="Direccion"
                                         OnSearchTextChanged="@(e => OnDealerSearchTextChanged(e, "Address"))"></GridColumn>
+                            <GridColumn ColumnTitle="Ciudad"
+                                        OnSearchTextChanged="@(e => OnDealerSearchTextChanged(e, "City"))"></GridColumn>
+                            <GridColumn ColumnTitle="Provincia/Estado"
+                                        OnSearchTextChanged="@(e => OnDealerSearchTextChanged(e, "State"))"></GridColumn>
+                            <GridColumn ColumnTitle="Pais"
+                                        OnSearchTextChanged="@(e => OnDealerSearchTextChanged(e, "Country"))"></GridColumn>
                             <GridColumn ColumnTitle="Telefono"
                                         OnSearchTextChanged="@(e => OnDealerSearchTextChanged(e, "Phone"))"></GridColumn>
                             <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
@@ -55,37 +155,20 @@
                             </AuthorizeView>
                         </GridColumns>
                         <GridRow Context="Dealer">
-                            @*<td>
+                            <td>
                                 <NavLink href=@string.Format("/Dealers/Dealerdetail/{0}", @Dealer.Id)>
                                     @Dealer.Id
                                 </NavLink>
-                            </td>*@
-                            <td>@Dealer.Name</td>
-                            <td>@Dealer.LocationCode</td>
-                            <td>@Dealer.DistributorCode</td>
-                            <td>@Dealer.Country</td>
-                            <td>@Dealer.State</td>
-                            <td>@Dealer.City</td>
-                            <td>@Dealer.Address</td>
-                            <td>@Dealer.Phone</td>
-                            <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
-                                <Authorized>
-                                    <th>
-                                        <a style="text-underline-position:below; cursor:pointer; color:blue" href=@string.Format("/editDealer/{0}", Dealer.Id)>Editar</a> |
-                                        <a style="text-underline-position:below; cursor:pointer; color:blue" @onclick="(() => DeleteDealer(Dealer.Id))">Eliminar</a>
-                                    </th>
-                                </Authorized>
-                            </AuthorizeView>
+                            </td>
+
                         </GridRow>
                     </GridView>
                 }
             </ContentTemplate>
-        </SpinLoader>
-    </div>
+        </SpinLoader>*@
+</div>
 
-@code {
-
-    public Dealer Dealer { get; set; }
+@code { public Dealer Dealer { get; set; }
     public List<Dealer> DealerList { get; set; }
     public List<Dealer> filteredDealerList { get; set; }
     public string SelectedCity { get; set; }
@@ -95,9 +178,32 @@
     public string RecordName { get; set; }
     public string[] Cities { get; set; }
     public bool IsGridViewFiltered { get; set; }
-    bool isLoading = true;
+    bool isLoading = false;
 
     ElementReference firstNameTextBox;
+
+    ElementReference htmlButton;
+    RadzenButton radzenButton;
+
+    void ShowTooltipEdit(ElementReference elementReference, TooltipOptions options = null) => tooltipService.Open(elementReference, "Editar Registro", options);
+
+    void ShowTooltipDelete(ElementReference elementReference, TooltipOptions options = null) => tooltipService.Open(elementReference, "Eliminar Registro", options);
+
+
+    void EditRow(Guid id)
+    {
+        navigationManager.NavigateTo(string.Format("/editDealer/{0}", id));
+    }
+
+    void DeleteRow(Guid id)
+    {
+        navigationManager.NavigateTo(string.Format("/deleteSetting/{0}", id));
+    }
+
+    void ShowTooltip(ElementReference elementReference, TooltipOptions options = null)
+    {
+        tooltipService.Open(elementReference, options.Text, options);
+    }
 
     protected override void OnInitialized()
     {
@@ -105,14 +211,45 @@
         base.OnInitialized();
     }
 
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+
+    bool IsUserAuthenticated;
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
     protected override async Task OnInitializedAsync()
     {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
         Console.WriteLine("Dealers - OnInitializedAsync");
 
         Dealer = new Dealer();
-        DealerList = new List<Dealer>();
-        //DealerList = await DealerService.GetDealers();
+        DealerList = filteredDealerList = await bookStoresService.GetAllAsync("Dealer/GetDealerFull");
 
+        if (DealerList == null)
+        {
+
+            RefreshRequest refreshRequest = new RefreshRequest();
+            refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+            refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+            var user1 = await userService.RefreshTokenAsync(refreshRequest);
+            await localStorageService.SetItemAsync("accessToken", user1.AccessToken);
+
+            DealerList = filteredDealerList = await bookStoresService.GetAllAsync("Dealer/GetDealerFull");
+        }
+        //DealerList = await DealerService.GetDealers();
+        isLoading = true;
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#dealers");
         await base.OnInitializedAsync();
     }
 
@@ -138,22 +275,15 @@
 
     protected override void OnAfterRender(bool firstRender)
     {
-        Console.WriteLine("Dealers - OnAfterRender - firstRender = " + firstRender);
+        Console.WriteLine("Clientes - OnAfterRender - firstRender = " + firstRender);
         base.OnAfterRender(firstRender);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        Console.WriteLine("Dealers - OnAfterRenderAsync - firstRender = " + firstRender);
-
-        if (firstRender)
-        {
-            await LoadDealers();
-
-            isLoading = false;
-            StateHasChanged();
-        }
-
+        Console.WriteLine("Clientes - OnAfterRenderAsync - firstRender = " + firstRender);
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesRemove", "#dealers");
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#dealers");
         await base.OnAfterRenderAsync(firstRender);
     }
 
@@ -166,7 +296,7 @@
     {
         await Task.Delay(500);
 
-        DealerList = filteredDealerList = await bookStoresService.GetAllAsync("Dealer/GetDealer");
+        DealerList = filteredDealerList = await bookStoresService.GetAllAsync("Dealer/GetDealerFull");
 
         if (DealerList == null)
         {
@@ -177,23 +307,32 @@
             var user1 = await userService.RefreshTokenAsync(refreshRequest);
             await localStorageService.SetItemAsync("accessToken", user1.AccessToken);
 
-            DealerList = filteredDealerList = await bookStoresService.GetAllAsync("Dealer/GetDealer");
+            DealerList = filteredDealerList = await bookStoresService.GetAllAsync("Dealer/GetDealerFull");
         }
-
-        //if (DealerList != null)
-        //    DealerList = DealerList.OrderByDescending(auth => auth.DealerId).ToList();
-
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesRemove", "#dealers");
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#dealers");
         StateHasChanged();
     }
 
+    private async Task ActivarDealer(Guid DealerId)
+    {
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea activar el Dealer?", TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            await bookStoresService.DeleteAsync("Dealer/ActivateDealer/", DealerId);
 
+            await LoadDealers();
+        }
+        //throw new Exception("DeleteDealer");
+    }
 
     private async Task DeleteDealer(Guid DealerId)
     {
-        var confirmado = await JSRuntime.Confirmar("Atencion!","¿Desea eliminar el Dealer?",TipoMensajeSweetAlert.warning);
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea desactivar el Dealer?", TipoMensajeSweetAlert.warning);
         if (confirmado)
         {
             await bookStoresService.DeleteAsync("Dealer/DeleteDealer/", DealerId);
+
             await LoadDealers();
         }
         //throw new Exception("DeleteDealer");
@@ -244,6 +383,4 @@
                 Console.WriteLine("Default case");
                 break;
         }
-    }
-
-}
+    } }

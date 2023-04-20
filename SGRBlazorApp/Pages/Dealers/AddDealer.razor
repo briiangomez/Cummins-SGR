@@ -3,10 +3,15 @@
 @using SGRBlazorApp.Interfaces
 @using CuriousDriveRazorLibrary
 @using Blazored.LocalStorage
+@using System.Globalization
 @using SGRBlazorApp.Shared
 @inject ISgrService<Dealer> bookStoresService
 @inject IUserService userService
 @inject ILocalStorageService localStorageService
+@inject ISgrService<Motor> motorService
+@inject ISgrService<Pai> paisService
+@inject ISgrService<Provincium> provinciaService
+@inject ISgrService<MotorDealer> certificacionMotService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager navigationManager
 @implements IDisposable
@@ -15,7 +20,7 @@
 @using SGRBlazorApp.Services
 @inject GeocodingService GeocodingService
 <div class="col-12">
-    <h3><b>Enter Dealer Information</b></h3>
+    <h3><b>Agregar Nuevo Dealer</b></h3>
     <hr />
 
     <ServerValidations IsVisible="IsVisible" Result="Result">
@@ -26,114 +31,154 @@
         @*<DataAnnotationsValidator />*@
 
         <div class="col-12 row">
-            <label class="col-2 font-weight-bold">Nombre :</label>
-            <input class="form-control col-3" @bind="Dealer.Name" placeholder="Nombre" />
+            <label class="col-4 font-weight-bold">Nombre :</label>
+            <input class="form-control col-3" @bind="Dealer.Name" placeholder="Nombre" required />
             &nbsp;<ValidationMessage For="@(() => Dealer.Name)" />
         </div>
         <br />
         <div class="col-12 row">
-            <label class="col-2 font-weight-bold">Codigo Dealer :</label>
-            <InputText class="form-control col-3" @bind-Value="Dealer.LocationCode" placeholder="Codigo Dealer" />
+            <label class="col-4 font-weight-bold">Codigo Dealer :</label>
+            <InputText class="form-control col-3" @bind-Value="Dealer.LocationCode" placeholder="Codigo Dealer" required />
             &nbsp;<ValidationMessage For="@(() => Dealer.LocationCode)" />
         </div>
         <br />
         <div class="col-12 row">
-            <label class="col-2 font-weight-bold">Codigo Distribuidor :</label>
-            <InputText class="form-control col-3" @bind-Value="Dealer.DistributorCode" placeholder="Codigo Distribuidor" />
+            <label class="col-4 font-weight-bold">Codigo Distribuidor :</label>
+            <InputText class="form-control col-3" @bind-Value="Dealer.DistributorCode" placeholder="Codigo Distribuidor" required />
             &nbsp;<ValidationMessage For="@(() => Dealer.DistributorCode)" />
         </div>
         <br />
         <div class="col-12 row">
-            <label class="col-2 font-weight-bold">Pais :</label>
-            <InputText class="form-control col-3" @bind-Value="Dealer.Country" placeholder="Pais" />
+            <label class="col-4 font-weight-bold">Pais :</label>
+            <select class="form-control col-3" @onchange="OnChangeEvent" name="PaisId" id="PaisId" required>
+                <option value="">Seleccione Pais...</option>
+                @if (PaisList != null)
+                {
+                    foreach (var item in PaisList.OrderBy(o => o.Nombre))
+                    {
+                        <option value="@item.Id">@item.Nombre</option>
+                    }
+                }
+            </select>
             &nbsp;<ValidationMessage For="@(() => Dealer.Country)" />
         </div>
         <br />
         <div class="col-12 row">
-            <label class="col-2 font-weight-bold">Provincia/Estado :</label>
-            <InputText class="form-control col-3" @bind-Value="Dealer.State" placeholder="Provincia/Estado" />
+            <label class="col-4 font-weight-bold">Provincia/Estado :</label>
+            <select class="form-control col-3" @onchange="OnChangeEvent2" name="ProvinciaId" id="ProvinciaId" required>
+                <option value="">Seleccione Provincia...</option>
+                @if (ProvinciasList != null)
+                {
+                    foreach (var item in ProvinciasList.OrderBy(o => o.Nombre))
+                    {
+                        <option value="@item.Id">@item.Nombre</option>
+                    }
+                }
+            </select>
             &nbsp;<ValidationMessage For="@(() => Dealer.State)" />
         </div>
         <br />
         <div class="col-12 row">
-            <label class="col-2 font-weight-bold">Ciudad :</label>
-            <InputText class="form-control col-3" @bind-Value="Dealer.City" placeholder="Ciudad" />
+            <label class="col-4 font-weight-bold">Ciudad :</label>
+            <InputText class="form-control col-3" @bind-Value="Dealer.City" placeholder="Ciudad" required />
             &nbsp;<ValidationMessage For="@(() => Dealer.City)" />
         </div>
         <br />
         <div class="col-12 row">
-            <label class="col-2 font-weight-bold">Direccion :</label>
-            <InputText class="form-control col-3" @bind-Value="Dealer.Address" placeholder="Direccion" />
-            &nbsp;<ValidationMessage For="@(() => Dealer.Address)" />
-            <Radzen.Blazor.RadzenTextBox @bind-Value="@(Dealer.Address)" Placeholder="Address:" Name="Address" style="width: 25%" @oninput="onTextChanged"></Radzen.Blazor.RadzenTextBox>
-            <InputNumber class="form-control col-3" @bind-Value="Dealer.LatitudGps" Style="visibility:hidden" Name="LatitudGps" placeholder="State" />
-            <InputNumber class="form-control col-3" @bind-Value="Dealer.LongitudGps" Style="visibility:hidden" Name="LongitudGps" placeholder="State" />
+            <label class="col-4 font-weight-bold">Telefono :</label>
+            <InputText class="form-control col-3" @bind-Value="Dealer.Phone" placeholder="Telefono" required />
+            &nbsp;<ValidationMessage For="@(() => Dealer.Phone)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-4 font-weight-bold">Codigo Postal :</label>
+            <InputText class="form-control col-3" @bind-Value="Dealer.Zip" placeholder="Codigo Postal" required />
+            &nbsp;<ValidationMessage For="@(() => Dealer.Zip)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-4 font-weight-bold">Email :</label>
+            <input type="email" class="form-control  col-3" placeholder="Email" @bind="Dealer.Email" name="Email" autocomplete="off" required />
+            &nbsp;<ValidationMessage For="@(() => Dealer.Email)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-4 font-weight-bold">Pagina Web :</label>
+            <InputText class="form-control col-3" @bind-Value="Dealer.Website" placeholder="Pagina Web" />
+            &nbsp;<ValidationMessage For="@(() => Dealer.Website)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-4 font-weight-bold">Motores :</label>
+            <RadzenListBox AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" @bind-Value=@multipleValues Multiple="true" Data=@CertificacionList
+                           TextProperty="Codigo" ValueProperty="Codigo" Change=@(args => OnChange(args, "ListBox with multiple selection")) Style="height:300px;width:100%" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <AutocompleteBing></AutocompleteBing>
+        </div>
+        <!--<div class="col-12 row">
+            <label class="col-4 font-weight-bold">Direccion :</label>
+            &nbsp;<ValidationMessage For=" />
+            <Radzen.Blazor.RadzenTextBox -Value="" Placeholder="Address:" Name="Address" style="width: 25%" ="onTextChanged" required></Radzen.Blazor.RadzenTextBox>
+            <InputNumber class="form-control col-3" -Value="Dealer.LatitudGps" Style="visibility:hidden" Name="LatitudGps" placeholder="State" />
+            <InputNumber class="form-control col-3" -Value="Dealer.LongitudGps" Style="visibility:hidden" Name="LongitudGps" placeholder="State" />
             <br />
-            @if (IsLoading)
+            if (IsLoading)
             {
                 <Radzen.Blazor.RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="margin: 100%"></Radzen.Blazor.RadzenProgressBar>
             }
 
-            @if (Results.Length > 0)
+            if (Results.Length > 0)
             {
-                <Radzen.Blazor.RadzenGrid Data="Results" RowSelect="@OnRowSelect" TItem="GeocodingResult">
+                <Radzen.Blazor.RadzenGrid Data="Results" RowSelect="" TItem="GeocodingResult">
                     <Columns>
                         <Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="FormattedAddress" Title="Address">
                             <FooterTemplate>
-                                Total Results: <b>@Results.Count()</b>
+                                Total Results: <b></b>
                             </FooterTemplate>
                         </Radzen.Blazor.RadzenGridColumn>
                     </Columns>
                 </Radzen.Blazor.RadzenGrid>
             }
+        </div>
+        <div class="col-12 row">
 
-
-            @if (showMap)
+            if (showMap)
             {
                 <br />
-                <Radzen.Blazor.RadzenGoogleMap Zoom="@zoom"
-                                               style="height:400px"
-                                               ApiKey="AIzaSyCBhlrEoE5ndgXMCeI7zyq0dK4MJksa8Ak"
+
+
+                <MapaComponent Latitud="" Longitud="" zoom="zoom" posiciones="posiciones"></MapaComponent>-->
+        @*<Radzen.Blazor.RadzenGoogleMap Zoom="@zoom"
+                                               style="height:400px;width:50%"
+                                               ApiKey="AIzaSyAPHRhaDoTeYi6g6Osx6d6ksw7v0I_fWyE"
                                                Center="@(posMap)"
                                                MapClick="@MapClick">
                     <Markers>
-                        @if (pos != null)
+                        if (pos != null)
                         {
                             <Radzen.Blazor.RadzenGoogleMapMarker Title="@Address" Label="@Address" Position="@(pos)" />
                         }
                     </Markers>
                 </Radzen.Blazor.RadzenGoogleMap>
-            }
-        </div>
+            <Radzen.Blazor.RadzenGoogleMap Zoom="@zoom"
+                                                                                 style="height:400px;width:50%"
+                                                                                 ApiKey="AIzaSyAPHRhaDoTeYi6g6Osx6d6ksw7v0I_fWyE"
+                                                                                 Center="@(posMap)"
+                                                                                 MapClick="@MapClick">
+                <Markers>
+                    <Radzen.Blazor.RadzenGoogleMapMarker Title="@Address" Label="@Address" Position="@(pos)" />
+                </Markers>
+            </Radzen.Blazor.RadzenGoogleMap>*@
+        <!--}
+        </div>-->
         <br />
-        <div class="col-12 row">
-            <label class="col-2 font-weight-bold">Telefono :</label>
-            <InputText class="form-control col-3" @bind-Value="Dealer.Phone" placeholder="Telefono" />
-            &nbsp;<ValidationMessage For="@(() => Dealer.Phone)" />
-        </div>
-        <br />
-        <div class="col-12 row">
-            <label class="col-2 font-weight-bold">Codigo Postal :</label>
-            <InputText class="form-control col-3" @bind-Value="Dealer.Zip" placeholder="Codigo Postal" />
-            &nbsp;<ValidationMessage For="@(() => Dealer.Zip)" />
-        </div>
-        <br />
-        <div class="col-12 row">
-            <label class="col-2 font-weight-bold">Email :</label>
-            <InputText class="form-control col-3" @bind-Value="Dealer.Email" placeholder="Phone" />
-            &nbsp;<ValidationMessage For="@(() => Dealer.Email)" />
-        </div>
-        <br />
-        <div class="col-12 row">
-            <label class="col-2 font-weight-bold">Pagina Web :</label>
-            <InputText class="form-control col-3" @bind-Value="Dealer.Website" placeholder="Pagina Web" />
-            &nbsp;<ValidationMessage For="@(() => Dealer.Website)" />
-        </div>
         <div class="col-12 row">
             <span class="col-2"></span>
-            <input type="submit" class="col-1 btn btn-primary" value="Guardar" />
+            <input type="submit" class="btn btn-success" value="Guardar" />
             <span>&nbsp;</span>
-            <a class="col-1 btn btn-primary" href="/dealers">Cancelar</a>
+            <a style="background-color:red;color:white" class="btn btn-success" href="/dealers">Cancelar</a>
         </div>
     </EditForm>
 </div>
@@ -141,13 +186,18 @@
 
 
 @code
-{
-    public Dealer Dealer { get; set; }
+{ public Dealer Dealer { get; set; }
     public bool IsVisible { get; set; }
     public bool Result { get; set; }
     public string RecordName { get; set; }
-
+    public List<Dealer> DealerList { get; set; }
+    public List<Pai> PaisList { get; set; }
+    public List<Provincium> ProvinciumList { get; set; }
+    public List<Provincium> ProvinciasList { get; set; }
+    IEnumerable<string> multipleValues = new string[] { };
+    string certs = "";
     Subject<string> addressSubject = new Subject<string>();
+    public List<Motor> CertificacionList { get; set; }
 
     protected override void OnInitialized()
     {
@@ -155,18 +205,47 @@
         base.OnInitialized();
     }
 
+    void OnChange(object value, string name)
+    {
+        var str = value is IEnumerable<object> ? string.Join(",", (IEnumerable<object>)value) : value;
+        certs = (string)str;
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+
+    bool IsUserAuthenticated;
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
     protected override async Task OnInitializedAsync()
     {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
         Console.WriteLine("Dealers - OnInitializedAsync");
 
         Dealer = new Dealer();
 
         await base.OnInitializedAsync();
 
+        CertificacionList = await motorService.GetAllAsync("Motor/GetMotor");
+        PaisList = await paisService.GetAllAsync("Pais/GetPais");
+        ProvinciumList = await provinciaService.GetAllAsync("Provincia/GetProvincia");
+        ProvinciasList = new List<Provincium>();
+        DealerList = await bookStoresService.GetAllAsync("Dealer/GetDealer");
         addressSubject
-            .Throttle(TimeSpan.FromMilliseconds(300))
-            .DistinctUntilChanged()
-            .Subscribe(OnAddressChanged);
+        .Throttle(TimeSpan.FromMilliseconds(300))
+    .DistinctUntilChanged()
+    .Subscribe(OnAddressChanged);
     }
 
     public void Dispose()
@@ -174,24 +253,104 @@
         Console.WriteLine("Dealers - Dispose");
     }
 
+    private void OnChangeEvent(ChangeEventArgs changeEventArgs)
+    {
+        if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Pais...")
+        {
+            Guid idPais = Guid.Parse((string)changeEventArgs.Value);
+            Dealer.PaisId = idPais;
+            ProvinciasList = ProvinciumList.Where(o => o.PaisId == idPais).ToList();
+        }
+        else
+        {
+            ProvinciasList = new List<Provincium>();
+        }
+    }
+
+    private void OnChangeEvent2(ChangeEventArgs changeEventArgs)
+    {
+        if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Provincia...")
+        {
+            Guid IdProvncia = Guid.Parse((string)changeEventArgs.Value);
+            Dealer.ProvinciaId = IdProvncia;
+        }
+        //else
+        //{
+        //      Incidencia.IdDealer = null;
+        //}
+    }
+
     private async Task SaveDealer()
     {
-        if (Dealer.Id == Guid.Empty)
-            await bookStoresService.SaveAsync("Dealer/CreateDealer", Dealer);
-        else
-            await bookStoresService.UpdateAsync("Dealer/UpdateDealer", Dealer.Id, Dealer);
+        try
+        {
+            //if (DealerList.Any(o => o.Name == Dealer.Name))
+            //{
+            //    await JSRuntime.MostrarMensaje("Atencion!", "El nombre ingresado ya se encuentra registrado!", TipoMensajeSweetAlert.warning);
+            //}
+            //else
+            if (DealerList.Any(o => o.LocationCode == Dealer.LocationCode))
+            {
+                await JSRuntime.MostrarMensaje("Atencion!", "El Codigo ingresado ya se encuentra registrado!", TipoMensajeSweetAlert.warning);
+            }
+            else
+            {
+                string lat = await JSRuntime.InvokeAsync<string>("getValue", "Lat");
+                string longi = await JSRuntime.InvokeAsync<string>("getValue", "Long");
+                string dire = await JSRuntime.InvokeAsync<string>("getValue", "Dir");
+                Dealer.Address = dire;
+                NumberFormatInfo formatProvider = new NumberFormatInfo();
+                formatProvider.NumberDecimalSeparator = ".";
+                formatProvider.NumberGroupSeparator = ",";
+                formatProvider.NumberGroupSizes = new int[] { 2 };
+                if (String.IsNullOrEmpty(lat) && String.IsNullOrEmpty(longi))
+                {
+                    await JSRuntime.MostrarMensaje("Atencion!", "El campo Direccion es Obligatorio!", TipoMensajeSweetAlert.warning);
 
-        Result = true;
-        IsVisible = true;
+                }
+                else
+                {
+                    Dealer.LatitudGps = Convert.ToDouble(lat, formatProvider);
+                    Dealer.LongitudGps = Convert.ToDouble(longi, formatProvider);
+                    var deal = await bookStoresService.SaveAsync("Dealer/CreateDealer", Dealer);
 
-        var firstName = Dealer.LocationCode;
-        var lastName = Dealer.Name;
+                    Result = true;
+                    IsVisible = true;
 
-        RecordName = firstName + " " + lastName;
+                    var firstName = Dealer.LocationCode;
+                    var lastName = Dealer.Name;
 
-        Dealer = new Dealer();
+                    RecordName = firstName + " " + lastName;
 
-        navigationManager.NavigateTo("/dealers");
+                    if (!String.IsNullOrEmpty(certs))
+                    {
+                        var datos = certs.Split(',');
+                        foreach (var item in datos)
+                        {
+                            if (!String.IsNullOrEmpty(item))
+                            {
+                                Guid IdCer = CertificacionList.FirstOrDefault(o => o.Codigo == item).Id;
+                                MotorDealer cert = new MotorDealer();
+                                cert.Id = Guid.NewGuid();
+                                cert.Created = DateTime.Now;
+                                cert.DealerId = deal.Id;
+                                cert.MotorId = IdCer;
+                                await certificacionMotService.SaveAsync("MotorDealer/CreateMotorDealer", cert);
+                            }
+                        }
+                    }
+
+                    Dealer = new Dealer();
+
+                    navigationManager.NavigateTo("/dealers");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.MostrarMensaje("Error!", "Ocurrio un error actualizando, por favor intente nuevamente!", TipoMensajeSweetAlert.error);
+            Logger.AddLine(String.Format("{0}-{1}-{2}", DateTime.Now.ToString(), ex.Message, ex.StackTrace));
+        }
     }
 
     int zoom = 5;
@@ -256,5 +415,5 @@
         IsLoading = false;
 
         await InvokeAsync(() => StateHasChanged());
-    }
-}
+    } }
+

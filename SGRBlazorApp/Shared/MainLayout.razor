@@ -4,33 +4,42 @@
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
-<div class="sidebar">
-    <NavMenu />
-</div>
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+    <RadzenDialog />
+    <RadzenTooltip />
+    <div class="main">
+        <div class="top-row px-4" style="z-index:10">
+            <AuthorizeView>
+                <Authorized>
+                    <a href="#">Hola @context.User.Identity.Name!</a>
+                    <a href="#" @onclick="(() => Logout())">Logout</a>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="/">Login</a>
+                </NotAuthorized>
+            </AuthorizeView>
 
-<div class="main">
-    <div class="top-row px-4">
-        <AuthorizeView>
-            <Authorized>
-                <a href="#">Hola @context.User.Identity.Name!</a>
-                <a href="/" @onclick="(() => Logout())">Logout</a>
-            </Authorized>
-            <NotAuthorized>
-                <a href="/">Login</a>
-            </NotAuthorized>
-        </AuthorizeView>
+        </div>
 
+        <div class="content px-4">
+            @Body
+        </div>
     </div>
 
-    <div class="content px-4">
-        @Body
-    </div>
-</div>
+    @code{
+        public async Task Logout()
+        {
+            try
+            {
+                await ((CustomAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsLoggedOut();
+                NavigationManager.NavigateTo("/");
+            }
+            catch (Exception ex)
+            {
+                NavigationManager.NavigateTo("");
 
-@code{
-    public async Task Logout()
-    {
-        await ((CustomAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsLoggedOut();
-        NavigationManager.NavigateTo("");
+            }
+        }
     }
-}

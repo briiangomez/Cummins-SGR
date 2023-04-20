@@ -5,84 +5,104 @@
 @inject NavigationManager navigationManager
 @inject ILocalStorageService localStorageService
 @inject IAuthorizationService authorizationService
+@inject IEmailSenderService emailService
+@inject NavigationManager NavigationManager
 @*@if (IsUserAuthenticated)
     {
         <h3><b>@user.Identity.Name</b> is logged in!!!</h3>
     }*@
 
 
-<img src="Images/logo.png" width="200px" />
+<div class="row-center">
+    <div class="row">
+        <div class="col-md-6">
+            <img src="Images/logo.png" width="200px" />
+        </div>
+        <div class="col-md-6">
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <h2 style="text-align:center;color:black">Bienvenido a Field Assistance Tool  (FAST) -</h2>
 
-<h2 style="text-align:center">Bienvenido a Cummins - SGI</h2>
+            <h3></h3>
 
-<h3></h3>
+            <h5 style="margin-left:20px; color:black;text-align:center">Argentina - @DateTime.Now.Year</h5>
 
-<h5 style="margin-left:20px; color:black;text-align:center">Argentina - @DateTime.Now.Year</h5>
+        </div>
+    </div>
+</div>
 
-<AuthorizeView>
-    <Authorized>
-        <div class="row-center">
-            <div class="navHome mTop40">
-                <div class="col-5">
-                    <a class="navHomeBtn" href="/incidencialist">
-                        <div class="row-center text_center mBottom10">
-                            <img src="../../images/Icons/campana.png" alt="Configurar" height="50" />
-                        </div>
-                        <div class="btnText">
-                            <h3>Reclamos</h3>
-                            <h5>Gestioná todos las Reclamos</h5>
-                        </div>
-                    </a>
+
+@*<AuthorizeView>
+        <Authorized>
+            <div class="row-center">
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <a class="navHomeBtn" href="/incidencias">
+                            <div class="row-center text_center mBottom10">
+                                <img src="../../images/Icons/campana.png" alt="Configurar" height="50" />
+                            </div>
+                            <div class="btnText">
+                                <h3>Reclamos</h3>
+                                <h5>Gestioná todos las Reclamos</h5>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a class="navHomeBtn" href="/dealers">
+                            <div class="row-center text_center mBottom10">
+                                <img src="../../images/Icons/templates.png" alt="Grupos" height="50" />
+                            </div>
+                            <div class="btnText">
+                                <h3>Dealers</h3>
+                                <h5>Gestioná los dealers cercanos</h5>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a class="navHomeBtn" href="/clientes">
+                            <div class="row-center text_center mBottom10">
+                                <img src="../../images/Icons/grupos.png" alt="Templates" height="50" />
+                            </div>
+                            <div class="btnText">
+                                <h3>Clientes</h3>
+                                <h5>Gestioná los clientes asociados</h5>
+                            </div>
+                        </a>
+                    </div>
+
                 </div>
-                <div class="col-5">
-                    <a class="navHomeBtn" href="/dealerlist">
-                        <div class="row-center text_center mBottom10">
-                            <img src="../../images/Icons/templates.png" alt="Grupos" height="50" />
-                        </div>
-                        <div class="btnText">
-                            <h3>Dealers</h3>
-                            <h5>Gestioná los dealers cercanos</h5>
-                        </div>
-                    </a>
-                </div>
-                <div class="col-5">
-                    <a class="navHomeBtn" href="/clienteslist">
-                        <div class="row-center text_center mBottom10">
-                            <img src="../../images/Icons/grupos.png" alt="Templates" height="50" />
-                        </div>
-                        <div class="btnText">
-                            <h3>Clientes</h3>
-                            <h5>Gestioná los clientes asociados</h5>
-                        </div>
-                    </a>
-                </div>
-                <div class="col-5">
-                    <a class="navHomeBtn" href="/Campaign">
-                        <div class="row-center text_center mBottom10">
-                            <img src="../../images/Icons/reportes.png" alt="Campaña" height="50" />
-                        </div>
-                        <div class="btnText">
-                            <h3>Encuestas</h3>
-                            <h5>Gestioná tus encuestas de servicio</h5>
-                        </div>
-                    </a>
-                </div>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <a class="navHomeBtn" href="#">
+                            <div class="row-center text_center mBottom10">
+                                <img src="../../images/Icons/reportes.png" alt="Campaña" height="50" />
+                            </div>
+                            <div class="btnText">
+                                <h3>Encuestas</h3>
+                                <h5>Gestioná tus encuestas de servicio</h5>
+                            </div>
+                        </a>
+                    </div>
 
-                <div class="col-5">
-                    <a class="navHomeBtn" href="/Report">
-                        <div class="row-center text_center mBottom10">
-                            <img src="../../images/Icons/configuracion.png" alt="Reportes" height="50" />
-                        </div>
-                        <div class="btnText">
-                            <h3>Configuración</h3>
-                            <h5>Configurá los anuncios y notificaciones</h5>
-                        </div>
-                    </a>
+                    <div class="col-md-2" >
+                        <a class="navHomeBtn" href="/Usuarios">
+                            <div class="row-center text_center mBottom10">
+                                <img src="../../images/Icons/configuracion.png" alt="Reportes" height="50" />
+                            </div>
+                            <div class="btnText">
+                                <h3>Configuración</h3>
+                                <h5>Configurá los anuncios y notificaciones</h5>
+                            </div>
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
-    </Authorized>
-</AuthorizeView>
+        </Authorized>
+    </AuthorizeView>*@
 
 
 @code {
@@ -97,17 +117,37 @@
 
     public int Count { get; set; } = 400;
 
+    private SGRBlazorApp.Data.User users;
+
     protected override async Task OnInitializedAsync()
     {
         user = (await authenticationStateTask).User;
 
-        if (user.Identity.IsAuthenticated)
-            IsUserAuthenticated = true;
+        if (!user.Identity.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            users = new SGRBlazorApp.Data.User();
 
-        if (user.IsInRole("Publisher"))
-            IsPublisher = true;
 
-        if ((await authorizationService.AuthorizeAsync(user, "SeniorEmployee")).Succeeded)
-            IsSeniorEmployee = true;
+            if (user.Identity.IsAuthenticated)
+                IsUserAuthenticated = true;
+
+            if (user.IsInRole("Publisher"))
+                IsPublisher = true;
+
+            if ((await authorizationService.AuthorizeAsync(user, "SeniorEmployee")).Succeeded)
+                IsSeniorEmployee = true;
+        }
+
+
+        //MailRequest mail = new MailRequest();
+
+        //mail.Email = "briian.gomez@hotmail.com";
+        //mail.Nombre = "Brian Gomez";
+        //mail.Subject = "FASS - TEST";
+        //emailService.SendEmailAsync(mail);
     }
 }

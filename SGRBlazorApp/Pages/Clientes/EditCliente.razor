@@ -27,32 +27,32 @@
 
         <div class="col-12 row">
             <label class="col-2 font-weight-bold">Nombre :</label>
-            <input class="form-control col-3" @bind="Cliente.Nombre" placeholder="Nombre" />
+            <input class="form-control col-3" @bind="Cliente.Nombre" placeholder="Nombre" required />
             &nbsp;<ValidationMessage For="@(() => Cliente.Nombre)" />
         </div>
         <br />
         <div class="col-12 row">
             <label class="col-2 font-weight-bold">Telefono :</label>
-            <InputText class="form-control col-3" @bind-Value="Cliente.Telefono" placeholder="Telefono" />
+            <InputText class="form-control col-3" @bind-Value="Cliente.Telefono" placeholder="Telefono" required />
             &nbsp;<ValidationMessage For="@(() => Cliente.Telefono)" />
         </div>
         <br />
         <div class="col-12 row">
             <label class="col-2 font-weight-bold">Celular :</label>
-            <InputText class="form-control col-3" @bind-Value="Cliente.Telefono" placeholder="Telefono" />
+            <InputText class="form-control col-3" @bind-Value="Cliente.Telefono" placeholder="Telefono Celular" required />
             &nbsp;<ValidationMessage For="@(() => Cliente.Telefono)" />
         </div>
         <br />
         <div class="col-12 row">
             <label class="col-2 font-weight-bold">Email :</label>
-            <InputText class="form-control col-3" @bind-Value="Cliente.Email" placeholder="Email" />
+            <InputText class="form-control col-3" @bind-Value="Cliente.Email" placeholder="Email" required />
             &nbsp;<ValidationMessage For="@(() => Cliente.Email)" />
         </div>
         <br />
         <div class="col-12 row">
             <label class="col-2 font-weight-bold">Tipo de Documento :</label>
-            <select class="form-control col-3" @onchange="OnChangeEvent" name="TipoDni" id="TipoDni">
-                <option value="">select city..</option>
+            <select class="form-control col-3" @onchange="OnChangeEvent" name="TipoDni" id="TipoDni" required>
+                <option value="">Seleccionar..</option>
                 <option value="DNI">DNI</option>
                 <option value="Pasaporte">Pasaporte</option>
                 <option value="LE">LE</option>
@@ -64,52 +64,13 @@
         <br />
         <div class="col-12 row">
             <label class="col-2 font-weight-bold">Nro de Documento :</label>
-            <InputText class="form-control col-3" @bind-Value="Cliente.Dni" placeholder="DNI" />
+            <InputText class="form-control col-3" @bind-Value="Cliente.Dni" placeholder="DNI" required />
             &nbsp;<ValidationMessage For="@(() => Cliente.Dni)" />
         </div>
-
         <br />
+
         <div class="col-12 row">
-            <label class="col-2 font-weight-bold">Direccion :</label>
-            <Radzen.Blazor.RadzenTextBox @bind-Value="@(Cliente.Direccion)" Placeholder="Direccion:" Name="Address" style="width: 25%" @oninput="onTextChanged"></Radzen.Blazor.RadzenTextBox>
-            <InputNumber class="form-control col-3" @bind-Value="Cliente.LatitudGpsContacto" Style="visibility:hidden" Name="LatitudGpsContacto" placeholder="State" />
-            <InputNumber class="form-control col-3" @bind-Value="Cliente.LongitudGpsContacto" Style="visibility:hidden" Name="LongitudGpsContacto" placeholder="State" />
-            <br />
-            @if (IsLoading)
-            {
-                <Radzen.Blazor.RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="margin: 100%"></Radzen.Blazor.RadzenProgressBar>
-            }
-
-            @if (Results.Length > 0)
-            {
-                <Radzen.Blazor.RadzenGrid Data="Results" RowSelect="@OnRowSelect" TItem="GeocodingResult">
-                    <Columns>
-                        <Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="FormattedAddress" Title="Address">
-                            <FooterTemplate>
-                                Total Results: <b>@Results.Count()</b>
-                            </FooterTemplate>
-                        </Radzen.Blazor.RadzenGridColumn>
-                    </Columns>
-                </Radzen.Blazor.RadzenGrid>
-            }
-
-
-            @if (showMap)
-            {
-                <br />
-                <Radzen.Blazor.RadzenGoogleMap Zoom="@zoom"
-                                               style="height:400px"
-                                               ApiKey="AIzaSyCBhlrEoE5ndgXMCeI7zyq0dK4MJksa8Ak"
-                                               Center="@(posMap)"
-                                               MapClick="@MapClick">
-                    <Markers>
-                        @if (pos != null)
-                        {
-                            <Radzen.Blazor.RadzenGoogleMapMarker Title="@Address" Label="@Address" Position="@(pos)" />
-                        }
-                    </Markers>
-                </Radzen.Blazor.RadzenGoogleMap>
-            }
+            <AutocompleteBing></AutocompleteBing>
         </div>
         <br />
         <div class="col-12 row">
@@ -123,15 +84,16 @@
             <InputText class="form-control col-3" @bind-Value="Cliente.Provincia" placeholder="Provincia" />
             &nbsp;<ValidationMessage For="@(() => Cliente.Provincia)" />
         </div>
+        <br />
         <div class="col-12 row">
             <span class="col-2"></span>
-            <input type="submit" class="col-1 btn btn-primary" value="Guardar" />
+            <input type="submit" class="btn btn-success" value="Guardar" />
             <span>&nbsp;</span>
-            <a class="col-1 btn btn-primary" href="/Clientes">Cancelar</a>
+            <a style="background-color:red;color:white" class="btn btn-success" href="/Clientes">Cancelar</a>
         </div>
     </EditForm>
 </div>
-<br />
+ 
 
 
 @code
@@ -143,6 +105,7 @@
     public bool Result { get; set; }
     public string TipoDNI { get; set; }
     public string RecordName { get; set; }
+    public List<CarPoint> posiciones { get; set; }
 
 
     private void OnChangeEvent(ChangeEventArgs changeEventArgs)
@@ -158,8 +121,26 @@
         base.OnInitialized();
     }
 
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+
+    bool IsUserAuthenticated;
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
     protected override async Task OnInitializedAsync()
     {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
         Console.WriteLine("Clientes - OnInitializedAsync");
 
         Cliente = new Cliente();
@@ -179,20 +160,44 @@
 
     private async Task SaveCliente()
     {
-        await bookStoresService.UpdateAsync("Clientes/UpdateClientes", Cliente.Id, Cliente);
-            
+        try
+        {
+            string lat = await JSRuntime.InvokeAsync<string>("getValue", "Lat");
+            string longi = await JSRuntime.InvokeAsync<string>("getValue", "Long");
+            string dire = await JSRuntime.InvokeAsync<string>("getValue", "Dir");
+            Cliente.Direccion = dire;
+            System.Globalization.NumberFormatInfo formatProvider = new System.Globalization.NumberFormatInfo();
+            formatProvider.NumberDecimalSeparator = ".";
+            formatProvider.NumberGroupSeparator = ",";
+            formatProvider.NumberGroupSizes = new int[] { 2 };
+            if (!String.IsNullOrEmpty(lat))
+            {
+                Cliente.LatitudGpsContacto = Convert.ToDouble(lat, formatProvider);
+            }
+            if (!String.IsNullOrEmpty(longi))
+            {
+                Cliente.LongitudGpsContacto = Convert.ToDouble(longi, formatProvider);
+            }
+            await bookStoresService.UpdateAsync("Clientes/UpdateClientes/", Cliente.Id, Cliente);
 
-        Result = true;
-        IsVisible = true;
 
-        var firstName = Cliente.Nombre;
-        var lastName = Cliente.Nombre;
+            Result = true;
+            IsVisible = true;
 
-        RecordName = firstName + " " + lastName;
+            var firstName = Cliente.Nombre;
+            var lastName = Cliente.Nombre;
 
-        Cliente = new Cliente();
+            RecordName = firstName + " " + lastName;
 
-        navigationManager.NavigateTo("/Clientes");
+            Cliente = new Cliente();
+
+            navigationManager.NavigateTo("/Clientes");
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.MostrarMensaje("Error!", "Ocurrio un error actualizando, por favor intente nuevamente!", TipoMensajeSweetAlert.error);
+            Logger.AddLine(String.Format("{0}-{1}-{2}", DateTime.Now.ToString(), ex.Message, ex.StackTrace));
+        }
     }
 
     int zoom = 5;
@@ -240,6 +245,10 @@
         Cliente.LatitudGpsContacto = (long)row.Geometry.Location.Lat;
         Cliente.LongitudGpsContacto = (long)row.Geometry.Location.Lng;
         Cliente.Direccion = Address;
+        posiciones = new List<CarPoint>()
+{
+            new CarPoint(){ name = row.FormattedAddress, Lat = row.Geometry.Location.Lat, Long = row.Geometry.Location.Lng }
+        };
         zoom = 16;
         showMap = true;
         StateHasChanged();

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SGIWebApi.Models;
+using SGR.Models.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
+using SGIWebApi.Models;
 
 namespace SGIWebApi.Controllers
 {
@@ -34,11 +35,11 @@ namespace SGIWebApi.Controllers
 
         // GET: api/EstadoIncidencia
         [HttpGet("GetEstadoIncidencia")]
-        public async Task<ActionResult<IEnumerable<EstadoIncidencia>>> GetEstadoIncidencias()
+        public async Task<ActionResult<IEnumerable<EstadoIncidencium>>> GetEstadoIncidencias()
         {
             try
             {
-                var result = await _context.EstadoIncidencias.Where(o => o.Deleted == null).ToListAsync();
+                var result = await _context.EstadoIncidencia.Where(o => o.Deleted == null).ToListAsync();
                 return Ok(result);
             }
             catch (Exception ex)
@@ -47,6 +48,22 @@ namespace SGIWebApi.Controllers
                 return BadRequest(ex);
             }
         }
+
+        [HttpGet("GetEstadoIncidenciasById/{id}")]
+        public async Task<ActionResult<IEnumerable<EstadoIncidencium>>> GetEstadoIncidenciasById(Guid id)
+        {
+            try
+            {
+                var result = await _context.EstadoIncidencia.Where(o => o.Deleted == null && o.IncidenciaId == id).Include(o => o.Estado).ToListAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                return BadRequest(ex);
+            }
+        }
+
 
         [HttpGet("GetEstadoIncidenciaCount")]
         public async Task<ActionResult<ItemCount>> GetEstadoIncidenciaCount(string accessToken)
@@ -57,7 +74,7 @@ namespace SGIWebApi.Controllers
                     throw new Exception("Invalid Token");
                 ItemCount itemCount = new ItemCount();
 
-                itemCount.Count = _context.EstadoIncidencias.Where(o => o.Deleted == null).Count();
+                itemCount.Count = _context.EstadoIncidencia.Where(o => o.Deleted == null).Count();
                 var result = await Task.FromResult(itemCount);
                 return Ok(result);
             }
@@ -70,10 +87,10 @@ namespace SGIWebApi.Controllers
 
         // GET: api/EstadoIncidencia
         [HttpGet("GetEstadoIncidenciaByPage")]
-        public async Task<ActionResult<IEnumerable<EstadoIncidencia>>> GetEstadoIncidenciaByPage(int pageSize, int pageNumber)
+        public async Task<ActionResult<IEnumerable<EstadoIncidencium>>> GetEstadoIncidenciaByPage(int pageSize, int pageNumber)
         {
 
-            List<EstadoIncidencia> EstadoIncidenciaList = await _context.EstadoIncidencias.Where(o => o.Deleted == null).ToListAsync();
+            List<EstadoIncidencium> EstadoIncidenciaList = await _context.EstadoIncidencia.Where(o => o.Deleted == null).ToListAsync();
             EstadoIncidenciaList = EstadoIncidenciaList.Skip(pageNumber * pageSize).Take(pageSize).ToList();
 
             return await Task.FromResult(EstadoIncidenciaList);
@@ -81,13 +98,13 @@ namespace SGIWebApi.Controllers
 
         // GET: api/EstadoIncidencia/5
         [HttpGet("GetEstadoIncidencia/{id}")]
-        public async Task<ActionResult<EstadoIncidencia>> GetEstadoIncidencia(string accessToken, Guid id)
+        public async Task<ActionResult<EstadoIncidencium>> GetEstadoIncidencia(string accessToken, Guid id)
         {
             try
             {
                 if (GetUserFromAccessToken(accessToken))
                     throw new Exception("Invalid Token");
-                var EstadoIncidencia = await _context.EstadoIncidencias.FindAsync(id);
+                var EstadoIncidencia = await _context.EstadoIncidencia.FindAsync(id);
 
                 if (EstadoIncidencia == null)
                 {
@@ -151,7 +168,7 @@ namespace SGIWebApi.Controllers
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for
         // more details see https://aka.ms/RazorPagesCRUD.
         [HttpPost("CreateEstadoIncidencia")]
-        public async Task<ActionResult<EstadoIncidencia>> PostEstadoIncidencia(string accessToken, EstadoIncidencia EstadoIncidencia)
+        public async Task<ActionResult<EstadoIncidencium>> PostEstadoIncidencia(string accessToken, EstadoIncidencium EstadoIncidencia)
         {
             try
             {
@@ -159,7 +176,7 @@ namespace SGIWebApi.Controllers
                     throw new Exception("Invalid Token");
                 EstadoIncidencia.Id = Guid.NewGuid();
                 EstadoIncidencia.Created = DateTime.UtcNow;
-                _context.EstadoIncidencias.Add(EstadoIncidencia);
+                _context.EstadoIncidencia.Add(EstadoIncidencia);
                 await _context.SaveChangesAsync();
 
                 return CreatedAtAction("GetEstadoIncidencia", new { id = EstadoIncidencia.Id }, EstadoIncidencia);
@@ -174,13 +191,13 @@ namespace SGIWebApi.Controllers
 
         // DELETE: api/EstadoIncidencia/5
         [HttpDelete("DeleteEstadoIncidencia/{id}")]
-        public async Task<ActionResult<EstadoIncidencia>> DeleteEstadoIncidencia(string accessToken, Guid id)
+        public async Task<ActionResult<EstadoIncidencium>> DeleteEstadoIncidencia(string accessToken, Guid id)
         {
             try
             {
                 if (GetUserFromAccessToken(accessToken))
                     throw new Exception("Invalid Token");
-                var EstadoIncidencia = await _context.EstadoIncidencias.FindAsync(id);
+                var EstadoIncidencia = await _context.EstadoIncidencia.FindAsync(id);
                 if (EstadoIncidencia == null)
                 {
                     return NotFound();
@@ -200,7 +217,7 @@ namespace SGIWebApi.Controllers
 
         private bool EstadoIncidenciaExists(Guid id)
         {
-            return _context.EstadoIncidencias.Any(e => e.Id == id);
+            return _context.EstadoIncidencia.Any(e => e.Id == id);
         }
 
         private bool GetUserFromAccessToken(string accessToken)

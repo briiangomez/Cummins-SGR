@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SGIWebApi.Models;
+using SGR.Models.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
+using SGIWebApi.Models;
 
 namespace SGIWebApi.Controllers
 {
@@ -34,12 +35,10 @@ namespace SGIWebApi.Controllers
 
         // GET: api/Motor
         [HttpGet("GetMotor")]
-        public async Task<ActionResult<IEnumerable<Motor>>> GetMotor(string accessToken)
+        public async Task<ActionResult<IEnumerable<Motor>>> GetMotor()
         {
             try
             {
-                if (GetUserFromAccessToken(accessToken))
-                    throw new Exception("Invalid Token");
                 var result = await _context.Motors.Where(o => o.Deleted == null).ToListAsync();
                 return Ok(result);
             }
@@ -103,7 +102,7 @@ namespace SGIWebApi.Controllers
                 _logger.LogError(ex.Message, ex);
                 return BadRequest(ex);
             }
-            
+
         }
 
         // PUT: api/Motor/5
@@ -146,7 +145,7 @@ namespace SGIWebApi.Controllers
                 _logger.LogError(ex.Message, ex);
                 return BadRequest(ex);
             }
-            
+
         }
 
         // POST: api/Motor
@@ -197,7 +196,7 @@ namespace SGIWebApi.Controllers
                 _logger.LogError(ex.Message, ex);
                 return BadRequest(ex);
             }
-            
+
         }
 
         private bool MotorExists(Guid id)

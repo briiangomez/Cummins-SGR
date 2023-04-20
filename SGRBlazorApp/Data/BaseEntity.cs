@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text;
 
-namespace SGRBlazorApp.Data
+namespace  SGRBlazorApp.Data
 {
     public abstract class BaseEntity
     {

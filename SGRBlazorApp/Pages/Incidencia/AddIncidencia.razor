@@ -1,183 +1,420 @@
 ﻿@page "/addincidencia"
 @layout MainLayout
 @inherits SGRBlazorApp.Pages.AddIncidenciaComponent
-@using Radzen
-@using Radzen.Blazor
+@inject IJSRuntime JS
 @using SGRBlazorApp.Data
 @using System.Reactive.Linq;
 @using System.Reactive.Subjects
 @using SGRBlazorApp.Services
 @using SGRBlazorApp.Interfaces
+@using SGRBlazorApp.Shared
+@using System.Security.Claims
+@using Blazored.LocalStorage
 @inject ISgrService<Dealer> dealerService
 @inject ISgrService<Cliente> clienteService
 @inject ISgrService<Motor> motorService
+@inject ISgrService<Equipo> equipoService
+@inject ISgrService<Oem> oemService
 @inject GeocodingService GeocodingService
-<h2 style="text-align:center;color:black">
-    Formulario de Reclamo / Claim Form
-</h2>
-<div class="row">
-    <RadzenTemplateForm Data="@incidencia" Visible="@(incidencia != null)" TItem="SGRBlazorApp.Data.IncidenciaApi" Submit="@Form0Submit">
-        <ChildContent>
-            <div class="row">
-                <div class="col-md-6">
-                    <h4 style="text-align:center;color:black">Fecha de esta solicitud / Date of this request:</h4>
-                    <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(incidencia.fechaIncidencia)" Name="fechaIncidencia" Placeholder="">
-                    </RadzenDatePicker>
-                </div>
-                <div class="col-md-6">
-                    <h4 style="text-align:center;color:black">WC/OT:</h4>
-                    <RadzenNumeric TValue="long" @bind-Value="@(incidencia.numeroIncidencia)" Name="numeroIncidencia" style="width: 100%" Placeholder="WC/OT" Disabled="true" />
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <h4 style="text-align:left;color:black">Datos del Cliente / Empresa</h4>
+@inject ILocalStorageService localStorageService
+@inject IUserService userService
 
-                    <div class="form-group">
-                        <RadzenAutoComplete Placeholder="DNI / CUIT:" Data="@Clientes" TextProperty="Dni" Change="@(args => ChangeDNI(args, "AutoComplete with placeholder"))" style="width: 100%" />
-                        <br /><br />
-                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.nombreContacto)" Placeholder="Cliente / Client" Name="nombreContacto">
-                        </RadzenTextBox>
-                        <br /><br />
-                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.telefonoFijoContacto)" Placeholder="Teléfono / Phone:" Name="telefonoFijoContacto">
-                        </RadzenTextBox>
-                        <br /><br />
-                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.emailContacto)" Placeholder="Email:" Name="emailContacto">
-                        </RadzenTextBox>
-                        <br /><br />
-                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.domicilioContacto)" Placeholder="Dirección / Address:" Name="domicilioContacto">
-                        </RadzenTextBox>
-
-                        <br /><br />
-                        <RadzenTextBox style="width: 100%" Placeholder="Persona de Contacto / Contact Person:">
-                        </RadzenTextBox>
-                        <br /><br />
-                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.telefonoCelularContacto)" Placeholder="Teléfono / Phone:" Name="telefonoCelularContacto">
-                        </RadzenTextBox>
-                        <br /><br />
-                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.emailContacto)" Placeholder="Email:">
-                        </RadzenTextBox>
-                        <br /><br />
-                        <Radzen.Blazor.RadzenTextBox @bind-Value="@(incidencia.DireccionInspeccion)" Placeholder="Dirección de inspección / Inspection Address:" Name="DireccionInspeccion" style="width: 100%" @oninput="onTextChanged"></Radzen.Blazor.RadzenTextBox>
-                        <RadzenNumeric style="width: 100%" @bind-Value="@(incidencia.latitudGps)" Visible="false" Name="latitudGps">
-                        </RadzenNumeric>
-                        <RadzenNumeric style="width: 100%" @bind-Value="@(incidencia.longitudGps)" Visible="false" Name="longitudGps">
-                        </RadzenNumeric>
-                        <br />
-                        @if (IsLoading)
-                        {
-                            <Radzen.Blazor.RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="margin: 20px"></Radzen.Blazor.RadzenProgressBar>
-                        }
-
-                        @if (Results.Length > 0)
-                        {
-                            <Radzen.Blazor.RadzenGrid Data="Results" RowSelect="@OnRowSelect" TItem="GeocodingResult">
-                                <Columns>
-                                    <Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="FormattedAddress" Title="Address">
-                                        <FooterTemplate>
-                                            Total Results: <b>@Results.Count()</b>
-                                        </FooterTemplate>
-                                    </Radzen.Blazor.RadzenGridColumn>
-                                    @*<Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="Geometry.Location.Lat" Title="Latitude" />
-                    <Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="Geometry.Location.Lng" Title="Longitude" />*@
-                                </Columns>
-                            </Radzen.Blazor.RadzenGrid>
-                        }
-
-
-                        @if (showMap)
-                        {
-                            <br />
-                            <Radzen.Blazor.RadzenGoogleMap Zoom="@zoom"
-                                                           style="height:400px"
-                                                           ApiKey="AIzaSyCBhlrEoE5ndgXMCeI7zyq0dK4MJksa8Ak"
-                                                           Center="@(posMap)"
-                                                           MapClick="@MapClick">
-                                <Markers>
-                                    @if (pos != null)
-                                    {
-                                        <Radzen.Blazor.RadzenGoogleMapMarker Title="@Address" Label="@Address" Position="@(pos)" />
-                                    }
-                                </Markers>
-                            </Radzen.Blazor.RadzenGoogleMap>
-                        }
+@if (isLoading)
+{
+    <h2 style="text-align:center;color:black">
+        Formulario de Reclamo / Claim Form
+    </h2>
+    <div class="row">
+        <RadzenTemplateForm Data="@incidencia" Visible="@(incidencia != null)" TItem="SGRBlazorApp.Data.IncidenciaApi" Submit="@Form0Submit">
+            <ChildContent>
+                @*<EditForm Model="@incidencia" OnValidSubmit="@SaveIncidencia">*@
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4 style="text-align:center;color:black">Fecha de esta solicitud / Date of this request:</h4>
+                        <input type="date" class="form-control" placeholder="" @bind="incidencia.fechaIncidencia" name="" autocomplete="off" required />
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <h4 style="text-align:left;color:black">Datos del Motor / Equipo</h4>
-                    <div class="form-group">
-                        <RadzenAutoComplete Placeholder="Modelo Motor / Engine Model:" Data="@Motores" TextProperty="Equipo" Change="@(args => Change(args, "AutoComplete with placeholder"))" style="width: 100%" />
-                        <br />
-                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.numeroMotor)" Placeholder="Nro. de Motor (ESN):" Name="numeroMotor">
-                        </RadzenTextBox>
-                        <br /><br />
-                        <h3>Hs o Km del Motor / Engine Hours or Km:</h3>
-                        <RadzenNumeric style="display: block; width: 100%" @bind-Value="@(incidencia.horasTractor)" Placeholder="Hs o Km del Motor / Engine Hours or Km:" Name="horasTractor">
-                        </RadzenNumeric>
-                        <br /><br />
-                        <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(incidencia.fechaCompra)" Name="fechaCompra" Placeholder="Fecha de compra (Adjuntar factura) / Date of Purchase:">
-                        </RadzenDatePicker>
-                        <input type="file" for="Name" class="form-control" />
-                        <br /><br />
-                        <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(incidencia.fechaInicioGarantia)" Name="fechaInicioGarantia" Placeholder="Fecha de incio Garantía / Warranty Start Date:">
-                        </RadzenDatePicker>
-                        <br /><br />
-                        <RadzenDatePicker DateFormat="dd/MM/yyyy" style="width: 100%" @bind-Value="@(incidencia.fechaFalla)" Name="fechaFalla" Placeholder="Fecha de falla / Failure date:">
-                        </RadzenDatePicker>
-                        <br /><br />
-                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.Equipo)" Placeholder="Equipo / Equipment:" Name="Equipo">
-                        </RadzenTextBox>
-                        <br /><br />
-                        <RadzenTextBox style="width: 100%" @bind-Value="@(incidencia.ModeloEquipo)" Placeholder="Modelo Equipo / Equipment Model:" Name="ModeloEquipo">
-                        </RadzenTextBox>
-                        <br /><br />
-                        <h3>Sintoma</h3>
-                        <RadzenDropDown @bind-Value="@(incidencia.Sintoma)" @onchange="OnChangeEvent" AllowClear="true" Placeholder="Seleccione Sintoma" Data="@sims" style="width: 100%;" TextProperty="Descripcion" ValueProperty="Codigo" Name="Sintoma">
-                        </RadzenDropDown>
-                        @*<br /><br />
-                        <h3>Es Garantia</h3>
-                        <RadzenCheckBox @bind-Value="@CheckBox1Value" Style="margin-bottom: 20px" TValue="bool" />*@
+                    <div class="col-md-6">
+                        <h4 style="text-align:center;color:black">WC/OT:</h4>
+                        <RadzenNumeric TValue="long" @bind-Value="@(incidencia.numeroIncidencia)" Name="numeroIncidencia" style="width: 100%" Placeholder="WC/OT" Disabled="true" />
                     </div>
-                </div>
-            </div>
-            <div class="col-md-12">
-                <h3 style="text-align:center">
-                    Reclamo del Cliente / Customer Complaint
-                </h3>
-                <div class="form-group">
-                    <textarea class="form-control" cols="10" rows="10" @bind="@incidencia.observacionesFalla"></textarea>
-                </div>
-            </div>
-            <div class="col-md-12">
-                <div class="form-group">
-                    <h3 class="alert alert-warning" role="alert">
-                        Importante: De surgir del diagnóstico realizado por el personal técnico de Cummins que no se trata de una falla de producto cubierta por la garantía Cummins, los gastos del servicio serán a cargo del cliente.
-                    </h3>
                 </div>
                 <div class="row">
-                    <div class="col offset-sm-3">
-                        <RadzenButton ButtonType="ButtonType.Submit" Icon="save" Text="Crear Incidencia" ButtonStyle="ButtonStyle.Success" class="btn btn-success">
-                        </RadzenButton>
-                        <RadzenButton ButtonStyle="ButtonStyle.Info" Text="Cancelar" Click="@Button2Click" class="btn btn-primary">
-                        </RadzenButton>
+                    <div class="col-md-6">
+                        <h4 style="text-align:left;color:black">Datos del Cliente / Empresa</h4>
+
+                        <div class="form-group">
+                            <label>DNI/CUIT:</label>
+                            <RadzenAutoComplete Placeholder="DNI / CUIT:" Data="@Clientes" TextProperty="Dni" Change="@(args => ChangeDNI(args, "AutoComplete with placeholder"))" style="width: 100%" />
+                            <br />
+                            <label>Cliente / Client:</label>
+                            <input type="text" class="form-control" placeholder="" @bind="incidencia.nombreContacto" name="nombreContacto" autocomplete="off" required />
+                            <label>Telefono / Phone:</label>
+                            <input type="text" class="form-control" placeholder="" @bind="incidencia.telefonoFijoContacto" name="telefonoFijoContacto" autocomplete="off" required />
+
+                            <label>Email:</label>
+                            <input type="email" class="form-control" placeholder="" @bind="incidencia.emailContacto" name="emailContacto" autocomplete="off" required />
+
+                            <label>Dirección / Address:</label>
+                            <input type="text" class="form-control" placeholder="" @bind="incidencia.domicilioContacto" name="domicilioContacto" autocomplete="off" required />
+
+                            <label>Persona de Contacto / Contact Person:</label>
+                            <input type="text" class="form-control" placeholder="" @bind="incidencia.nombreContactoCliente" name="nombreContactoCliente" autocomplete="off" required />
+
+
+                            <label>Celular / Celphone:</label>
+                            <input type="text" class="form-control" placeholder="" @bind="incidencia.telefonoContactoCliente" name="telefonoContactoCliente" autocomplete="off" required />
+                            <label>Email:</label>
+                            <input type="email" class="form-control" placeholder="" @bind="incidencia.emailContactoCliente" name="emailContactoCliente" autocomplete="off" required />
+                            <label>Dirección de inspección / Inspection Address:</label>
+                            <div class="ui-widget">
+                                <RadzenRadioButtonList @bind-Value=@KmOrHs TValue="int" Change=@((args) => OnChangeRB(args, "RadioButtonList with horizontal orientation")) Style="width:50%">
+                                    <Items>
+                                        <RadzenRadioButtonListItem Text="Direccion" Value="1" />
+                                        <RadzenRadioButtonListItem Text="Coordenadas" Value="2" />
+                                    </Items>
+                                </RadzenRadioButtonList>
+                            </div>
+                            @if (KmOrHs == 1)
+                            {
+                                <input id="searchBox" class="form-control" type="text" placeholder="Ingrese Direccion de Inspeccion" style="border:1px solid #ced4da !important" />
+                                <input type="hidden" id="Lat" class="form-control" placeholder="" @bind="incidencia.latitudGps" name="latitudGps" autocomplete="off" />
+                                <input type="hidden" id="Long" class="form-control" placeholder="" @bind="incidencia.longitudGps" name="longitudGps" autocomplete="off" />
+                                <input type="hidden" id="Dir" class="form-control" placeholder="" @bind="incidencia.DireccionInspeccion" name="DireccionInspeccion" autocomplete="off" />
+                                <br />
+                                <div class="col-12 row">
+                                    <div class="col-md-12">
+                                        <div style="display:flex; justify-content: space-around">
+                                            <div class="m-3" id="newMap" style="position:relative;width:550px;height:300px;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <input type="text" id="Lat" class="form-control" placeholder="Ingrese Latitud (-31.45665)"  name="latitudGps" autocomplete="off" style="border:1px solid #ced4da !important"  @onchange="NameChanged" />
+                                <input type="text" id="Long" class="form-control" placeholder="Ingrese Longitud (-56.45665)" name="longitudGps" autocomplete="off" style="border:1px solid #ced4da !important"  @onchange="NameChanged2" />
+                                <input type="text" id="Dir" class="form-control" placeholder="Ingrese Direccion de Inspeccion" name="DireccionInspeccion" autocomplete="off" style="border:1px solid #ced4da !important" @onchange="onChange2"/>
+                                <br />
+                                <div class="col-12 row">
+                                    <div class="col-md-12">
+                                        <div style="display:flex; justify-content: space-around">
+                                            <div class="m-3" id="newMap" style="position:relative;width:550px;height:300px;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            @*@if (IsLoading)
+        {
+            <Radzen.Blazor.RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="margin: 20px"></Radzen.Blazor.RadzenProgressBar>
+        }
+
+        @if (Results.Length > 0)
+        {
+            <Radzen.Blazor.RadzenGrid Data="Results" RowSelect="@OnRowSelect" TItem="GeocodingResult">
+                <Columns>
+                    <Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="FormattedAddress" Title="Address">
+                        <FooterTemplate>
+                            Total Results: <b>@Results.Count()</b>
+                        </FooterTemplate>
+                    </Radzen.Blazor.RadzenGridColumn>
+                    <Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="Geometry.Location.Lat" Title="Latitude" />
+                    <Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="Geometry.Location.Lng" Title="Longitude" />
+                </Columns>
+            </Radzen.Blazor.RadzenGrid>
+        }
+
+
+        @if (showMap)
+        {
+            <MapaComponent Latitud="@pos.Lat" Longitud="@pos.Lng" zoom="@zoom" posiciones="posiciones"></MapaComponent>
+        }*@
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h4 style="text-align:left;color:black">Datos del Motor / Equipo</h4>
+                        <div class="form-group">
+                            <label>Modelo Motor / Engine Model: </label>
+                            <select class="form-control" @onchange="OnChangeEvent" name="ModeloMotor" id="ModeloMotor" required>
+                                <option value="">Seleccione Motor...</option>
+                                @if (MotoresList != null)
+                                {
+                                    foreach (var item in MotoresList.OrderBy(o => o.Codigo))
+                                    {
+                                        <option value="@item.Codigo">@item.Codigo</option>
+                                    }
+                                }
+                            </select>
+                            <label>Nro. de Motor (ESN): / Motor Number (ESN): </label>
+                            <input type="text" maxlength="8" class="form-control" placeholder="Nro. de Motor (ESN):" @bind="incidencia.numeroMotor" name="numeroMotor" autocomplete="off" required />
+                            <br /> @*<RadzenRequiredValidator Component="numeroMotor" Text="Campo obligatorio" Popup=@popup Style="position: absolute" />*@
+
+                            <label>Hs o Km del Motor / Engine Hours or Km:</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="number" class="form-control" placeholder="" @bind="incidencia.horasTractor" name="horasTractor" autocomplete="off" required />
+                                </div>
+                                <div class="col-md-6">
+                                    @*<RadzenRadioButtonList @bind-Value=@KmOrHs TValue="int" Change=@((args) => OnChange(args, "RadioButtonList with horizontal orientation")) Style="width:50%">
+                                            <Items>
+                                                <RadzenRadioButtonListItem Text="KM" Value="1" />
+                                                <RadzenRadioButtonListItem Text="HS" Value="2" />
+                                            </Items>
+                                        </RadzenRadioButtonList>*@
+                                    <select class="form-control" @bind="@incidencia.Aux3" name="Aux3" id="Aux3">
+                                        <option value="1">KM</option>
+                                        <option value="2">HS</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <label>Fecha de compra (Adjuntar factura) / Date of Purchase (Attach Invoice):</label>
+                            <input type="date" @bind="@incidencia.fechaCompra" name="fechaCompra" class="form-control" Placeholder="Fecha de compra (Adjuntar factura) / Date of Purchase:" />
+                            <InputFile for="Name" class="form-control" OnChange="HandleFileSelected" />
+                            <label>Fecha de inicio Garantía / Warranty Start Date:</label>
+                            <input type="date" class="form-control" placeholder="" @bind="incidencia.fechaInicioGarantia" name="fechaInicioGarantia" autocomplete="off" required />
+                            <label>Fecha de falla / Failure date:</label>
+                            <input type="date" class="form-control" placeholder="" @bind="incidencia.fechaFalla" name="fechaFalla" autocomplete="off" required />
+                            <label>
+                                Nro Vin / Vin Chasis
+                                :
+                            </label>
+                            <input type="text" class="form-control" placeholder="" @bind="incidencia.numeroChasis" name="numeroChasis" autocomplete="off" required />
+                            <label>OEM: </label>
+                            @*<RadzenDropDown @bind-Value="@(incidencia.Equipo)" AllowClear="true" Placeholder="Seleccione Equipo" Data="@Oems" style="width: 100%;" TextProperty="Nombre" ValueProperty="Nombre" Name="Equipo">
+                                </RadzenDropDown>*@
+                            <select class="form-control"  name="Equipo" id="Equipo" @onchange="OnChangeEventOem"  required>
+                                <option value="">Seleccione OEM...</option>
+                                @if (Oems != null)
+                                {
+                                    foreach (var item in Oems.OrderBy(o => o.Nombre))
+                                    {
+                                        <option value="@item.Nombre">@item.Nombre</option>
+                                    }
+                                }
+                            </select>
+                            <label>Modelo Equipo / Equipment Model:</label>
+                            @if (!isEquipos)
+                            {
+                                <input type="text" class="form-control" placeholder="" @bind="incidencia.ModeloEquipo" name="ModeloEquipo" autocomplete="off" required />
+                            }
+                            else
+                            {
+                                <select class="form-control" @bind="incidencia.ModeloEquipo" name="ModeloEquipo" id="ModeloEquipo" required>
+                                    <option value="">Seleccione Modelo...</option>
+                                    @if (EquipoList != null)
+                                    {
+                                        foreach (var item in EquipoList.OrderBy(o => o.Modelo))
+                                        {
+                                            <option value="@item.Modelo">@item.Modelo</option>
+                                        }
+                                    }
+                                </select>
+                            }
+                            <label>Sintoma / Symptom</label>
+                            @*<RadzenDropDown @bind-Value="@(incidencia.Sintoma)" @onchange="OnChangeEvent" AllowClear="true" Placeholder="Seleccione Sintoma" Data="@sims" style="width: 100%;" TextProperty="Descripcion" ValueProperty="Codigo" Name="Sintoma">
+                                </RadzenDropDown>*@
+                            <select class="form-control" @bind="@incidencia.Sintoma" name="Sintoma" id="Sintoma" required>
+                                <option value="">Seleccione Sintoma...</option>
+                                @if (sims != null)
+                                {
+                                    foreach (var item in sims.OrderBy(o => o.Descripcion))
+                                    {
+                                        <option value="@item.Codigo">@item.Descripcion</option>
+                                    }
+                                }
+                            </select>
+                            <label>Es Garantia / Is Warranty</label>
+                            @*<RadzenCheckBox @bind-Value="@CheckBox1Value" Style="margin-bottom: 20px" TValue="bool" />*@
+                            <input type="checkbox" checked=@CheckBox1Value
+                                   @onchange="eventArgs => { CheckboxClicked(eventArgs.Value); }" />
+                            <br />
+                            @{
+                                if (!CheckBox1Value)
+                                {
+                                    <label>Dealer</label>
+                                    <select class="form-control" @bind="@incidencia.IdConcesionario" name="IdConcesionario" id="IdConcesionario" required>
+                                        <option value="">Seleccione Dealer...</option>
+                                        @if (getDealersForIdDealerResult != null)
+                                        {
+                                            foreach (var item in getDealersForIdDealerResult.OrderBy(o => o.Name))
+                                            {
+                                                <option value="@item.Id">@item.Name</option>
+                                            }
+                                        }
+                                    </select>
+                                }
+                            }
+                        </div>
                     </div>
                 </div>
-            </div>
-        </ChildContent>
-    </RadzenTemplateForm>
-</div>
+                <div class="col-md-12">
+                    <h3 style="text-align:center">
+                        Reclamo del Cliente / Customer Complaint
+                    </h3>
+                    <div class="form-group">
+                        <textarea class="form-control" cols="10" rows="10" @bind="@incidencia.ObservacionesIncidencia" name="Aux1" required></textarea>
+                        <br />
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <h3 class="alert alert-warning" role="alert">
+                            Importante: De surgir del diagnóstico realizado por el personal técnico de Cummins que no se trata de una falla de producto cubierta por la garantía Cummins, los gastos del servicio serán a cargo del cliente.
+                        </h3>
+                    </div>
+                    <div class="row">
+                        <div class="col offset-sm-3">
+                            <span class="col-2"></span>
+                            <RadzenButton ButtonType="ButtonType.Submit" Icon="save" Text="Guardar" ButtonStyle="ButtonStyle.Success" class="btn btn-success">
+                            </RadzenButton>
+                            @*<input type="submit" class="btn btn-success" value="Guardar" />*@
+                            <span>&nbsp;</span>
+                            <a style="background-color:red;color:white" class="btn btn-success" href="/incidencias">Cancelar</a>
+                            @*
+                                <RadzenButton ButtonStyle="ButtonStyle.Info" Text="Cancelar" Click="@Button2Click" class="btn btn-primary">
+                                </RadzenButton>*@
+                        </div>
+                    </div>
+                </div>
+            </ChildContent>
+        </RadzenTemplateForm>
+        @*</EditForm>*@
+    </div>
+}
+else
+{
+    <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
+        <br /><br />
+        <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
+    </div>
+}
+
 
 @code {
+
+    public void CheckboxClicked(object aChecked)
+    {
+        if ((bool)aChecked)
+        {
+            CheckBox1Value = true;
+        }
+        else
+        {
+            CheckBox1Value = false;
+        }
+        StateHasChanged();
+    }
+
+    void OnChangeRB(int? value, string name)
+    {
+        KmOrHs = value.Value;
+    }
+
+    private async Task SaveIncidencia()
+    {
+
+        var incc = incidencia;
+        Motor mots = new Motor();
+        //if (IdOem != Guid.Empty)
+        //{
+        //    Motor.Oemid = IdOem;
+        //}
+        //if (Motor.NumeroMotor.Length < 8)
+        //{
+        //    Motor.NumeroMotor = Motor.NumeroMotor.PadLeft(8, '0');
+        //    //Motor.NumeroMotor = Motor.NumeroMotor.ToString("00000000");
+        //    //Motor.NumeroMotor = Motor.NumeroMotor.ToString("D8");
+        //}
+        //var mots = await bookStoresService.SaveAsync("Equipo/CreateEquipo", Motor);
+        //Result = true;
+        //IsVisible = true;
+
+        //var firstName = Motor.NumeroMotor;
+        //var lastName = Motor.Equipo1;
+
+        //RecordName = firstName + " " + lastName;
+
+        //if (!String.IsNullOrEmpty(certs))
+        //{
+        //    var datos = certs.Split(',');
+        //    foreach (var item in datos)
+        //    {
+        //        if (!String.IsNullOrEmpty(item))
+        //        {
+        //            Guid IdCer = Guid.Parse(item);
+        //            CertificacionMotor cert = new CertificacionMotor();
+        //            cert.MotorId = mots.Id;
+        //            cert.CertificacionId = IdCer;
+        //            await certificacionMotService.SaveAsync("CertificacionMotor/CreateCertificacionMotor", cert);
+        //        }
+        //    }
+        //}
+
+        //Motor = new Equipo();
+
+        //navigationManager.NavigateTo("/Equipos");
+    }
+
+
+    private void NameChanged(Microsoft.AspNetCore.Components.ChangeEventArgs args)
+    {
+        Latitud = Convert.ToDouble(args.Value.ToString());
+    }
+
+    private void NameChanged2(Microsoft.AspNetCore.Components.ChangeEventArgs args)
+    {
+        Longitud = Convert.ToDouble(args.Value.ToString());
+    }
+
+    private void onChange2(Microsoft.AspNetCore.Components.ChangeEventArgs args)
+    {
+        Direc = (string)args.Value;
+    }
+
+    public class MyObject
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+
+    IEnumerable<MyObject> data = new MyObject[] {
+        new MyObject(){ Id = 1 , Name = "KM"}, new MyObject() { Id = 2 , Name = "HS"}};
+
+    int KmOrHs = 1;
+    int? nullableValue = null;
+
+
+    void OnChange(int? value, string name)
+    {
+        KmOrHs = value.Value;
+    }
 
     public List<Dealer> Dealers { get; set; }
 
     public List<Motor> Motores { get; set; }
 
+    public List<Equipo> Equipos { get; set; }
+
+    public List<Equipo> EquipoList { get; set; }
+
+    public List<Oem> Oems { get; set; }
+
     public List<Cliente> Clientes { get; set; }
+
+    public List<CarPoint> posiciones { get; set; }
+
+    public Guid MotorId = Guid.Empty;
+
+    public Guid OemId = Guid.Empty;
+
+    bool isEquipos = false;
 
     int zoom = 5;
 
+    bool popup;
+
     bool showMap;
+
+    bool isLoading = false;
 
     public GoogleMapPosition pos;
 
@@ -186,6 +423,29 @@
     public double? latitud;
 
     public double? longitud;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+
+    public SGRBlazorApp.Data.User user1 { get; set; }
+    public RefreshRequest refreshRequest { get; set; }
+
+    bool IsUserAuthenticated;
+    bool IsDealer;
+
+
+
+    async Task HandleFileSelected(IFileListEntry[] entryFiles)
+    {
+        files = new List<IFileListEntry>();
+        foreach (var item in entryFiles)
+        {
+            string path = await fileUpload.Upload(item, "Incidencias");
+            ArchivoCompra.Add(path);
+            files.Add(item);
+        }
+    }
 
     Dictionary<DateTime, string> events = new Dictionary<DateTime, string>();
 
@@ -198,18 +458,80 @@
     private void OnChangeEvent(ChangeEventArgs changeEventArgs)
     {
 
-        if (!String.IsNullOrEmpty((string)changeEventArgs.Value))
+        Guid idDealer = Guid.NewGuid();
+        if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Motor...")
         {
+            string nombre = (string)changeEventArgs.Value;
+            incidencia.ModeloMotor = nombre;
+            idDealer = MotoresList.FirstOrDefault(o => o.Codigo == nombre).Id;
+            MotorId = idDealer;
+            if(MotorId != Guid.Empty && OemId != Guid.Empty)
+            {
+                EquipoList = Equipos;
+                EquipoList = EquipoList.Where(o => o.MotorId == MotorId && o.Oemid == OemId).ToList();
 
+                if (EquipoList.Count > 0)
+                {
+                    isEquipos = true;
+                }
+                else
+                {
+                    isEquipos = false;
+                    incidencia.ModeloEquipo = "Otros";
+                }
+            }
+            else
+            {
+                isEquipos = false;
+                incidencia.ModeloEquipo = "Otros";
+            }
         }
-        //{
-        //    incidencia.codigoSintoma = (int)changeEventArgs.Value);
+        else
+        {
+            isEquipos = false;
+            incidencia.ModeloEquipo = "Otros";
+        }
 
-        //}
-        //else
-        //{
-        //    incidencia.codigoSintoma = String.Empty;
-        //}
+    }
+
+    private void OnChangeEventOem(ChangeEventArgs changeEventArgs)
+    {
+
+        Guid idOem = Guid.NewGuid();
+        if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione OEM...")
+        {
+            string nombre = (string)changeEventArgs.Value;
+            incidencia.Equipo = nombre;
+            idOem = Oems.FirstOrDefault(o => o.Nombre == nombre).Id;
+            OemId = idOem;
+            incidencia.IdOem = idOem;
+            if (MotorId != Guid.Empty && OemId != Guid.Empty)
+            {
+                EquipoList = Equipos;
+                EquipoList = EquipoList.Where(o => o.MotorId == MotorId && o.Oemid == OemId).ToList();
+
+                if (EquipoList.Count > 0)
+                {
+                    isEquipos = true;
+                }
+                else
+                {
+                    isEquipos = false;
+                    incidencia.ModeloEquipo = "Otros";
+                }
+            }
+            else
+            {
+                isEquipos = false;
+                incidencia.ModeloEquipo = "Otros";
+            }
+        }
+        else
+        {
+            isEquipos = false;
+            incidencia.ModeloEquipo = "Otros";
+        }
+
     }
 
     Subject<string> addressSubject = new Subject<string>();
@@ -227,15 +549,58 @@
         addressSubject.OnNext(args.Value.ToString());
     }
 
+    protected override Task OnParametersSetAsync()
+    {
+        if (KmOrHs == 1)
+        {
+            var name = JS.InvokeVoidAsync("AutoCompleteBing", "searchBox");
+        }
+        else if (KmOrHs == 2 && Latitud != 0 && Longitud != 0)
+        {
+            var name = JS.InvokeVoidAsync("addPin", Latitud.ToString().Replace(',', '.'), Longitud.ToString().Replace(',', '.'), Direc);
+        }
+        return base.OnParametersSetAsync();
+
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        OnParametersSetAsync();
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
     protected async override void OnInitialized()
     {
-        Dealers = await dealerService.GetAllAsync("Dealer/GetDealer");
-        Motores = await motorService.GetAllAsync("Motor/GetMotor");
+        incidencia = new IncidenciaApi();
+        //Dealers = await dealerService.GetAllAsync("Dealer/GetDealer");
+        //Motores = await motorService.GetAllAsync("Motor/GetMotor");
+        Equipos = await equipoService.GetAllAsync("Equipo/GetEquipo");
+        EquipoList = new List<Equipo>();
+        Oems = await oemService.GetAllAsync("Oems/GetOems");
         Clientes = await clienteService.GetAllAsync("Clientes/GetClientes");
+        Clientes = Clientes.Where(o => o.Dni != null).ToList();
+        user = (await authenticationStateTask).User;
+
+        CheckBox1Value = true;
+
+        if (user.Identity.IsAuthenticated)
+            IsUserAuthenticated = true;
+
+        if (user.IsInRole("Dealer"))
+            IsDealer = true;
+
+        refreshRequest = new RefreshRequest();
+        refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+        refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+        user1 = await userService.RefreshTokenAsync(refreshRequest);
+
+        isLoading = true;
+
+        //incidencia.Aux1 = user1.Id.ToString();
         addressSubject
-            .Throttle(TimeSpan.FromMilliseconds(300))
-            .DistinctUntilChanged()
-            .Subscribe(OnAddressChanged);
+        .Throttle(TimeSpan.FromMilliseconds(300))
+        .DistinctUntilChanged()
+        .Subscribe(OnAddressChanged);
     }
 
 
@@ -250,8 +615,14 @@
         incidencia.longitudGps = (long)row.Geometry.Location.Lng;
         latitud = row.Geometry.Location.Lat;
         longitud = row.Geometry.Location.Lng;
+
+        posiciones = new List<CarPoint>()
+{
+            new CarPoint(){ name = row.FormattedAddress, Lat = row.Geometry.Location.Lat, Long = row.Geometry.Location.Lng }
+        };
         zoom = 16;
         showMap = true;
+
         StateHasChanged();
     }
 
@@ -270,37 +641,43 @@
         await InvokeAsync(() => StateHasChanged());
     }
 
-    void Change(object value, string name)
-    {
-        string eq = value.ToString();
-        Motor mot = Motores.FirstOrDefault(c=> c.Equipo.Contains(eq));
-        if(mot != null)
-        {
-            incidencia.Equipo = mot.Equipo;
-            incidencia.ModeloMotor = eq;
-            incidencia.numeroMotor = mot.NumeroMotor;
-        }
-        StateHasChanged();
-    }
+    //void Change(object value, string name)
+    //{
+    //    string eq = value.ToString();
+    //    Equipo mot = Motores.FirstOrDefault(c => c.Equipos.Contains(eq));
+    //    if (mot != null)
+    //    {
+    //        incidencia.Equipo = eq;
+    //        incidencia.ModeloEquipo = mot.Modelo1;
+    //        incidencia.ModeloMotor = eq;
+    //        //incidencia.numeroMotor = mot.NumeroMotor;
+    //    }
+    //    StateHasChanged();
+    //}
 
     void ChangeDNI(object value, string name)
     {
         string eq = value.ToString();
-        Cliente mot = Clientes.FirstOrDefault(c=> c.Dni.Contains(eq));
-        if(mot != null)
+        Cliente mot = Clientes.FirstOrDefault(c => c.Dni.Contains(eq));
+        if (mot != null)
         {
+            incidencia.numeroDocumento = eq;
             incidencia.nombreContacto = mot.Nombre;
             incidencia.telefonoFijoContacto = mot.Telefono;
             incidencia.emailContacto = mot.Email;
             incidencia.domicilioContacto = mot.Direccion;
+        }
+        else
+        {
+            incidencia.numeroDocumento = eq;
         }
         StateHasChanged();
     }
 
     void LoadData(LoadDataArgs args)
     {
-        Motores = Motores.Where(c=> c.Equipo.Contains(args.Filter)).ToList();
-        Clientes = Clientes.Where(c=> c.Dni.Contains(args.Filter)).ToList();
+        //Motores = Motores.Where(c => c.Equipo.Contains(args.Filter)).ToList();
+        Clientes = Clientes.Where(c => c.Dni.Contains(args.Filter)).ToList();
         InvokeAsync(StateHasChanged);
     }
 }

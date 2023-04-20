@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SGIWebApi.Models;
+using SGR.Models;
+using SGR.Models.Models;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -33,6 +35,23 @@ namespace SGIWebApi.Controllers
         // GET: api/Users
         [HttpGet("GetUsers")]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        {
+
+            try
+            {
+                var result = await _context.Users.Include(o => o.IdRoleNavigation).Include(o => o.IdDealerNavigation).ToListAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                return BadRequest(ex);
+            }
+        }
+
+        // GET: api/Users
+        [HttpGet("GetUsersFull")]
+        public async Task<ActionResult<IEnumerable<User>>> GetUsersFull()
         {
 
             try
@@ -95,19 +114,30 @@ namespace SGIWebApi.Controllers
 
         // POST: api/Users
         [HttpPost("Login")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<ActionResult<UserWithToken>> Login([FromBody] User user)
         {
             try
             {
                 user = await _context.Users.Include(u => u.IdRoleNavigation)
                             .Where(u => u.EmailAddress == user.EmailAddress
-                                    && u.Password == user.Password).FirstOrDefaultAsync();
+                                    && u.Password == user.Password && u.Deleted == null).FirstOrDefaultAsync();
+
+                if(user != null)
+                {
+                    Logger.AddLine(String.Format("{0}-{1}-{2}", DateTime.Now.ToString(), user.EmailAddress, user.Password));
+                }
+                else
+                {
+                    Logger.AddLine(String.Format("{0}-{1}-{2}", DateTime.Now.ToString(), "DATABASE RETURN ", " USER DATA NULL"));
+                }
 
                 UserWithToken userWithToken = null;
 
                 if (user != null)
                 {
                     RefreshToken refreshToken = GenerateRefreshToken();
+                    refreshToken.IdUser = user.Id;
                     user.RefreshTokens.Add(refreshToken);
                     await _context.SaveChangesAsync();
 
@@ -127,6 +157,7 @@ namespace SGIWebApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message, ex);
+                Logger.AddLine(String.Format("{0}-{1}-{2}", DateTime.Now.ToString(), ex.Message,ex.StackTrace));
                 return BadRequest(ex);
             }
 
@@ -187,7 +218,10 @@ namespace SGIWebApi.Controllers
                 {
                     UserWithToken userWithToken = new UserWithToken(user);
                     userWithToken.AccessToken = GenerateAccessToken(user.Id);
-
+                    userWithToken.IdOem = user.IdOem;
+                    userWithToken.IdDealer = user.IdDealer;
+                    userWithToken.IdOemNavigation = user.IdOemNavigation;
+                    userWithToken.IdDealerNavigation = user.IdDealerNavigation;
                     return Ok(userWithToken);
                 }
                 return null;
@@ -277,7 +311,7 @@ namespace SGIWebApi.Controllers
         private RefreshToken GenerateRefreshToken()
         {
             RefreshToken refreshToken = new RefreshToken();
-
+            //refreshToken.Id = Guid.NewGuid();
             var randomNumber = new byte[32];
             using (var rng = RandomNumberGenerator.Create())
             {
@@ -366,23 +400,45 @@ namespace SGIWebApi.Controllers
         {
             try
             {
-
-                var user = await _context.Users.FindAsync(id);
-                if (user == null)
+                var User = await _context.Users.FindAsync(id);
+                if (User == null)
                 {
                     return NotFound();
                 }
-
-                _context.Users.Remove(user);
+                User.Deleted = DateTime.Now;
+                _context.Entry(User).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
-
-                return Ok(user);
+                return Ok(User);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message, ex);
                 return BadRequest(ex);
             }
+        }
+
+        // DELETE: api/User/5
+        [HttpDelete("ActivateUser/{id}")]
+        public async Task<ActionResult<User>> ActivateUser(string accessToken, Guid id)
+        {
+            try
+            {
+                var User = await _context.Users.FindAsync(id);
+                if (User == null)
+                {
+                    return NotFound();
+                }
+                User.Deleted = null;
+                _context.Entry(User).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+                return Ok(User);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                return BadRequest(ex);
+            }
+
         }
 
         private bool UserExists(Guid id)

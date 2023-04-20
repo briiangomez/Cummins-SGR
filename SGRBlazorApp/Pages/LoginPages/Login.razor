@@ -8,10 +8,13 @@
 @inject Blazored.LocalStorage.ILocalStorageService localStorageService
 @inject IUserService userService
 @inject IJSRuntime jsRunTime
+@inject ISgrService<SGRBlazorApp.Data.User> bookStoresService
 
+@if (user != null)
+{
 <EditForm Model="@user" OnValidSubmit="@ValidateUser">
     <div>
-        <h3 style="font-weight:bold; color:#EF272C">Bienvenido a Cummins-SGR Login</h3>
+        <h3 style="font-weight:bold; color:#EF272C">Bienvenido a Field Assistance Tool  (FAST) - Login</h3>
     </div>
     <div>
         <br />
@@ -30,29 +33,47 @@
         @*<a href="/signup" class="col-3">Sign up</a>*@
     </div>
     <br />
-    <div class="col-12 row" style="text-align:left; font-weight:bold">
+    <div class="col-12 row" style="text-align:left; font-weight:bold;color:red">
         <span class="col-12">@LoginMesssage</span>
     </div>
-</EditForm>
+</EditForm>}
 
-@code {
-
-    private User user;
-    public string LoginMesssage { get; set; }
+@code { public string LoginMesssage { get; set; }
+    public string PassTemp { get; set; }
     ClaimsPrincipal claimsPrincipal;
-
+    private SGRBlazorApp.Data.User user;
     [CascadingParameter]
     private Task<AuthenticationState> authenticationStateTask { get; set; }
 
     protected async override Task OnInitializedAsync()
     {
-        user = new User();
-
-        claimsPrincipal = (await authenticationStateTask).User;
-
-        if (claimsPrincipal.Identity.IsAuthenticated)
+        try
         {
-            NavigationManager.NavigateTo("/index");
+            user = new SGRBlazorApp.Data.User();
+            user.EmailAddress = String.Empty;
+            user.Password = String.Empty;
+            LoginMesssage = String.Empty;
+
+            claimsPrincipal = (await authenticationStateTask).User;
+
+            var users = await bookStoresService.GetAllAsync("Users/GetUsers");
+            var user2 = users.FirstOrDefault(o => o.EmailAddress == claimsPrincipal.Identity.Name);
+            string password = Utility.DefaultPassEnc();
+            if (claimsPrincipal.Identity.IsAuthenticated)
+            {
+                if (user2.Password.Contains(password))
+                {
+                    NavigationManager.NavigateTo("/changepass");
+                }
+                else
+                {
+                    NavigationManager.NavigateTo("/index");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            string test = ex.Message;
         }
 
     }
@@ -62,19 +83,42 @@
         //assume that user is valid
         //call an API
 
-        var returnedUser = await userService.LoginAsync(user);
+        LoginMesssage = "Aguarde un instante por favor...";
+        string passwordDefault = Utility.DefaultPassEnc();
+        PassTemp = user.Password;
 
-        if (returnedUser.EmailAddress != null)
+        try
         {
-            await ((CustomAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsAuthenticated(returnedUser);
-            NavigationManager.NavigateTo("/index");
+            var returnedUser = await userService.LoginAsync(user);
+
+
+            Console.Write(user.EmailAddress);
+            Console.Write(user.Password);
+
+            if (returnedUser.EmailAddress != null)
+            {
+                await ((CustomAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsAuthenticated(returnedUser);
+                if (user.Password.Contains(passwordDefault))
+                {
+                    NavigationManager.NavigateTo("/changepass");
+                }
+                else
+                {
+                    NavigationManager.NavigateTo("/index");
+                }
+            }
+            else
+            {
+                LoginMesssage = "Usuario y/o contraseña incorrectos o el Usuario no tiene habilitado el Acceso. Por favor, intente nuevamente";
+                user.Password = String.Empty;
+            }
         }
-        else
+        catch (Exception ex)
         {
-            LoginMesssage = "Invalid username or password";
+            Logger.AddLine(String.Format("Error desde Login.razor - {0}-{1}-{2}", DateTime.Now.ToString(), ex.Message, ex.StackTrace));
+            LoginMesssage = "Ocurrio un error al iniciar sesión. Por favor, intente nuevamente";
+            user.Password = String.Empty;
         }
 
         return await Task.FromResult(true);
-    }
-
-}
+    } }

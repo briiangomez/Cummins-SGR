@@ -4,23 +4,112 @@
 @using CuriousDriveRazorLibrary
 @using Blazored.LocalStorage
 @using SGRBlazorApp.Shared
-@inject ISgrService<Motor> bookStoresService
+@inject ISgrService<Equipo> bookStoresService
+@inject ISgrService<Motor> motorService
 @inject IUserService userService
 @inject ILocalStorageService localStorageService
 @inject IJSRuntime JSRuntime
 @implements IDisposable
+@inject NavigationManager navigationManager
 
-    <div class="col-12">
+<div class="col-12">
 
-        <h3><b>Motores</b></h3>
-        <br />
-        <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
-            <Authorized>
-                <a class="btn btn-primary" style="text-underline-position:below; cursor:pointer; color:blue" href="/addEquipo">Nuevo Cliente</a>
-            </Authorized>
-        </AuthorizeView>
-        <br />
-        <SpinLoader IsLoading="isLoading">
+    <h3><b>Listado Fabricante/OEM</b></h3>
+    <br />
+    <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+        <Authorized>
+            <a class="btn btn-primary" style="text-underline-position:below; cursor:pointer; " href="/addEquipo">Nuevo Registro</a>
+        </Authorized>
+    </AuthorizeView>
+    <br />
+    <br />
+
+    @if (isLoading)
+    {
+        <RadzenDataGrid AllowFiltering="true" AllowColumnResize="true"
+                        FilterMode="FilterMode.Simple" PageSize="20" AllowPaging="true" AllowSorting="true" Data="@EquipoList.OrderBy(o => o.Oem.Nombre).ThenBy(o => o.Modelo).ToList()" TItem="Equipo" ColumnWidth="300px"
+                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                        LogicalFilterOperator="LogicalFilterOperator.Or">
+            <Columns>
+                <RadzenDataGridColumn TItem="Equipo" Property="Oem.Nombre" Title="Fabricante/OEM" />
+                <RadzenDataGridColumn TItem="Equipo" Property="Modelo" Title="Modelo" />
+                <RadzenDataGridColumn TItem="Equipo" Property="Motor.Codigo" Title="Motor" />
+            @*<RadzenDataGridColumn TItem="Equipo" Title="Motor" Property="Modelo">
+                <Template Context="Equipo">
+
+                    @if (Equipo.MotorId != null && MotorList.Any(o => o.Id == Equipo.MotorId))
+                    {
+                        @MotorList.FirstOrDefault(o => o.Id == Equipo.MotorId).Codigo
+                    }
+                </Template>
+            </RadzenDataGridColumn>*@
+                <RadzenDataGridColumn TItem="Equipo" Context="sampleBlazorModelsSampleOrder" Filterable="false" Sortable="false" TextAlign="TextAlign.Left" Title="Editar"  Width="100px">
+                    <Template Context="Equipo">
+                        <RadzenButton Icon="edit" Size="ButtonSize.Medium" Click="@(args => EditRow(Equipo.Id))" @onclick:stopPropagation="true">
+                        </RadzenButton>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="Equipo" Context="order" Filterable="false" Sortable="false" TextAlign="TextAlign.Left"   Title="Eliminar" Width="70px">
+                    <Template Context="Equipo">
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Medium" Click="@(args => DeleteRow(Equipo.Id))" @onclick:stopPropagation="true">
+                        </RadzenButton>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+
+        @*<table id="equipos" class="table" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Fabricante/OEM</th>
+                        <th>Modelo</th>
+                        <th>Motor</th>
+                        <th style="width:15%"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var Equipo in EquipoList)
+                    {
+                        <tr>
+                            <td>@Equipo.Modelo</td>
+                            @if (Equipo.Oemid != null)
+                            {
+                                <td>@Equipo.Oem.Nombre</td>
+                            }
+                            else
+                            {
+                                <td></td>
+                            }
+                            @if (Equipo.MotorId != null)
+                            {
+                                <td>@Equipo.Motor.Codigo</td>
+                            }
+                            else
+                            {
+                                <td></td>
+                            }
+
+                            <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+                                <Authorized>
+                                    <td>
+                                        <a class="btn btn-success" href=@string.Format("/editEquipo/{0}", Equipo.Id)><i class="fa fa-pencil"></i></a>
+                                        <a style="background-color:red;color:white" class="btn btn-success" href=@string.Format("/deleteEquipo/{0}", Equipo.Id)><i class="fa fa-trash"></i></a>
+                                    </td>
+                                </Authorized>
+                            </AuthorizeView>
+                        </tr>
+                    }
+                </tbody>
+            </table>*@
+    }
+    else
+    {
+        <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
+            <br /><br />
+            <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
+        </div>
+    }
+    @*<SpinLoader IsLoading="isLoading">
             <LoadingTemplate>
                 <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
                     <br /><br />
@@ -32,12 +121,12 @@
                 {
                     <GridView Items="filteredEquipoList" ReloadList="IsGridViewFiltered">
                         <GridColumns>
-                            <GridColumn ColumnTitle="NumeroMotor"
-                                        OnSearchTextChanged="@(e => OnMotorearchTextChanged(e, "NumeroMotor"))"></GridColumn>
+                            <GridColumn ColumnTitle="NumeroEquipo"
+                                        OnSearchTextChanged="@(e => OnEquipoearchTextChanged(e, "NumeroEquipo"))"></GridColumn>
                             <GridColumn ColumnTitle="Modelo"
-                                        OnSearchTextChanged="@(e => OnMotorearchTextChanged(e, "Modelo"))"></GridColumn>
+                                        OnSearchTextChanged="@(e => OnEquipoearchTextChanged(e, "Modelo"))"></GridColumn>
                             <GridColumn ColumnTitle="Equipo"
-                                        OnSearchTextChanged="@(e => OnMotorearchTextChanged(e, "Equipo"))"></GridColumn>
+                                        OnSearchTextChanged="@(e => OnEquipoearchTextChanged(e, "Equipo"))"></GridColumn>
                             <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
                                 <Authorized>
                                     <GridColumn ColumnTitle="Actions"></GridColumn>
@@ -45,18 +134,15 @@
                             </AuthorizeView>
                         </GridColumns>
                         <GridRow Context="Equipo">
-                            @*<td>
-                                <NavLink href=@string.Format("/Motor/Equipodetail/{0}", @Equipo.Id)>
+                            <td>
+                                <NavLink href=@string.Format("/Equipo/Equipodetail/{0}", @Equipo.Id)>
                                     @Equipo.Id
                                 </NavLink>
-                            </td>*@
-                            <td>@Equipo.NumeroMotor</td>
-                            <td>@Equipo.Modelo</td>
-                            <td>@Equipo.Equipo</td>
-                            <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+                            </td>
+
                                 <Authorized>
                                     <th>
-                                        <a style="text-underline-position:below; cursor:pointer; color:blue" href=@string.Format("/editMotor/{0}", Equipo.Id)>Edit</a> |
+                                        <a style="text-underline-position:below; cursor:pointer; color:blue" href=@string.Format("/editEquipo/{0}", Equipo.Id)>Edit</a> |
                                         <a style="text-underline-position:below; cursor:pointer; color:blue" @onclick="(() => DeleteEquipo(Equipo.Id))">Delete</a>
                                     </th>
                                 </Authorized>
@@ -65,77 +151,116 @@
                     </GridView>
                 }
             </ContentTemplate>
-        </SpinLoader>
-    </div>
+        </SpinLoader>*@
+</div>
 
 @code {
 
-    public Motor Equipo { get; set; }
-    public List<Motor> EquipoList { get; set; }
-    public List<Motor> filteredEquipoList { get; set; }
+    public Equipo Equipo { get; set; }
+    public List<Equipo> EquipoList { get; set; }
+    public List<Equipo> filteredEquipoList { get; set; }
     public string SelectedCity { get; set; }
-
+    public List<Motor> MotorList { get; set; }
     public bool IsVisible { get; set; }
     public bool Result { get; set; }
     public string RecordName { get; set; }
     public string[] Cities { get; set; }
     public bool IsGridViewFiltered { get; set; }
-    bool isLoading = true;
+    bool isLoading = false;
 
     ElementReference firstNameTextBox;
 
     protected override void OnInitialized()
     {
-        Console.WriteLine("Motor - OnInitialized");
+        Console.WriteLine("Equipo - OnInitialized");
         base.OnInitialized();
     }
 
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+
+    bool IsUserAuthenticated;
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("Motor - OnInitializedAsync");
+        user = (await authenticationStateTask).User;
 
-        Equipo = new Motor();
-        EquipoList = new List<Motor>();
-        //EquipoList = await Motorervice.GetMotor();
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+        Console.WriteLine("Equipo - OnInitializedAsync");
 
+        Equipo = new Equipo();
+        EquipoList = filteredEquipoList = await bookStoresService.GetAllAsync("Equipo/GetEquipoFull");
+        MotorList = await motorService.GetAllAsync("Motor/GetMotor");
+        if (EquipoList == null)
+        {
+
+            RefreshRequest refreshRequest = new RefreshRequest();
+            refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+            refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+            var user1 = await userService.RefreshTokenAsync(refreshRequest);
+            await localStorageService.SetItemAsync("accessToken", user1.AccessToken);
+
+            EquipoList = filteredEquipoList = await bookStoresService.GetAllAsync("Equipo/GetEquipoFull");
+        }
+        List<Equipo> EquipoListFull = new List<Equipo>();
+        foreach (var item in EquipoList)
+        {
+            item.Motor = MotorList.FirstOrDefault(o => o.Id == item.MotorId);
+            EquipoListFull.Add(item);
+        }
+        EquipoList = EquipoListFull;
+        isLoading = true;
+
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#equipos");
         await base.OnInitializedAsync();
     }
 
     protected override void OnParametersSet()
     {
-        Console.WriteLine("Motor - OnParametersSet");
+        Console.WriteLine("Equipo - OnParametersSet");
         base.OnParametersSet();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        Console.WriteLine("Motor - OnParametersSetAsync");
+        Console.WriteLine("Equipo - OnParametersSetAsync");
         await base.OnParametersSetAsync();
     }
 
     protected override bool ShouldRender()
     {
         base.ShouldRender();
-        Console.WriteLine("Motor - ShouldRender");
+        Console.WriteLine("Equipo - ShouldRender");
 
         return true;
     }
 
     protected override void OnAfterRender(bool firstRender)
     {
-        Console.WriteLine("Motor - OnAfterRender - firstRender = " + firstRender);
+        Console.WriteLine("Equipo - OnAfterRender - firstRender = " + firstRender);
         base.OnAfterRender(firstRender);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        Console.WriteLine("Motor - OnAfterRenderAsync - firstRender = " + firstRender);
-
+        Console.WriteLine("Equipo - OnAfterRenderAsync - firstRender = " + firstRender);
+        ////await JSRuntime.InvokeAsync<object>("TestDataTablesRemove", "#equipos");
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#equipos");
         if (firstRender)
         {
-            await LoadMotor();
+            //await LoadEquipo();
 
-            isLoading = false;
+            //isLoading = false;
             StateHasChanged();
         }
 
@@ -144,14 +269,14 @@
 
     public void Dispose()
     {
-        Console.WriteLine("Motor - Dispose");
+        Console.WriteLine("Equipo - Dispose");
     }
 
-    private async Task LoadMotor()
+    private async Task LoadEquipo()
     {
         await Task.Delay(500);
 
-        EquipoList = filteredEquipoList = await bookStoresService.GetAllAsync("Motor/GetMotor");
+        EquipoList = filteredEquipoList = await bookStoresService.GetAllAsync("Equipo/GetEquipoFull");
 
         if (EquipoList == null)
         {
@@ -162,29 +287,40 @@
             var user1 = await userService.RefreshTokenAsync(refreshRequest);
             await localStorageService.SetItemAsync("accessToken", user1.AccessToken);
 
-            EquipoList = filteredEquipoList = await bookStoresService.GetAllAsync("Motor/GetMotor");
+            EquipoList = filteredEquipoList = await bookStoresService.GetAllAsync("Equipo/GetEquipoFull");
         }
 
-        //if (EquipoList != null)
-        //    EquipoList = EquipoList.OrderByDescending(auth => auth.EquipoId).ToList();
+        isLoading = true;
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesRemove", "#equipos");
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#equipos");
 
         StateHasChanged();
+    }
+
+    void EditRow(Guid id)
+    {
+        navigationManager.NavigateTo(string.Format("/editEquipo/{0}", id));
+    }
+
+    void DeleteRow(Guid id)
+    {
+        navigationManager.NavigateTo(string.Format("/deleteEquipo/{0}", id));
     }
 
 
 
     private async Task DeleteEquipo(Guid EquipoId)
     {
-        var confirmado = await JSRuntime.Confirmar("Atencion!","¿Desea eliminar el Equipo?",TipoMensajeSweetAlert.warning);
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea eliminar el Equipo?", TipoMensajeSweetAlert.warning);
         if (confirmado)
         {
-            await bookStoresService.DeleteAsync("Motor/DeleteMotor/", EquipoId);
-            await LoadMotor();
+            await bookStoresService.DeleteAsync("Equipo/DeleteEquipo/", EquipoId);
+            await LoadEquipo();
         }
         //throw new Exception("DeleteEquipo");
     }
 
-    private void EditEquipo(Motor argEquipo)
+    private void EditEquipo(Equipo argEquipo)
     {
         Equipo = argEquipo;
     }
@@ -194,21 +330,18 @@
         SelectedCity = (string)changeEventArgs.Value;
     }
 
-    private void OnMotorearchTextChanged(ChangeEventArgs changeEventArgs, string columnTitle)
+    private void OnEquipoearchTextChanged(ChangeEventArgs changeEventArgs, string columnTitle)
     {
         string searchText = changeEventArgs.Value.ToString();
         IsGridViewFiltered = true;
 
         switch (columnTitle)
         {
-            case "NumeroMotor":
-                filteredEquipoList = EquipoList.Where(auth => auth.NumeroMotor.ToLower().Contains(searchText)).ToList();
-                break;
             case "Modelo":
                 filteredEquipoList = EquipoList.Where(auth => auth.Modelo.ToLower().Contains(searchText)).ToList();
                 break;
             case "Equipo":
-                filteredEquipoList = EquipoList.Where(auth => auth.Equipo.ToLower().Contains(searchText)).ToList();
+                filteredEquipoList = EquipoList.Where(auth => auth.Equipo1.ToLower().Contains(searchText)).ToList();
                 break;
             default:
                 Console.WriteLine("Default case");

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SGIWebApi.Models;
+using SGR.Models.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
+using SGIWebApi.Models;
 
 namespace SGIWebApi.Controllers
 {

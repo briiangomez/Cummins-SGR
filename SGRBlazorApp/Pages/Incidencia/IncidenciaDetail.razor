@@ -3,12 +3,16 @@
 @using SGRBlazorApp.Interfaces
 @using CuriousDriveRazorLibrary
 @using Blazored.LocalStorage
+@using System.Security.Claims
 @using SGRBlazorApp.Shared
+@inject ISgrService<Estado> estadoService
 @inject ISgrService<Incidencia> bookStoresService
 @inject ISgrService<IncidenciaApi> incidenciaApiService
+@inject ISgrService<ImagenesIncidencium> imagenesService
 @inject ISgrService<Dealer> dealerService
 @inject IUserService userService
 @inject ILocalStorageService localStorageService
+@inject ISgrService<EstadoIncidencium> estadoIncidenciaService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager navigationManager
 @implements IDisposable
@@ -17,90 +21,337 @@
 @using SGRBlazorApp.Services
 @inject GeocodingService GeocodingService
 
-    <div class="col-12">
-        <h3><b>Informacion de la incidencia Nro @Incidencia.NumeroIncidencia</b></h3>
-        <hr />
-
-        <div class="col-12 row">
-            <label class="col-2 font-weight-bold">Estado Actual:</label>
-            <input class="form-control col-3" value="@IncidenciaApi.nombreEstadoIncidencia" readonly/>
-        </div>
-        <br />
-        <div class="col-12 row">
-            <label class="col-2 font-weight-bold">Equipo:</label>
-            <input class="form-control col-3" value="@IncidenciaApi.numeroMotor" readonly />
-        </div>
-
-        <h3>Dealer Asignado </h3>
-
-        @if (dealer != null)
-        {
-            <div class="card-body">
-                <div class="card bg-info">
-                    <div class="card-body text-white">
-                        <h4 class="card-title">Dealer Asignado: <b>@dealer.Name - @dealer.Address, @dealer.City, @dealer.Country </b></h4>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <Radzen.Blazor.RadzenGoogleMap Zoom="16"
-                                                   style="height:500px"
-                                                   ApiKey="AIzaSyCBhlrEoE5ndgXMCeI7zyq0dK4MJksa8Ak"
-                                                   Center="@(new GoogleMapPosition() { Lat = dealer.LatitudGps.Value, Lng = dealer.LongitudGps.Value })">
-                        <Markers>
-                            <Radzen.Blazor.RadzenGoogleMapMarker Title="@dealer.Name" Label="@dealer.Name" Position="@(new GoogleMapPosition() { Lat = dealer.LatitudGps.Value, Lng = dealer.LongitudGps.Value })" />
-
-                        </Markers>
-                    </Radzen.Blazor.RadzenGoogleMap>
-                </div>
-            </div>
-        }
+@if (isLoading)
+{
 
 
-        @*if (IncidenciaApi.nombreEstadoIncidencia == "En Proceso")
-        {
-        <br />
-        <div class="col-12 row">
-            <textarea class="form-control" cols="10" rows="10" @bind="@Observaciones"></textarea>
-        </div>
-        <br />
-        <div class="col-12 row">
-
-        </div>
-        }
-        else*@
-        <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
-            <Authorized>
-                @if (IncidenciaApi.nombreEstadoIncidencia == "Rechazado")
-                {
-                    <h3><b>Asignar Nuevo Dealer</b></h3>
-                    <div class="col-12 row">
-                        <label class="col-2 font-weight-bold">Dealer :</label>
-                        <select class="form-control col-10" @onchange="OnChangeEvent2" name="IdDealer" id="IdDealer">
-                            <option value="">Seleccione Dealer...</option>
-                            @if (Dealers != null)
-                            {
-                                foreach (var item in Dealers)
-                                {
-                                    <option value="@item.Id">@item.Name</option>
-                                }
-                            }
-                        </select>
-                    </div>
-                    <br />
-                    <div class="col-12 row">
-                        <span class="col-2"></span>
-                        <a class="col-1 btn btn-success" @onclick="(() => RechazarIncidencia(Incidencia.Id))">Aceptar </a>
-                        <span>&nbsp;</span>
-                        <a class="col-1 btn btn-primary" href="/Incidencias">Cancelar</a>
-                    </div>
-                }
-            </Authorized>
-        </AuthorizeView>
-
+<div class="row">
+    <div class="col-md-12">
+        <h3><b>Informacion del Reclamo Nro @Incidencia.NumeroIncidencia</b></h3>
+    </div>
+    <hr />
+    <div class="col-md-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Fecha Carga:</label>
+        <input class="form-control col-12" value="@IncidenciaApi.fechaIncidencia" readonly />
+    </div>
+    <br />
+    <div class="col-md-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Estado Actual:</label>
+        <input class="form-control col-12" value="@IncidenciaApi.nombreEstadoIncidencia" readonly />
+    </div>
+    <br />
+    <div class="col-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Equipo:</label>
+        <input class="form-control col-12" value="@IncidenciaApi.Equipo" readonly />
     </div>
 
+    <div class="col-md-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Nombre Contacto:</label>
+        <input class="form-control col-12" value="@IncidenciaApi.nombreContacto" readonly />
+    </div>
+    <br />
+    <div class="col-md-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Telefono:</label>
+        <input class="form-control col-12" value="@IncidenciaApi.telefonoFijoContacto" readonly />
+    </div>
+    <br />
+    <div class="col-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Email Contacto:</label>
+        <input class="form-control col-12" value="@IncidenciaApi.emailContacto" readonly />
+    </div>
+    <br />
+    <div class="col-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Hs o Km del Motor: </label>
+        <div class="input-group mb-3">
+            <input class="form-control col-12" value="@IncidenciaApi.horasTractor" readonly />
+            <div class="input-group-append">
+                <span class="input-group-text">@(IncidenciaApi.Aux3 == "1" ? "KM" : "HS")</span>
+            </div>
+        </div>
+    </div>
+    <br />
+    <div class="col-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Fecha de compra: </label>
+        <input class="form-control col-12" value="@IncidenciaApi.fechaCompra" readonly />
+    </div>
+    <br />
+    <div class="col-md-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Numero Motor (ESN):</label>
+        <input class="form-control col-12" value="@IncidenciaApi.numeroMotor" readonly />
+    </div>
+    <br />
+    <div class="col-md-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Modelo Motor:</label>
+        <input class="form-control col-12" value="@IncidenciaApi.ModeloMotor" readonly />
+    </div>
+    <br />
+    <div class="col-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Modelo Equipo: </label>
+        <input class="form-control col-12" value="@IncidenciaApi.ModeloEquipo" readonly />
+    </div>
+    <br />
+    <div class="col-md-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Sintoma:</label>
+        <input class="form-control col-12" value="@IncidenciaApi.Sintoma" readonly />
+    </div>
+    <br />
+    <div class="col-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Direccion Contacto: </label>
+        <input class="form-control col-12" value="@IncidenciaApi.domicilioContacto" readonly />
+    </div>
+
+    <br />
+    <div class="col-12" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Direccion de Inspeccion: </label>
+        <input class="form-control col-12" value="@IncidenciaApi.DireccionInspeccion" readonly />
+    </div>
+    @if (IncidenciaApi.nombreEstadoIncidencia == "Cerrado")
+    {
+        <br />
+        <div class="col-6" style="margin-top:15px">
+            <label class="col-12 font-weight-bold">Es Garantia: </label>
+            @if (Incidencia.EsGarantia != null && Incidencia.EsGarantia.Value)
+            {
+                <input class="form-control col-12" value="Si" readonly />
+            }
+            else
+            {
+                <input class="form-control col-12" value="No" readonly />
+            }
+        </div>
+        <br />
+        <div class="col-6" style="margin-top:15px">
+            <label class="col-12 font-weight-bold">Fecha de Cierre: </label>
+            <input class="form-control col-12" value="@IncidenciaApi.fechaCierre" readonly />
+        </div>
+    }
+    <br />
+    <div class="col-12">
+        <label class="col-12 font-weight-bold">Reclamo del Cliente / Customer Complaint:</label>
+        <textarea class="form-control col-10" readonly>@IncidenciaApi.ObservacionesIncidencia</textarea>
+    </div>
+
+    <label>Factura de Compra Cargada</label>
+    <br />
+    @if (imagenesIncidencia.Where(o => o.Tipo == "Factura de Compra").ToList().Count() > 0 && imagenesIncidencia != null)
+    {
+        <table id="equipos" class="table" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Tipo de Archivo</th>
+                    <th>Archivo</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var Setting in imagenesIncidencia.Where(o => o.Tipo == "Factura de Compra").ToList())
+                {
+                    <tr>
+                        <td>@Setting.Tipo</td>
+                        <td>
+                            <a class="btn btn-success"  @onclick="(() => DownloadServerFile(Setting.Imagen))"><i class="fa fa-file"></i> Abrir Archivo</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    @if (IncidenciaApi.nombreEstadoIncidencia != "Cerrado")
+    {
+        if (dealer != null)
+        {
+            <div class="col-12 row">
+                <div class="col-md-12">
+                    <div class="card-body">
+                        <div class="card bg-info">
+                            <div class="card-body text-white">
+                                <h4 class="card-title">Dealer Asignado: <b>@dealer.Name - @dealer.Address, @dealer.City, @dealer.Country </b></h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            if (showMap)
+            {
+                <div class="col-12 row">
+                    <div class="col-md-12">
+                        <MapaComponent Latitud="@IncidenciaApi.latitudGps" Longitud="@IncidenciaApi.longitudGps" zoom="16" posiciones="posiciones"></MapaComponent>
+
+                        @*<Radzen.Blazor.RadzenGoogleMap Zoom="16"
+                                                           style="height:500px"
+                                                           ApiKey="AIzaSyAPHRhaDoTeYi6g6Osx6d6ksw7v0I_fWyE"
+                                                           Center="@(new GoogleMapPosition() { Lat = dealer.LatitudGps.Value, Lng = dealer.LongitudGps.Value })">
+                                <Markers>
+                                    <Radzen.Blazor.RadzenGoogleMapMarker Title="@dealer.Name" Label="@dealer.Name" Position="@(new GoogleMapPosition() { Lat = dealer.LatitudGps.Value, Lng = dealer.LongitudGps.Value })" />
+
+                                </Markers>
+                            </Radzen.Blazor.RadzenGoogleMap>*@
+                    </div>
+                </div>
+            }
+        }
+
+    }
+<AuthorizeView Roles="Dealer" Policy="SeniorEmployee">
+    <Authorized>
+        <div class="col-12">
+            <br />
+            <br />
+            <label>Comentarios y Estado del Reclamo</label>
+            <br />
+            @if (estadoIncidencia.Count() > 0 && estadoIncidencia != null)
+            {
+                <table id="equipos" class="table" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Observacion</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var Setting in estadoIncidencia.OrderByDescending(o => o.Created).ToList())
+                        {
+                            <tr>
+                                <td>@Setting.Created.ToString("dd/MM/yyyy")</td>
+                                <td>@Setting.Estado.Descripcion</td>
+                                <td>@Setting.Observacion</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            <br />
+            <br />
+            <label>Archivos Adjuntos</label>
+            <br />
+            @if (imagenesIncidencia.Count() > 0 && imagenesIncidencia != null)
+            {
+                <table id="equipos" class="table" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Tipo de Archivo</th>
+                            <th>Archivo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var Setting in imagenesIncidencia)
+                        {
+                            <tr>
+                                <td>@Setting.Tipo</td>
+                                <td>
+                                    <a class="btn btn-success" @onclick="(() => DownloadServerFile(Setting.Imagen))"><i class="fa fa-file"></i> Abrir Archivo</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </Authorized>
+</AuthorizeView>
+    <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+        <Authorized>
+            @if (IncidenciaApi.nombreEstadoIncidencia == "Cerrado")
+            {
+                <div class="col-12">
+                    <br />
+                    <br />
+                    <label>Comentarios y Estado del Reclamo</label>
+                    <br />
+                    @if (estadoIncidencia.Count() > 0 && estadoIncidencia != null)
+                    {
+                        <table id="equipos" class="table" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                    <th>Observacion</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var Setting in estadoIncidencia.OrderByDescending(o => o.Created).ToList())
+                                {
+                                    <tr>
+                                        <td>@Setting.Created.ToString("dd/MM/yyyy")</td>
+                                        <td>@Setting.Estado.Descripcion</td>
+                                        <td>@Setting.Observacion</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    <br />
+                    <br />
+                    <label>Archivos Adjuntos</label>
+                    <br />
+                    @if (imagenesIncidencia.Count() > 0 && imagenesIncidencia != null)
+                    {
+                        <table id="equipos" class="table" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Tipo de Archivo</th>
+                                    <th>Archivo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var Setting in imagenesIncidencia)
+                                {
+                                    <tr>
+                                        <td>@Setting.Tipo</td>
+                                        <td>
+                                            <a class="btn btn-success" @onclick="(() => DownloadServerFile(Setting.Imagen))"><i class="fa fa-file"></i> Abrir Archivo</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+
+            }
+            @if (IncidenciaApi.nombreEstadoIncidencia == "Rechazado" && Rechs > 1)
+            {
+                <h3><b>Asignar Nuevo Dealer</b></h3>
+                <div class="col-12 row">
+                    <label class="col-12 font-weight-bold">Dealer :</label>
+                    <select class="form-control col-10" @onchange="OnChangeEvent2" name="IdDealer" id="IdDealer">
+                        <option value="">Seleccione Dealer...</option>
+                        @if (Dealers != null)
+                        {
+                            foreach (var item in Dealers.OrderBy(o => o.Name))
+                            {
+                                <option value="@item.Id">@item.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <br />
+                <div class="col-12 row">
+                    <span class="col-4"></span>
+                    <a class="col-1 btn btn-success" @onclick="(() => RechazarIncidencia(Incidencia.Id))">Aceptar </a>
+                    <span>&nbsp;</span>
+                    <a class="col-1 btn btn-primary" href="/Incidencias">Cancelar</a>
+                </div>
+            }
+        </Authorized>
+    </AuthorizeView>
+    <br>
+    <div class="col-12 row" style="margin-top:15px;margin-bottom:20px">
+        <span class="col-4"></span>
+        <span>&nbsp;</span>
+        <a class="col-1 btn btn-primary" href="/Incidencias">Volver</a>
+    </div>
+</div>
+}
+else
+{
+    <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
+        <br /><br />
+        <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
+    </div>
+}
 @code
 {
     [Parameter]
@@ -108,11 +359,58 @@
     public Incidencia Incidencia { get; set; }
     public IncidenciaApi IncidenciaApi { get; set; }
     public List<IncidenciaApi> IncidenciaList { get; set; }
-    public List<EstadoIncidencia> estadoIncidencia { get; set; }
+    public List<EstadoIncidencium> estadoIncidencia { get; set; }
+    public List<ImagenesIncidencium> imagenesIncidencia { get; set; }
+    public List<Estado> estadosList { get; set; }
     public string Observaciones { get; set; }
     public Guid IdDealer { get; set; }
     public List<Dealer> Dealers { get; set; }
     public Dealer dealer { get; set; }
+    public bool showMap = false;
+    public int Rechs = 0;
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+    bool IsUserAuthenticated;
+    bool IsDealer;
+    bool isLoading = false;
+
+
+    public SGRBlazorApp.Data.User user1 { get; set; }
+    public RefreshRequest refreshRequest { get; set; }
+    public List<CarPoint> posiciones { get; set; }
+
+    private async Task DownloadServerFile(string filePath)
+    {
+
+        if (!String.IsNullOrEmpty(filePath))
+        {
+            string base64String = String.Empty;
+            using (var fileInput = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            {
+                MemoryStream memoryStream = new MemoryStream();
+                fileInput.CopyTo(memoryStream);
+
+                var buffer = memoryStream.ToArray();
+                base64String = Convert.ToBase64String(buffer);
+            }
+            string name = filePath.Split('\\')[filePath.Split('\\').Length - 1];
+            //call javascript function to download the file
+            if (name.ToUpper().Contains(".JPG") || name.ToUpper().Contains(".PNG") || name.ToUpper().Contains(".JPEG"))
+            {
+                await JSRuntime.InvokeVoidAsync("downloadFile", "image/png", base64String, name);
+
+            }
+            else if (name.ToUpper().Contains(".PDF"))
+            {
+                await JSRuntime.InvokeVoidAsync("downloadFile", "application/pdf", base64String, name);
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("downloadFile", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", base64String, name);
+            }
+        }
+    }
 
     public void Dispose()
     {
@@ -124,6 +422,7 @@
         Console.WriteLine("Clientes - OnInitialized");
         base.OnInitialized();
     }
+
 
     private void OnChangeEvent2(ChangeEventArgs changeEventArgs)
     {
@@ -139,13 +438,19 @@
     }
 
 
-        private async Task RechazarIncidencia(Guid ClienteId)
+    private async Task RechazarIncidencia(Guid ClienteId)
     {
         var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea confirmar la asignacion del nuevo Dealer para el Reclamo?", TipoMensajeSweetAlert.warning);
         if (confirmado)
         {
-            
-            await bookStoresService.UpdateAsync("Incidencia/UpdateIncidencia/", Id,Incidencia);
+            EstadoIncidencium estado = new EstadoIncidencium();
+            estado.IncidenciaId = ClienteId;
+            estado.EstadoId = estadosList.FirstOrDefault(o => o.Descripcion == "En Proceso").Id;
+            estado.Created = DateTime.Now;
+            estado.IdUser = user1.Id;
+            estado.Observacion = Observaciones;
+            await estadoIncidenciaService.SaveAsync("EstadoIncidencia/CreateEstadoIncidencia/", estado);
+            await bookStoresService.UpdateAsync("Incidencia/UpdateIncidencia/", Id, Incidencia);
             //await bookStoresService.UpdateAsync("Incidencia/UpdateIncidencia/", Id,Incidencia);
             navigationManager.NavigateTo("/Incidencias");
         }
@@ -155,16 +460,48 @@
 
     protected override async Task OnInitializedAsync()
     {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+
         Console.WriteLine("Clientes - OnInitializedAsync");
         Incidencia = new Incidencia();
         IncidenciaApi = new IncidenciaApi();
+        posiciones = new List<CarPoint>();
+        estadosList = new List<Estado>();
+        estadoIncidencia = new List<EstadoIncidencium>();
+        imagenesIncidencia = new List<ImagenesIncidencium>();
+        estadosList = await estadoService.GetAllAsync("Estados/GetEstados");
         Incidencia = await bookStoresService.GetByIdAsync("Incidencia/GetIncidencia/", Id);
         IncidenciaList = await incidenciaApiService.GetAllAsync("Incidencia/GetIncidenciaApi");
         IncidenciaApi = IncidenciaList.FirstOrDefault(o => o.Id == Id);
         Dealers = await dealerService.GetAllAsync("Dealer/GetDealer");
         dealer = Dealers.FirstOrDefault(o => o.Id == Incidencia.IdDealer.Value);
+        var incsIds = await estadoIncidenciaService.GetAllAsync("EstadoIncidencia/GetEstadoIncidenciasById/" + Id.ToString());
 
+        imagenesIncidencia = await imagenesService.GetAllAsync("ImagenesIncidencia/GetImagenesIncidenciasById/" + Id.ToString());
+        estadoIncidencia = incsIds;
+        Guid idRec = estadosList.FirstOrDefault(o => o.Descripcion == "Rechazado").Id;
+        Rechs = incsIds.Where(o => o.EstadoId == idRec).Count();
+        //posMap = new GoogleMapPosition() { Lat = circuito.Latitud.Value, Lng = circuito.Longitud.Value };
+        if (IncidenciaApi.latitudGps != 0 && IncidenciaApi.longitudGps != 0)
+        {
+            CarPoint car = new CarPoint() { Lat = IncidenciaApi.latitudGps, Long = IncidenciaApi.longitudGps, name = IncidenciaApi.DireccionInspeccion };
+            posiciones.Add(car);
+            showMap = true;
+        }
 
+        if (user.IsInRole("Dealer"))
+            IsDealer = true;
+
+        refreshRequest = new RefreshRequest();
+        refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+        refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+        user1 = await userService.RefreshTokenAsync(refreshRequest);
+        isLoading = true;
         await base.OnInitializedAsync();
     }
 }

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SGIWebApi.Models;
+using SGR.Models.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
@@ -14,6 +14,8 @@ using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
+using SGIWebApi.Models;
+using SGR.Models;
 
 namespace SGIWebApi.Controllers
 {
@@ -175,7 +177,7 @@ namespace SGIWebApi.Controllers
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for
         // more details see https://aka.ms/RazorPagesCRUD.
         [HttpPut("UpdateIncidencia/{id}")]
-        public async Task<IActionResult> PutIncidencia(string accessToken, Guid id, IncidenciaApi Incidencia)
+        public async Task<IActionResult> PutIncidencia(string accessToken, Guid id, Incidencia Incidencia)
         {
             try
             {
@@ -246,152 +248,221 @@ namespace SGIWebApi.Controllers
         [HttpPost("CrearIncidencia")]
         public async Task<ActionResult<IncidenciaApi>> CrearIncidencia(string accessToken, IncidenciaApi entity)
         {
-            try
+            using (var transaction = await _context.Database.BeginTransactionAsync())
             {
-                if (GetUserFromAccessToken(accessToken))
-                    throw new Exception("Invalid Token");
-                Incidencia inc = new Incidencia();
-                inc.Id = Guid.NewGuid();
-                
-                inc.Created = DateTime.Now;
-                inc.Modified = DateTime.Now;
-                inc.NumeroIncidencia = _context.Incidencias.Count() + 1;
-                inc.NroIncidenciaPauny = entity.numeroIncidencia.ToString();
-                Motor mot = new Motor();
-                Cliente cli = new Cliente();
-                Falla fal = new Falla();
-                EstadoGarantia estG = new EstadoGarantia();
-                Dealer dea = _context.Dealers.FirstOrDefault(o => o.Name.Contains(entity.nombreConcesionario) && o.LocationCode.Contains(entity.codigoConcesionario));
-                if (dea == null)
+                try
                 {
-                    dea = new Dealer();
-                    dea.Id = Guid.NewGuid();
-                    dea.Created = DateTime.Now;
-                    dea.Name = entity.nombreConcesionario;
-                    dea.Phone = entity.telefonoConcesionario;
-                    dea.Email = entity.emailConcesionario;
-                    dea.DistributorCode = entity.codigoConcesionario;
-                    dea.LatitudGps = entity.latitudGps;
-                    dea.LongitudGps = entity.longitudGps;
-                    await _context.Dealers.AddAsync(dea);
+                    if (GetUserFromAccessToken(accessToken))
+                        throw new Exception("Invalid Token");
+                    Incidencia inc = new Incidencia();
+                    inc.Id = Guid.NewGuid();
+                    inc.Created = DateTime.Now;
+                    inc.Modified = DateTime.Now;
+                    inc.NumeroIncidencia = _context.Incidencias.Count() + 1;
+                    inc.NroIncidenciaPauny = entity.numeroIncidencia.ToString();
+                    inc.ConfiguracionCorta = entity.configuracionCorta;
+                    Equipo mot = new Equipo();
+                    Cliente cli = new Cliente();
+                    Falla fal = new Falla();
+                    EstadoGarantium estG = new EstadoGarantium();
+                    Dealer dea = _context.Dealers.FirstOrDefault(o => o.Name.Contains(entity.nombreConcesionario) && o.LocationCode.Contains(entity.codigoConcesionario));
+                    if (dea == null)
+                    {
+                        dea = new Dealer();
+                        dea.Id = Guid.NewGuid();
+                        dea.Created = DateTime.Now;
+                        dea.Name = entity.nombreConcesionario;
+                        dea.Phone = entity.telefonoConcesionario;
+                        dea.Email = entity.emailConcesionario;
+                        dea.LocationCode = entity.codigoConcesionario;
+                        dea.LatitudGps = entity.latitudGps;
+                        dea.LongitudGps = entity.longitudGps;
+                        await _context.Dealers.AddAsync(dea);
+                        await _context.SaveChangesAsync();
+                    }
+                    inc.IdDealer = dea.Id;
+                    cli = _context.Clientes.FirstOrDefault(o => o.Nombre.Contains(entity.nombreContacto) && o.Dni.Contains(entity.numeroDocumento));
+                    if (cli == null)
+                    {
+                        cli = new Cliente();
+                        cli.Id = Guid.NewGuid();
+                        cli.Created = DateTime.Now;
+                        cli.TipoDni = entity.tipoDniContacto;
+                        cli.Dni = entity.numeroDocumento;
+                        cli.Nombre = entity.nombreContacto;
+                        cli.Direccion = entity.domicilioContacto;
+                        cli.Localidad = entity.localidadContacto;
+                        cli.Provincia = entity.provinciaContacto;
+                        cli.Telefono = entity.telefonoFijoContacto;
+                        cli.Celular = entity.telefonoCelularContacto;
+                        cli.Email = entity.emailContacto;
+                        cli.LatitudGpsContacto = entity.latitudGpsContacto;
+                        cli.LongitudGpsContacto = entity.longitudGpsContacto;
+                        cli.Contacto = entity.nombreContactoCliente;
+                        cli.Aux1 = entity.emailContactoCliente;
+                        cli.Aux2 = entity.telefonoContactoCliente;
+                        await _context.Clientes.AddAsync(cli);
+                        await _context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        cli.Direccion = entity.domicilioContacto;
+                        cli.Localidad = entity.localidadContacto;
+                        cli.Provincia = entity.provinciaContacto;
+                        cli.Telefono = entity.telefonoFijoContacto;
+                        cli.Celular = entity.telefonoCelularContacto;
+                        cli.LatitudGpsContacto = entity.latitudGpsContacto;
+                        cli.LongitudGpsContacto = entity.longitudGpsContacto;
+                        cli.Email = entity.emailContacto;
+                        cli.Contacto = entity.nombreContactoCliente;
+                        cli.Aux1 = entity.emailContactoCliente;
+                        cli.Aux2 = entity.telefonoContactoCliente;
+                        _context.Entry(cli).State = EntityState.Modified;
+                        await _context.SaveChangesAsync();
+                    }
+                    inc.IdCliente = cli.Id;
+                    inc.Aux2 = entity.nombreEstadoIncidencia;
+                    inc.Aux3 = entity.idEstadoIncidencia.ToString();
+                    Estado est = new Estado();
+                    if (entity.idEstadoIncidencia == 0)
+                    {
+                        est = _context.Estados.FirstOrDefault(o => o.Descripcion.Contains("Pendiente"));
+                    }
+                    else if (entity.idEstadoIncidencia == 1 || entity.idEstadoIncidencia == 2)
+                    {
+                        est = _context.Estados.FirstOrDefault(o => o.Descripcion.Contains("En Proceso"));
+                    }
+                    //else if (entity.idEstadoIncidencia == 3)
+                    //{
+                    //    est = _context.Estados.FirstOrDefault(o => o.Descripcion.Contains("Cerrado"));
+                    //}
+                    else if (entity.idEstadoIncidencia == 4)
+                    {
+                        est = _context.Estados.FirstOrDefault(o => o.Descripcion.Contains("Anulado"));
+                    }
+                    inc.Id = Guid.NewGuid();
+                    inc.NumeroIncidencia = entity.numeroIncidencia;
+                    inc.NumeroOperacion = entity.numeroOperacion;
+                    if (entity.fechaIncidencia != null)
+                    {
+                        inc.FechaIncidencia = entity.fechaIncidencia.Value;
+                    }
+                    if (entity.fechaRegistro != null)
+                    {
+                        inc.FechaRegistro = entity.fechaRegistro.Value;
+                    }
+                    //if (entity.fechaCierre != null)
+                    //{
+                    //    inc.FechaCierre = entity.fechaCierre.Value;
+                    //}
+                    //inc.NroReclamoConcesionario = entity.NroReclamoConcesionario;
+                    //inc.NroReclamoCummins = entity.NroReclamoCummins;
+                    //inc.Descripcion = entity.Descripcion;
+                    inc.DireccionInspeccion = entity.DireccionInspeccion;
+                    string codSin = entity.codigoSintoma.ToString();
+                    Sintoma sint = _context.Sintomas.FirstOrDefault(o => o.Codigo == codSin);
+                    if (sint != null)
+                    {
+                        inc.Sintoma = sint.Descripcion;
+                    }
+                    else
+                    {
+                        inc.Sintoma = entity.Sintoma;
+                    }
+                    if (entity.fechaPreEntrega != null)
+                    {
+                        inc.FechaPreEntrega = entity.fechaPreEntrega.Value;
+                    }
+                    inc.LatitudGps = entity.latitudGps;
+                    inc.LongitudGps = entity.longitudGps;
+                    inc.PathImagenes = entity.PathImagenes;
+                    inc.EsGarantia = entity.EsGarantia;
+                    inc.MostrarEnTv = entity.mostrarEnTv;
+                    inc.Sintoma = entity.Sintoma;
+                    inc.Aux1 = entity.ObservacionesIncidencia;
+                    await _context.Incidencias.AddAsync(inc);
                     await _context.SaveChangesAsync();
-                }
-                inc.IdDealer = dea.Id;
-                cli = _context.Clientes.FirstOrDefault(o => o.Nombre.Contains(entity.nombreContacto) && o.Dni.Contains(entity.numeroDocumento));
-                if(cli == null)
-                {
-                    cli = new Cliente();
-                    cli.Id = Guid.NewGuid();
-                    cli.Created = DateTime.Now;
-                    cli.TipoDni = entity.tipoDniContacto;
-                    cli.Dni = entity.numeroDocumento;
-                    cli.Nombre = entity.nombreContacto;
-                    cli.Direccion = entity.domicilioContacto;
-                    cli.Localidad = entity.localidadContacto;
-                    cli.Provincia = entity.provinciaContacto;
-                    cli.Telefono = entity.telefonoFijoContacto;
-                    cli.Celular = entity.telefonoCelularContacto;
-                    cli.Email = entity.emailContacto;
-                    cli.LatitudGpsContacto = entity.latitudGpsContacto;
-                    cli.LongitudGpsContacto = entity.longitudGpsContacto;
-                    await _context.Clientes.AddAsync(cli);
+                    mot = _context.Equipos.Where(o => o.Modelo == entity.ModeloEquipo && o.Equipo1 == entity.Equipo && o.Oemid == entity.IdOem).FirstOrDefault();
+                    if (mot == null)
+                    {
+                        mot = new Equipo();
+                        mot.Created = DateTime.Now;
+                        mot.Equipo1 = entity.Equipo;
+                        mot.Modelo = entity.ModeloEquipo;
+                        mot.Id = Guid.NewGuid();
+                        mot.MotorId = _context.Motors.FirstOrDefault(o => o.Codigo == entity.ModeloMotor).Id;
+                        mot.Oemid = entity.IdOem;
+                        await _context.Equipos.AddAsync(mot);
+                        await _context.SaveChangesAsync();
+                    }
+                    MotorIncidencium mots = new MotorIncidencium();
+                    mots.Created = DateTime.Now;
+                    mots.Modified = DateTime.Now;
+                    mots.NumeroChasis = entity.numeroChasis;
+                    mots.ModeloEquipo = entity.ModeloEquipo;
+                    mots.NumeroMotor = entity.numeroMotor;
+                    mots.HsKm = entity.horasTractor;
+                    mots.IncidenciaId = inc.Id;
+                    mots.MotorId = mot.Id;
+                    if (entity.fechaCompra != null)
+                    {
+                        mots.FechaCompra = entity.fechaCompra.Value;
+                    }
+                    if (entity.fechaFalla != null)
+                    {
+                        mots.FechaFalla = entity.fechaFalla.Value;
+                    }
+                    if (entity.fechaInicioGarantia != null)
+                    {
+                        mots.FechaInicioGarantia = entity.fechaInicioGarantia.Value;
+                    }
+                    EstadoIncidencium estt = new EstadoIncidencium();
+                    estt.Id = Guid.NewGuid();
+                    estt.Created = DateTime.Now;
+                    estt.EstadoId = est.Id;
+                    estt.IncidenciaId = inc.Id;
+                    if (entity.idEstadoGarantia == 4)
+                    {
+                        estt.Observacion = entity.observacionesAnulada;
+                    }
+                    await _context.EstadoIncidencia.AddAsync(estt);
                     await _context.SaveChangesAsync();
-                }
-                inc.IdCliente = cli.Id;
-                Estado est = _context.Estados.FirstOrDefault(o => o.Descripcion.Contains(entity.nombreEstadoIncidencia));
-                if(est == null)
-                {
-                    est = _context.Estados.FirstOrDefault(o => o.Descripcion.Contains("Pendiente"));
-                }
-                inc.Id = Guid.NewGuid();
-                inc.NumeroIncidencia = entity.numeroIncidencia;
-                inc.NumeroOperacion = entity.numeroOperacion;
-                if (entity.fechaIncidencia != null)
-                {
-                    inc.FechaIncidencia = entity.fechaIncidencia.Value;
-                }
-                if (entity.fechaRegistro != null)
-                {
-                    inc.FechaRegistro = entity.fechaRegistro.Value;
-                }
-                if (entity.fechaCierre != null)
-                {
-                    inc.FechaCierre = entity.fechaCierre.Value;
-                }
-                inc.NroReclamoConcesionario = entity.NroReclamoConcesionario;
-                inc.NroReclamoCummins = entity.NroReclamoCummins;
-                inc.Descripcion = entity.Descripcion;
-                inc.LatitudGps = entity.latitudGps;
-                inc.LongitudGps = entity.latitudGps;
-                inc.PathImagenes = entity.PathImagenes;
-                inc.EsGarantia = entity.EsGarantia;
-                inc.MostrarEnTv = entity.mostrarEnTv;
-                inc.Sintoma = entity.Sintoma;
-                await _context.Incidencias.AddAsync(inc);
-                await _context.SaveChangesAsync();
-                mot = _context.Motors.Where(o => o.NumeroMotor == entity.numeroMotor && o.Equipo == entity.Equipo).FirstOrDefault();
-                if (mot == null)
-                {
-                    mot = new Motor();
-                    mot.Created = DateTime.Now;
-                    mot.Equipo = entity.Equipo;
-                    mot.NumeroMotor = entity.numeroMotor;
-                    mot.Id = Guid.NewGuid();
-                    await _context.Motors.AddAsync(mot);
+                    fal.Id = Guid.NewGuid();
+                    fal.IdFalla = (int)entity.idFalla;
+                    fal.Created = DateTime.Now;
+                    fal.Observaciones = entity.observacionesFalla;
+                    fal.Nombre = entity.nombreFalla;
+                    fal.Codigo = entity.idFalla.ToString();
+                    fal.IdIncidencia = inc.Id;
+                    mots.Id = Guid.NewGuid();
+                    await _context.Fallas.AddAsync(fal);
                     await _context.SaveChangesAsync();
-                }
-                MotorIncidencia mots = new MotorIncidencia();
-                mots.Created = DateTime.Now;
-                mots.Modified = DateTime.Now;
-                mots.NumeroChasis = entity.numeroChasis;
-                mots.ModeloEquipo = entity.ModeloEquipo;
-                mots.HsKm = entity.horasTractor;
-                mots.IncidenciaId = inc.Id;
-                mots.MotorId = mot.Id;
-                if (entity.fechaCompra != null)
-                {
-                    mots.FechaCompra = entity.fechaCompra.Value;
-                }
-                if (entity.fechaFalla != null)
-                {
-                    mots.FechaFalla = entity.fechaFalla.Value;
-                }
-                if (entity.fechaInicioGarantia != null)
-                {
-                    mots.FechaInicioGarantia = entity.fechaInicioGarantia.Value;
-                }
-                EstadoIncidencia estt = new EstadoIncidencia();
-                estt.Created = DateTime.Now;
-                estt.EstadoId = est.Id;
-                estt.IncidenciaId = inc.Id;
-                await _context.EstadoIncidencias.AddAsync(estt);
-                await _context.SaveChangesAsync();
-                fal.IdFalla = (int)entity.idFalla;
-                fal.Created = DateTime.Now;
-                fal.Observaciones = entity.observacionesFalla;
-                fal.Nombre = entity.nombreFalla;
-                fal.Codigo = entity.codigoSintoma.ToString();
-                fal.IdIncidencia = inc.Id;
-                await _context.Fallas.AddAsync(fal);
-                await _context.SaveChangesAsync();
-                await _context.MotorIncidencias.AddAsync(mots);
-                await _context.SaveChangesAsync();
-                estG.Created = DateTime.Now;
-                estG.Nombre = entity.nombreEstadoGarantia;
-                estG.ObservacionesGarantia = entity.observacionesGarantia;
-                estG.ObservacionesProveedor = entity.observacionesProveedor;
-                estG.IdIncidencia = inc.Id;
-                await _context.EstadoGarantias.AddAsync(estG);
-                await _context.SaveChangesAsync();
-                entity.Id = inc.Id;
-                return Ok(entity);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message, ex);
-                return BadRequest(ex);
-            }
+                    await _context.MotorIncidencia.AddAsync(mots);
+                    await _context.SaveChangesAsync();
+                    estG.Id = Guid.NewGuid();
+                    estG.IdEstadoGarantia = entity.idEstadoGarantia;
+                    estG.Created = DateTime.Now;
+                    estG.Nombre = entity.nombreEstadoGarantia;
+                    estG.ObservacionesGarantia = entity.observacionesGarantia;
+                    estG.ObservacionesProveedor = entity.observacionesProveedor;
+                    estG.IdIncidencia = inc.Id;
+                    estG.Codigo = 1;
+                    await _context.EstadoGarantia.AddAsync(estG);
+                    await _context.SaveChangesAsync();
+                    entity.Id = inc.Id;
+                    await transaction.CommitAsync();
+                    return Ok(entity);
 
+
+                }
+                catch (Exception ex)
+                {
+                    Logger.AddLine(String.Format("{0}-{1}-{2}", DateTime.Now.ToString(), ex.Message, ex.StackTrace));
+                    _logger.LogError(ex.Message, ex);
+                    await transaction.RollbackAsync();
+                    return BadRequest(ex);
+                }
+            }
         }
 
         // DELETE: api/Incidencia/5

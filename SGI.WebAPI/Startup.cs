@@ -18,6 +18,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using SGIWebApi.Models;
+using SGR.Models.Models;
 
 namespace SGIWebApi
 {
@@ -72,7 +73,7 @@ namespace SGIWebApi
 
                 services.AddSwaggerGen(gen =>
                 {
-                    gen.SwaggerDoc("v1.0", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "Cummins-SGR Web API", Version = "v1.0" });
+                    gen.SwaggerDoc("v1.0", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "Field Assistance Tool  (FAST) - Web API", Version = "v1.0" });
                 });
             }
             catch (Exception)
@@ -85,10 +86,13 @@ namespace SGIWebApi
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
+            //if (env.IsDevelopment())
+            //{
+
+            //}
+
+            app.UseDeveloperExceptionPage();
+            //app.UseExceptionHandler("/error-development");
 
             app.UseHttpsRedirection();
 
@@ -101,7 +105,7 @@ namespace SGIWebApi
 
             app.UseSwaggerUI(ui =>
             {
-                ui.SwaggerEndpoint("/swagger/v1.0/swagger.json", "Cummins-SGR API Endpoint");
+                ui.SwaggerEndpoint("/swagger/v1.0/swagger.json", "Field Assistance Tool  (FAST) - API Endpoint");
             });
 
             app.UseEndpoints(endpoints =>

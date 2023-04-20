@@ -16,31 +16,33 @@
             {
                 <Radzen.Blazor.RadzenGrid Data="Results" RowSelect="@OnRowSelect" TItem="GeocodingResult">
                     <Columns>
-                        <Radzen.Blazor.RadzenGridColumn Width="100%" TItem="GeocodingResult" Property="FormattedAddress" >
+                        <Radzen.Blazor.RadzenGridColumn Width="100%" TItem="GeocodingResult" Property="FormattedAddress">
                             <FooterTemplate>
                                 Total Results: <b>@Results.Count()</b>
                             </FooterTemplate>
                         </Radzen.Blazor.RadzenGridColumn>
                         @*<Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="Geometry.Location.Lat" Title="Latitude" />
-                        <Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="Geometry.Location.Lng" Title="Longitude" />*@
+                    <Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="Geometry.Location.Lng" Title="Longitude" />*@
                     </Columns>
                 </Radzen.Blazor.RadzenGrid>
             }
 
+            <MapaComponent Latitud="@pos.Lat" Longitud="@pos.Lng" zoom="zoom" posiciones="posiciones"></MapaComponent>
 
-            <br />
-            <Radzen.Blazor.RadzenGoogleMap Zoom="@zoom"
-                                           style="height:500px"
-                                           ApiKey="AIzaSyCBhlrEoE5ndgXMCeI7zyq0dK4MJksa8Ak"
-                                           Center="@(posMap)"
-                                           MapClick="@MapClick">
-                <Markers>
-                    @if (pos != null)
-                    {
-                        <Radzen.Blazor.RadzenGoogleMapMarker Title="@Address" Label="@Address" Position="@(pos)" />
-                    }
-                </Markers>
-            </Radzen.Blazor.RadzenGoogleMap>
+
+            @*<br />
+        <Radzen.Blazor.RadzenGoogleMap Zoom="@zoom"
+                                       style="height:500px"
+                                       ApiKey="AIzaSyAPHRhaDoTeYi6g6Osx6d6ksw7v0I_fWyE"
+                                       Center="@(posMap)"
+                                       MapClick="@MapClick">
+            <Markers>
+                @if (pos != null)
+                {
+                    <Radzen.Blazor.RadzenGoogleMapMarker Title="@Address" Label="@Address" Position="@(pos)" />
+                }
+            </Markers>
+        </Radzen.Blazor.RadzenGoogleMap>*@
         </div>
     </div>
             @code {
@@ -50,6 +52,8 @@
                 bool showMadridMarker;
 
                 public GoogleMapPosition pos;
+                public List<CarPoint> posiciones { get; set; }
+
 
                 public GoogleMapPosition posMap = new GoogleMapPosition() { Lat = -34.29403345819787, Lng = -64.03364269523182 };
 
@@ -95,6 +99,11 @@
                     Results = new GeocodingResult[0];
                     pos = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
                     posMap = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
+                    zoom = 16;
+                    posiciones = new List<CarPoint>()
+{
+            new CarPoint(){ name = row.FormattedAddress, Lat = row.Geometry.Location.Lat, Long = row.Geometry.Location.Lng }
+        };
                     zoom = 16;
                     StateHasChanged();
                 }

@@ -1,5 +1,5 @@
 ﻿<div class="top-row pl-4 navbar navbar-dark">
-    <a class="navbar-brand" href="">Cummins-SGR</a>
+    <a class="navbar-brand" href=""> FAST </a>
     <button class="navbar-toggler" @onclick="ToggleNavMenu">
         <span class="navbar-toggler-icon"></span>
     </button>
@@ -7,11 +7,11 @@
 
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
     <ul class="nav flex-column">
-        <li class="nav-item px-3">
+        @*<li class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
                 <i class="material-icons" style="margin-right: 10px">home</i>Inicio
             </NavLink>
-        </li>
+        </li>*@
         <AuthorizeView Roles="Administrador">
             <Authorized>
                 <li class="nav-item px-3">
@@ -31,17 +31,41 @@
                 </li>
                 <li class="nav-item px-3">
                     <NavLink class="nav-link" href="equipos" Match="NavLinkMatch.Prefix">
-                        <i class="material-icons" style="margin-right: 10px">build</i>Equipos
+                        <i class="material-icons" style="margin-right: 10px">directions_car</i>Equipos
                     </NavLink>
                 </li>
                 <li class="nav-item px-3">
-
-                    <NavLink class="nav-link" href="Survey" Match="NavLinkMatch.Prefix">
+                    <NavLink class="nav-link" href="motores" Match="NavLinkMatch.Prefix">
+                        <i class="material-icons" style="margin-right: 10px">power</i>Motores
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="oems" Match="NavLinkMatch.Prefix">
+                        <i class="material-icons" style="margin-right: 10px">directions_car</i>Oems
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="reportes" Match="NavLinkMatch.Prefix">
+                        <i class="material-icons" style="margin-right: 10px">leaderboard</i>Reportes
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="surveyadmin" Match="NavLinkMatch.Prefix">
                         <i class="material-icons" style="margin-right: 10px">timeline</i>Encuestas
                     </NavLink>
                 </li>
                 <li class="nav-item px-3">
-                    <NavLink class="nav-link" href="JSInterop" Match="NavLinkMatch.Prefix">
+                    <NavLink class="nav-link" href="Usuarios" Match="NavLinkMatch.Prefix">
+                        <i class="material-icons" style="margin-right: 10px">person</i>Usuarios
+                    </NavLink>
+                </li>
+                @*<li class="nav-item px-3">
+            <NavLink class="nav-link" href="Certificaciones" Match="NavLinkMatch.Prefix">
+                <i class="material-icons" style="margin-right: 10px">card_membership</i>Certificaciones
+            </NavLink>
+        </li>*@
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="Settings" Match="NavLinkMatch.Prefix">
                         <i class="material-icons" style="margin-right: 10px">settings</i>Configuración
                     </NavLink>
                 </li>
@@ -56,13 +80,22 @@
                 </li>
             </Authorized>
         </AuthorizeView>
+        <AuthorizeView Roles="OEM">
+            <Authorized>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="incidencias" Match="NavLinkMatch.Prefix">
+                        <i class="material-icons" style="margin-right: 10px">email</i>Reclamos
+                    </NavLink>
+                </li>
+            </Authorized>
+        </AuthorizeView>
     </ul>
 </div>
 
 @code {
 
     private bool expandSubNav;
-    bool collapseNavMenu = true;
+    bool collapseNavMenu = false;
 
     string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 

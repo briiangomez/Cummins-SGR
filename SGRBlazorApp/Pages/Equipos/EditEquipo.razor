@@ -1,11 +1,13 @@
-﻿@page "/editMotor/{Id:guid}"
+﻿@page "/editEquipo/{Id:guid}"
 @using SGRBlazorApp.Data
 @using SGRBlazorApp.Interfaces
 @using CuriousDriveRazorLibrary
 @using Blazored.LocalStorage
 @using SGRBlazorApp.Shared
-@inject ISgrService<Motor> bookStoresService
+@inject ISgrService<Equipo> bookStoresService
 @inject IUserService userService
+@inject ISgrService<Certificacion> certificacionService
+@inject ISgrService<CertificacionMotor> certificacionMotService
 @inject ILocalStorageService localStorageService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager navigationManager
@@ -14,40 +16,73 @@
 @using System.Reactive.Subjects
 @using SGRBlazorApp.Services
 @inject GeocodingService GeocodingService
+@inject ISgrService<Oem> oemService
+@inject ISgrService<Motor> motorService
+
 <div class="col-12">
-    <h3><b>Enter Motor Information</b></h3>
+    <h3><b>Editar Equipo</b></h3>
     <hr />
 
     <ServerValidations IsVisible="IsVisible" Result="Result">
         @RecordName
     </ServerValidations>
 
-    <EditForm Model="@Motor" OnValidSubmit="@SaveMotor">
+    <EditForm Model="@Equipo" OnValidSubmit="@SaveEquipo">
         @*<DataAnnotationsValidator />*@
 
-        <div class="col-12 row">
-            <label class="col-2 font-weight-bold">Numero de Motor (ESN) :</label>
-            <input class="form-control col-3" @bind="Motor.NumeroMotor" placeholder="Name" />
-            &nbsp;<ValidationMessage For="@(() => Motor.NumeroMotor)" />
-        </div>
+        @*<div class="col-12 row">
+            <label class="col-4 font-weight-bold">Numero de Equipo (ESN) :</label>
+            <input class="form-control col-8" @bind="Equipo.NumeroEquipo" placeholder="Name" />
+            &nbsp;<ValidationMessage For="@(() => Equipo.NumeroEquipo)" />
+        </div>*@
         <br />
         <div class="col-12 row">
-            <label class="col-2 font-weight-bold">Modelo :</label>
-            <InputText class="form-control col-3" @bind-Value="Motor.Modelo" placeholder="Location Code" />
-            &nbsp;<ValidationMessage For="@(() => Motor.Modelo)" />
+            <label class="col-4 font-weight-bold">OEM :</label>
+            <select class="form-control col-5" value="@IdOem" @onchange="OnChangeEvent" name="IdOem" id="IdOem">
+                <option value="">Seleccione OEM...</option>
+                @if (OemList != null)
+                {
+                    foreach (var item in OemList.OrderBy(o => o.Nombre))
+                    {
+                        <option value="@item.Id">@item.Nombre</option>
+                    }
+                }
+            </select>
+            <div class="col-3">
+                <a class="btn btn-primary" style="text-underline-position:below; cursor:pointer; " href="/addOem">Nuevo OEM</a>
+            </div>
+            &nbsp;<ValidationMessage For="@(() => Equipo.Oemid)" />
         </div>
-        <br />
         <div class="col-12 row">
-            <label class="col-2 font-weight-bold">Equipo :</label>
-            <InputText class="form-control col-3" @bind-Value="Motor.Equipo" placeholder="Distributor Code" />
-            &nbsp;<ValidationMessage For="@(() => Motor.Equipo)" />
+            <label class="col-4 font-weight-bold">Modelo de OEM:</label>
+            <InputText class="form-control col-8" @bind-Value="Equipo.Modelo" placeholder="Location Code" />
+            &nbsp;<ValidationMessage For="@(() => Equipo.Modelo)" />
         </div>
+        <div class="col-12 row">
+            <label class="col-4 font-weight-bold">Motor :</label>
+            <select class="form-control col-8" value="@IdMotor" @onchange="OnChangeEvent2" name="MotorId" id="MotorId" required>
+                <option value="">Seleccione Motor...</option>
+                @if (Motores != null)
+                {
+                    foreach (var item in Motores.OrderBy(o => o.Codigo))
+                    {
+                        <option value="@item.Id">@item.Codigo</option>
+                    }
+                }
+            </select>
+        </div>
+        @*<br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Certificaciones :</label>
+            <RadzenListBox AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" @bind-Value=@multipleValues Multiple="true" Data=@CertificacionList
+                           TextProperty="Descripcion" ValueProperty="IdStr" Change=@(args => OnChange(args, "ListBox with multiple selection")) Style="height:300px;width:100%" />
+        </div>*@
         <br />
         <div class="col-12 row">
             <span class="col-2"></span>
-            <input type="submit" class="form-control col-1 btn btn-primary" value="Guardar" />
+            <input type="submit" class="btn btn-success" value="Guardar" />
             <span>&nbsp;</span>
-            <a class="form-control col-1 btn btn-primary" href="/Motors">Cancelar</a>
+            <a style="background-color:red;color:white" class="btn btn-success" href="/Equipos">Cancelar</a>
         </div>
     </EditForm>
 </div>
@@ -58,51 +93,163 @@
 {
     [Parameter]
     public Guid Id { get; set; }
-    public Motor Motor { get; set; }
+    public Equipo Equipo { get; set; }
     public bool IsVisible { get; set; }
     public bool Result { get; set; }
     public string RecordName { get; set; }
-
+    public Guid IdOem = Guid.Empty;
+    public List<Oem> OemList { get; set; }
+    public List<Motor> Motores { get; set; }
+    public Guid IdMotor = Guid.Empty;
+    IEnumerable<string> multipleValues = new string[] { };
+    string certs = "";
     Subject<string> addressSubject = new Subject<string>();
-
+    public List<Certificacion> CertificacionList { get; set; }
+    public Guid IdCert = Guid.Empty;
     protected async override void OnInitialized()
     {
-        Motor = await bookStoresService.GetByIdAsync("Motor/GetMotor/", Id);
+        Equipo = await bookStoresService.GetByIdAsync("Equipo/GetEquipo/", Id);
         base.OnInitialized();
     }
 
+    private void OnChangeEvent(ChangeEventArgs changeEventArgs)
+    {
+
+        if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione OEM...")
+        {
+            IdOem = Guid.Parse((string)changeEventArgs.Value);
+        }
+    }
+
+    private void OnChangeEvent2(ChangeEventArgs changeEventArgs)
+    {
+
+        if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Motor...")
+        {
+            IdMotor = Guid.Parse((string)changeEventArgs.Value);
+        }
+    }
+
+    void OnChange(object value, string name)
+    {
+        var str = value is IEnumerable<object> ? string.Join(", ", (IEnumerable<object>)value) : value;
+        certs = (string)str;
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+
+    bool IsUserAuthenticated;
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("Motors - OnInitializedAsync");
-        Motor = new Motor();
-        Motor = await bookStoresService.GetByIdAsync("Motor/GetMotor/", Id);
+        user = (await authenticationStateTask).User;
 
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+        Console.WriteLine("Equipos - OnInitializedAsync");
+        Equipo = new Equipo();
+        Equipo = await bookStoresService.GetByIdAsync("Equipo/GetEquipo/", Id);
+        OemList = await oemService.GetAllAsync("Oems/GetOems");
+        Motores = await motorService.GetAllAsync("Motor/GetMotor");
+
+        if (Equipo.Oemid != null)
+        {
+            IdOem = Equipo.Oemid.Value;
+        }
+        if (Equipo.MotorId != null)
+        {
+            IdMotor = Equipo.MotorId.Value;
+        }
+        CertificacionList = await certificacionService.GetAllAsync("Certificacion/GetCertificacion");
+        var certsMot = await certificacionMotService.GetAllAsync("CertificacionMotor/GetCertificacionMotor");
+        certsMot = certsMot.Where(o => o.MotorId == Equipo.Id).ToList();
+        List<string> ls = new List<string>();
+        foreach (var item in certsMot)
+        {
+            ls.Add(item.CertificacionId.ToString());
+            certs += item.CertificacionId.ToString() + ",";
+        }
+        multipleValues = ls.ToArray();
         await base.OnInitializedAsync();
     }
 
     public void Dispose()
     {
-        Console.WriteLine("Motors - Dispose");
+        Console.WriteLine("Equipos - Dispose");
     }
 
-    private async Task SaveMotor()
+    private async Task SaveEquipo()
     {
-        if (Motor.Id == Guid.Empty)
-            await bookStoresService.SaveAsync("Motor/CreateMotor", Motor);
-        else
-            await bookStoresService.UpdateAsync("Motor/UpdateMotor", Motor.Id, Motor);
+        try
+        {
+            if (IdOem != Guid.Empty)
+            {
+                Equipo.Oemid = IdOem;
+            }
+            if (IdMotor != Guid.Empty)
+            {
+                Equipo.MotorId = IdMotor;
+            }
+            if (Equipo.Id == Guid.Empty)
+                await bookStoresService.SaveAsync("Equipo/CreateEquipo", Equipo);
+            else
+                await bookStoresService.UpdateAsync("Equipo/UpdateEquipo/", Equipo.Id, Equipo);
 
-        Result = true;
-        IsVisible = true;
 
-        var firstName = Motor.NumeroMotor;
-        var lastName = Motor.Equipo;
+            var certsMot = await certificacionMotService.GetAllAsync("CertificacionMotor/GetCertificacionMotor");
+            certsMot = certsMot.Where(o => o.MotorId == Equipo.Id).ToList();
 
-        RecordName = firstName + " " + lastName;
+            foreach (var item in certsMot)
+            {
+                await certificacionMotService.DeleteAsync("CertificacionMotor/DeleteCertificacionMotor/", item.Id);
+            }
 
-        Motor = new Motor();
+            if (!String.IsNullOrEmpty(certs))
+            {
+                var datos = certs.Split(',');
+                foreach (var item in datos)
+                {
+                    if (!String.IsNullOrEmpty(item))
+                    {
+                        Guid IdCer = Guid.Parse(item);
+                        CertificacionMotor cert = new CertificacionMotor();
+                        cert.MotorId = Equipo.Id;
+                        cert.CertificacionId = IdCer;
+                        await certificacionMotService.SaveAsync("CertificacionMotor/CreateCertificacionMotor", cert);
+                    }
+                }
+            }
 
-        navigationManager.NavigateTo("/Motors");
+            Result = true;
+            IsVisible = true;
+
+            var firstName = Equipo.NumeroMotor;
+            var lastName = Equipo.Motor;
+
+            RecordName = firstName + " " + lastName;
+
+            Equipo = new Equipo();
+
+
+
+
+            navigationManager.NavigateTo("/Equipos");
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.MostrarMensaje("Error!", "Ocurrio un error actualizando, por favor intente nuevamente!", TipoMensajeSweetAlert.error);
+            Logger.AddLine(String.Format("{0}-{1}-{2}", DateTime.Now.ToString(), ex.Message, ex.StackTrace));
+        }
     }
 
     int zoom = 5;
@@ -147,8 +294,8 @@
     //    Results = new GeocodingResult[0];
     //    pos = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
     //    posMap = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
-    //    Motor.LatitudGps = (long)row.Geometry.Location.Lat;
-    //    Motor.LongitudGps = (long)row.Geometry.Location.Lng;
+    //    Equipo.LatitudGps = (long)row.Geometry.Location.Lat;
+    //    Equipo.LongitudGps = (long)row.Geometry.Location.Lng;
     //    zoom = 16;
     //    showMap = true;
     //    StateHasChanged();

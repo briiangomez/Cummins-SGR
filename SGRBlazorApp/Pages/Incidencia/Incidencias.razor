@@ -6,151 +6,496 @@
 @using SGRBlazorApp.Shared
 @using System.Security.Claims
 @inject ISgrService<IncidenciaApi> bookStoresService
-@inject ISgrService<EstadoIncidencia> estadoIncidenciaService
+@inject ISgrService<EstadoIncidencium> estadoIncidenciaService
+@inject ISgrService<IncidenciaSurvey> surveyIncidenciaService
 @inject ISgrService<Estado> estadoService
 @inject IUserService userService
 @inject ILocalStorageService localStorageService
+@inject TooltipService tooltipService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager navigationManager
+@inject IEmailSenderService emailService
+@inject NavigationManager MyNavigationManager
 @implements IDisposable
 
 <div class="col-12">
+    <h3><b>Listado de Reclamos</b></h3>
+    <br />
+    <div class="col-md-12-row">
+        <AuthorizeView Roles="Administrador,OEM,Dealer" Policy="SeniorEmployee">
+            <Authorized>
+                <a class="btn btn-primary" style="text-underline-position:below; cursor:pointer;" href="/addIncidencia"><i class="fa  fa-plus"></i> Nuevo Reclamo</a>
+            </Authorized>
+        </AuthorizeView>
+        <br /><br />
+    </div>
 
-    <h3><b>Reclamos</b></h3>
-    <br />
-    <AuthorizeView Roles="Administrador,Fabricante" Policy="SeniorEmployee">
-        <Authorized>
-            <a class="btn btn-primary" style="text-underline-position:below; cursor:pointer; color:blue" href="/addIncidencia">Nuevo Reclamo</a>
-        </Authorized>
-    </AuthorizeView>
-    <br />
-    <SpinLoader IsLoading="isLoading">
-        <LoadingTemplate>
-            <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
-                <br /><br />
-                <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
-            </div>
-        </LoadingTemplate>
-        <ContentTemplate>
-            @if (filteredIncidenciaList != null)
-            {
-                <GridView Items="filteredIncidenciaList" ReloadList="IsGridViewFiltered">
-                    <GridColumns>
-                        <GridColumn ColumnTitle="Nro de WO/OT"
-                                    OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "numeroIncidencia"))"></GridColumn>
-                        <GridColumn ColumnTitle="Fecha de Reclamo"
-                                    OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "fechaIncidencia"))"></GridColumn>
-                        <GridColumn ColumnTitle="Cliente"
-                                    OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "nombreContacto"))"></GridColumn>
-                        <GridColumn ColumnTitle="Nro de Motor (ESN)"
-                                    OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "numeroMotor"))"></GridColumn>
-                        <GridColumn ColumnTitle="Nro de Chasis"
-                                    OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "Equipo"))"></GridColumn>
-                        <GridColumn ColumnTitle="Estado Actual"
-                                    OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "nombreEstadoIncidencia"))"></GridColumn>
-                        <GridColumn ColumnTitle="Sintoma"
-                                    OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "Sintoma"))"></GridColumn>
-                        <GridColumn ColumnTitle="EsGarantia"
-                                    OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "EsGarantia"))"></GridColumn>
+    @if (isLoading)
+    {
+        <RadzenDataGrid PageSize="30" AllowFiltering="true" AllowPaging="true" AllowSorting="true" FilterMode="FilterMode.Simple"  Data="@IncidenciaList.OrderByDescending(o => o.numeroIncidencia).ToList()" TItem="IncidenciaApi" >
+            <Columns>
+                <RadzenDataGridColumn TItem="IncidenciaApi" Property="numeroIncidencia" Title="Nro" Width="60px" />
+                @*<RadzenDataGridColumn TItem="IncidenciaApi" Title="Fecha" Sortable="true" Filterable="true" Width="120px">
+            <Template Context="Equipo">
+                @(Equipo.fechaIncidencia.Value.ToString("dd/MM/yyyy"))
+            </Template>
+        </RadzenDataGridColumn>*@
+                <RadzenDataGridColumn TItem="IncidenciaApi" Property="fechaIncidencia" Title="Fecha" FormatString="{0:d}" />
+                <RadzenDataGridColumn TItem="IncidenciaApi" Title="Cliente" Property="nombreContacto">
+                    <Template Context="Equipo">
+                        <a href=@string.Format("/detalleCliente/{0}", Equipo.Id)>@(Equipo.nombreContacto)</a>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="IncidenciaApi" Title="Nro de Motor (ESN)" Property="numeroMotor">
+                    <Template Context="Equipo">
+                        <a href=@string.Format("/detalleMotor/{0}", Equipo.Id)>@(Equipo.numeroMotor)</a>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="IncidenciaApi" Property="numeroChasis" Title="Nro de Chasis" />
+                <RadzenDataGridColumn TItem="IncidenciaApi" Property="nombreEstadoIncidencia" Title="Estado Actual" />
+                <RadzenDataGridColumn TItem="IncidenciaApi" Property="Sintoma" Title="Sintoma" />
+                <RadzenDataGridColumn TItem="IncidenciaApi" Property="Garantia" Title="Es Garantia" />
+                @*<RadzenDataGridColumn TItem="IncidenciaApi" Title="Sintoma">
+            <Template Context="Incidencia">
+                @if (!String.IsNullOrEmpty(Incidencia.Sintoma))
+                {
+                    if (Incidencia.Sintoma.Length > 30)
+                    {
+                        @(Incidencia.Sintoma.Substring(0, 30) + "...")
+                    }
+                    else
+                    {
+                        @(Incidencia.Sintoma)
+                    }
+                }
+                else
+                {
+                    @(Incidencia.Sintoma)
+                }
+            </Template>
+        </RadzenDataGridColumn>*@
+                @*<RadzenDataGridColumn TItem="IncidenciaApi" Title="Es Garantia" Width="100px">
+            <Template Context="Incidencia">
+                @if (Incidencia.EsGarantia)
+                {
+                    @("Si")
+                }
+                else
+                {
+                    @("No")
+                }
+            </Template>
+        </RadzenDataGridColumn>*@
+                <RadzenDataGridColumn TItem="IncidenciaApi" Context="order" Filterable="false" Sortable="false" TextAlign="TextAlign.Center"   Title="Acciones"  Width="200px">
+                    <Template Context="Incidencia">
                         <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
                             <Authorized>
-                                <GridColumn ColumnTitle="Actions"></GridColumn>
+                                @if (Incidencia.nombreEstadoIncidencia == "Escalado")
+                                {
+                                    <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="info" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Detalle de Reclamo" }))" Size="ButtonSize.Medium" Click="@(args => Redirect(string.Format("/incidenciaDetail/{0}", Incidencia.Id)))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                    <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="highlight_off" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Informar Falta de Reporte" }))" Size="ButtonSize.Medium" Click="@(args => Redirect(string.Format("/incidenciaReporte/{0}", Incidencia.Id)))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Medium" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Anular Reclamo" }))" Click="@(args => Redirect(string.Format("/anularIncidencia/{0}", Incidencia.Id)))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                    <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="arrow_back" Size="ButtonSize.Medium" Click="@(args => ProcesarIncidencia(Incidencia.Id))" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Volver a En Proceso" }))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                }
+                                else if (Incidencia.nombreEstadoIncidencia == "Reparacion Terminada")
+                                {
+                                    <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="info" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Detalle de Reclamo" }))" Size="ButtonSize.Medium" Click="@(args => Redirect(string.Format("/incidenciaDetail/{0}", Incidencia.Id)))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Cerrar Reclamo" }))" Size="ButtonSize.Medium" Click="@(args => CerrarIncidencia(Incidencia.Id))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                }
+                                else if (Incidencia.nombreEstadoIncidencia == "Cerrado")
+                                {
+                                    <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="info" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Detalle de Reclamo" }))" Size="ButtonSize.Medium" Click="@(args => Redirect(string.Format("/incidenciaDetail/{0}", Incidencia.Id)))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+
+                                }
+                                else if (Incidencia.nombreEstadoIncidencia == "Anulado")
+                                {
+                                    <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="info" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Detalle de Reclamo" }))" Size="ButtonSize.Medium" Click="@(args => Redirect(string.Format("/incidenciaDetail/{0}", Incidencia.Id)))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                }
+                                else
+                                {
+                                    <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="info" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Detalle de Reclamo" }))" Size="ButtonSize.Medium" Click="@(args => Redirect(string.Format("/incidenciaDetail/{0}", Incidencia.Id)))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                    <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="highlight_off" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Informar Falta de Reporte" }))" Size="ButtonSize.Medium" Click="@(args => Redirect(string.Format("/incidenciaReporte/{0}", Incidencia.Id)))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Medium" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Anular Reclamo" }))" Click="@(args => Redirect(string.Format("/anularIncidencia/{0}", Incidencia.Id)))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                }
+                            </Authorized>
+                        </AuthorizeView>
+                        <AuthorizeView Roles="OEM" Policy="SeniorEmployee">
+                            <Authorized>
+                                <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="info" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Detalle de Reclamo" }))" Size="ButtonSize.Medium" Click="@(args => Redirect(string.Format("/incidenciaDetail/{0}", Incidencia.Id)))" @onclick:stopPropagation="true">
+                                </RadzenButton>
                             </Authorized>
                         </AuthorizeView>
                         <AuthorizeView Roles="Dealer" Policy="SeniorEmployee">
                             <Authorized>
-                                <GridColumn ColumnTitle="Actions"></GridColumn>
+                                @if (Incidencia.nombreEstadoIncidencia == "Pendiente")
+                                {
+                                    <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="info" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Detalle de Reclamo" }))" Size="ButtonSize.Medium" Click="@(args => Redirect(string.Format("/incidenciaDetail/{0}", Incidencia.Id)))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                    <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="done" Size="ButtonSize.Medium" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Aceptar Reclamo" }))" Click="@(args => AceptarIncidencia(Incidencia.Id))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Medium" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Rechazar Reclamo" }))" Click="@(args => RechazarIncidencia(Incidencia.Id))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                }
+                                else if (Incidencia.nombreEstadoIncidencia == "En Proceso")
+                                {
+                                    <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="info" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Detalle de Reclamo" }))" Size="ButtonSize.Medium" Click="@(args => Redirect(string.Format("/incidenciaDetail/{0}", Incidencia.Id)))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                    <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="report_problem" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Solicitar Asistencia" }))" Size="ButtonSize.Medium" Click="@(args => EscalarIncidencia(Incidencia.Id))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                    <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="schedule" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Reparacion Terminada" }))" Size="ButtonSize.Medium" Click="@(args => Redirect(string.Format("/incidenciaReparacion/{0}", Incidencia.Id)))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Cerrar Reclamo" }))" Size="ButtonSize.Medium" Click="@(args => CerrarIncidencia(Incidencia.Id))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                }
+                                else if (Incidencia.nombreEstadoIncidencia == "Reparacion Terminada")
+                                {
+                                    <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="info" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Detalle de Reclamo" }))" Size="ButtonSize.Medium" Click="@(args => Redirect(string.Format("/incidenciaDetail/{0}", Incidencia.Id)))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Cerrar Reclamo" }))" Size="ButtonSize.Medium" Click="@(args => CerrarIncidencia(Incidencia.Id))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                }
+                                else if (Incidencia.nombreEstadoIncidencia == "Anulado")
+                                {
+                                    <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="info" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Detalle de Reclamo" }))" Size="ButtonSize.Medium" Click="@(args => Redirect(string.Format("/incidenciaDetail/{0}", Incidencia.Id)))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                }
+                                else
+                                {
+                                    <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="info" MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Detalle de Reclamo" }))" Size="ButtonSize.Medium" Click="@(args => Redirect(string.Format("/incidenciaDetail/{0}", Incidencia.Id)))" @onclick:stopPropagation="true">
+                                    </RadzenButton>
+                                }
                             </Authorized>
                         </AuthorizeView>
-                    </GridColumns>
-                    <GridRow Context="Incidencia">
-                        @*<td>
-                                <NavLink href=@string.Format("/Incidencias/Incidenciadetail/{0}", @Incidencia.Id)>
-                                    @Incidencia.Id
-                                </NavLink>
-                            </td>*@
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+
+        @*<table id="incidencias" class="table" style="width:100%">
+            <thead>
+                <tr>
+                    <th style="width:5%">Nro de WO/OT</th>
+                    <th>Fecha de Reclamo</th>
+                    <th>Cliente</th>
+                    <th>Nro de Motor (ESN)</th>
+                    <th>Nro de Chasis</th>
+                    <th>Estado Actual</th>
+                    <th style="width:15%">Sintoma</th>
+                    <th style="width:5%">Es Garantia</th>
+                    <th style="width:20%"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var Incidencia in IncidenciaList.OrderByDescending(o => o.numeroIncidencia))
+                {
+                    <tr>
                         <td>@Incidencia.numeroIncidencia</td>
-                        <td>@Incidencia.fechaIncidencia</td>
-                        <td>@Incidencia.nombreContacto</td>
-                        <td>@Incidencia.numeroMotor</td>
+                        <td>@Incidencia.fechaIncidencia.Value.ToString("dd/MM/yyyy") </td>
+                        <td><a href=@string.Format("/detalleCliente/{0}", Incidencia.Id)>@Incidencia.nombreContacto</a></td>
+                        <td><a href=@string.Format("/detalleMotor/{0}", Incidencia.Id)>@Incidencia.numeroMotor</a></td>
                         <td>@Incidencia.numeroChasis</td>
                         <td>@Incidencia.nombreEstadoIncidencia</td>
-                        <td>@Incidencia.Sintoma</td>
-                        @if (Incidencia.EsGarantia)
+                        @if (!String.IsNullOrEmpty(Incidencia.Sintoma))
+                        {
+                            if (Incidencia.Sintoma.Length > 30)
                             {
-                            <td>Si</td>
+                                <td>@Incidencia.Sintoma.Substring(0, 30)...</td>
                             }
                             else
                             {
-                            <td>No</td>
+                                <td>@Incidencia.Sintoma</td>
                             }
+                        }
+                        else
+                        {
+                            <td>@Incidencia.Sintoma</td>
+                        }
+                        @if (Incidencia.EsGarantia)
+                        {
+                            <td>Si</td>
+                        }
+                        else
+                        {
+                            <td>No</td>
+                        }
                         <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
                             <Authorized>
+                                @if (Incidencia.nombreEstadoIncidencia == "Escalado")
+                                {
+                                    <td>
+                                        <a class="btn btn-success" style="color:white;background-color:blue;width:42px;height:42px;padding:7px" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id) data-toggle="tooltip" data-placement="top" title="Detalle de Reclamo"><i class="fa fa-info"></i></a>
+                                        <a class="btn btn-success" style="color:white;background-color:blue;width:42px;height:42px;padding:7px" href=@string.Format("/incidenciaReporte/{0}", Incidencia.Id) data-toggle="tooltip" data-placement="top" title="Informar Falta de Reporte"><i class="fa fa-window-close"></i></a>
+                                        <a class="btn btn-success" style="color:white;background-color:red;width:42px;height:42px;padding:7px" href=@string.Format("/anularIncidencia/{0}", Incidencia.Id) data-toggle="tooltip" data-placement="top" title="Anular Reclamo"><i class="fa fa-close"></i></a>
+                                        <a class="btn btn-success" @onclick="(() => ProcesarIncidencia(Incidencia.Id))" style="width: 42px; height: 42px;padding:7px" data-toggle="tooltip" data-placement="top" title="Volver a 'En Proceso'"><i class="fa fa-reply"></i></a>
+                                    </td>
+                                }
+                                else if (Incidencia.nombreEstadoIncidencia == "Reparacion Terminada")
+                                {
+                                    <td>
+                                        <a class="btn btn-success" style="color:white;background-color:blue;width:42px;height:42px;padding:7px" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id) data-toggle="tooltip" data-placement="top" title="Detalle de Reclamo"><i class="fa fa-info"></i></a>
+                                        <a class="btn btn-success" @onclick="(() => CerrarIncidencia(Incidencia.Id))" style="width: 42px; height: 42px;padding:7px" data-toggle="tooltip" data-placement="top" title="Cerrar Reclamo"><i class="fa fa-close"></i></a>
+                                    </td>
+                                }
+                                else if (Incidencia.nombreEstadoIncidencia == "Cerrado")
+                                {
+                                    <td>
+                                        <a class="btn btn-success" style="color:white;background-color:blue;width:42px;height:42px;padding:7px" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id) data-toggle="tooltip" data-placement="top" title="Detalle de Reclamo"><i class="fa fa-info"></i></a>
+                                        @if (surveyList.Count > 0)
+                                            {
+                                                <a class="btn btn-success" style="color:white;background-color:blue;width:42px;height:42px;padding:7px" @onclick="(() => EnviarMail(Incidencia.Id))" data-toggle="tooltip" data-placement="top" title="Enviar Encuesta"><i class="fa fa-envelope"></i></a>
+                                            }
+                                            else
+                                            {
+                                                <a class="btn btn-success" href=@string.Format("/surveyIncidencia/{0}", Incidencia.Id) style="width: 42px; height: 42px;padding:7px" data-toggle="tooltip" data-placement="top" title="Asignar Encuesta"><i class="fa fa-bar-chart"></i></a>
+
+                                            }
+                                    </td>
+
+                                }
+                                else if (Incidencia.nombreEstadoIncidencia == "Anulado")
+                                {
+                                    <td>
+                                        <a class="btn btn-success" style="color:white;background-color:blue;width:42px;height:42px;padding:7px" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id) data-toggle="tooltip" data-placement="top" title="Detalle de Reclamo"><i class="fa fa-info"></i></a>
+
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td>
+                                        <a class="btn btn-success" style="color:white;background-color:blue;width:42px;height:42px;padding:7px" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id) data-toggle="tooltip" data-placement="top" title="Detalle de Reclamo"><i class="fa fa-info"></i></a>
+                                        <a class="btn btn-success" style="color:white;background-color:blue;width:42px;height:42px;padding:7px" href=@string.Format("/incidenciaReporte/{0}", Incidencia.Id) data-toggle="tooltip" data-placement="top" title="Informar Falta de Reporte"><i class="fa fa-window-close"></i></a>
+                                        <a class="btn btn-success" style="color:white;background-color:red;width:42px;height:42px;padding:7px" href=@string.Format("/anularIncidencia/{0}", Incidencia.Id) data-toggle="tooltip" data-placement="top" title="Anular Reclamo"><i class="fa fa-close"></i></a>
+                                    </td>
+                                }
+
+                            </Authorized>
+                        </AuthorizeView>
+                        <AuthorizeView Roles="OEM" Policy="SeniorEmployee">
+                            <Authorized>
                                 <td>
-                                    <a class="btn btn-primary" style="text-underline-position:below; cursor:pointer; color:white;background-color:blue" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id)>Detalle</a>
+                                    <a class="btn btn-success" style="color:white;background-color:blue;width:42px;height:42px;padding:7px" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id) data-toggle="tooltip" data-placement="top" title="Detalle de Reclamo"><i class="fa fa-info"></i></a>
                                 </td>
                             </Authorized>
                         </AuthorizeView>
                         <AuthorizeView Roles="Dealer" Policy="SeniorEmployee">
                             <Authorized>
                                 @if (Incidencia.nombreEstadoIncidencia == "Pendiente")
-                                    {
+                                {
                                     <td>
-                                        <a class="btn btn-success" @onclick="(() => AceptarIncidencia(Incidencia.Id))">Aceptar</a>
-                                        <a class="btn btn-primary" @onclick="(() => RechazarIncidencia(Incidencia.Id))">Rechazar</a>
+                                        <a class="btn btn-success" style="color:white;background-color:blue;width:42px;height:42px;padding:7px" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id) data-toggle="tooltip" data-placement="top" title="Detalle de Reclamo"><i class="fa fa-info"></i></a>
+                                        <a class="btn btn-success" @onclick="(() => AceptarIncidencia(Incidencia.Id))" style="width: 42px; height: 42px;padding:7px" data-toggle="tooltip" data-placement="top" title="Aceptar Reclamo"><i class="fa fa-check"></i></a>
+                                        <a class="btn btn-success" @onclick="(() => RechazarIncidencia(Incidencia.Id))" style=" width: 42px; height: 42px;padding:7px" data-toggle="tooltip" data-placement="top" title="Rechazar Reclamo"><i class="fa fa-remove"></i></a>
                                     </td>
-                                    }
-                                    else if (Incidencia.nombreEstadoIncidencia == "En Proceso")
-                                    {
+                                }
+                                else if (Incidencia.nombreEstadoIncidencia == "En Proceso")
+                                {
                                     <td>
-                                        <a class="btn btn-warning" @onclick="(() => EscalarIncidencia(Incidencia.Id))">Solicitar Asistencia</a>
-                                        <a class="btn btn-success" @onclick="(() => CerrarIncidencia(Incidencia.Id))">Cerrar</a>
+                                        <a class="btn btn-success" style="color:white;background-color:blue;width:42px;height:42px;padding:7px" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id) data-toggle="tooltip" data-placement="top" title="Detalle de Reclamo"><i class="fa fa-info"></i></a>
+                                        <a class="btn btn-warning" @onclick="(() => EscalarIncidencia(Incidencia.Id))" style="width: 42px; height: 42px;padding:7px" data-toggle="tooltip" data-placement="top" title="Solicitar Asistencia"><i class="fa fa-warning"></i></a>
+                                        <a class="btn btn-success" href=@string.Format("/incidenciaReparacion/{0}", Incidencia.Id) style="width: 42px; height: 42px;padding:7px" data-toggle="tooltip" data-placement="top" title="Reparacion Terminada"><i class="fa fa-clock-o"></i></a>
+                                        <a class="btn btn-success" @onclick="(() => CerrarIncidencia(Incidencia.Id))" style="width: 42px; height: 42px;padding:7px" data-toggle="tooltip" data-placement="top" title="Cerrar Reclamo"><i class="fa fa-close"></i></a>
                                     </td>
-                                    }
-                                    @*else if (Incidencia.nombreEstadoIncidencia == "Rechazado")
-                                    {
+                                }
+                                else if (Incidencia.nombreEstadoIncidencia == "Reparacion Terminada")
+                                {
                                     <td>
-                                        <a class="btn btn-success" style="text-underline-position:below; cursor:pointer; color:blue" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id)>Detalle</a>
+                                        <a class="btn btn-success" style="color:white;background-color:blue;width:42px;height:42px;padding:7px" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id) data-toggle="tooltip" data-placement="top" title="Detalle de Reclamo"><i class="fa fa-info"></i></a>
+                                        <a class="btn btn-success" @onclick="(() => CerrarIncidencia(Incidencia.Id))" style="width: 42px; height: 42px;padding:7px" data-toggle="tooltip" data-placement="top" title="Cerrar Reclamo"><i class="fa fa-close"></i></a>
                                     </td>
-                                    }*@
-                                    else
-                                    {
-                                    <td></td>
-                                    }
+                                }
+                                else if (Incidencia.nombreEstadoIncidencia == "Anulado")
+                                {
+                                    <td>
+                                        <a class="btn btn-success" style="color:white;background-color:blue;width:42px;height:42px;padding:7px" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id) data-toggle="tooltip" data-placement="top" title="Detalle de Reclamo"><i class="fa fa-info"></i></a>
+
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td>
+                                        <a class="btn btn-success" style="color:white;background-color:blue;width:42px;height:42px;padding:7px" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id) data-toggle="tooltip" data-placement="top" title="Detalle de Reclamo"><i class="fa fa-info"></i></a>
+                                    </td>
+                                }
                             </Authorized>
                         </AuthorizeView>
-                    </GridRow>
-                </GridView>
-            }
-        </ContentTemplate>
-    </SpinLoader>
+                    </tr>
+                }
+            </tbody>
+        </table>*@
+    }
+    else
+    {
+        <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
+            <br /><br />
+            <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
+        </div>
+    }
+
+    @*<SpinLoader IsLoading="isLoading">
+            <LoadingTemplate>
+                <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
+                    <br /><br />
+                    <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
+                </div>
+            </LoadingTemplate>
+            <ContentTemplate>
+                @if (filteredIncidenciaList != null)
+                {
+                    <GridView Items="filteredIncidenciaList" ReloadList="IsGridViewFiltered">
+                        <GridColumns>
+                            <GridColumn ColumnTitle="Nro de WO/OT"
+                                        OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "numeroIncidencia"))"></GridColumn>
+                            <GridColumn ColumnTitle="Fecha de Reclamo"
+                                        OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "fechaIncidencia"))"></GridColumn>
+                            <GridColumn ColumnTitle="Cliente"
+                                        OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "nombreContacto"))"></GridColumn>
+                            <GridColumn ColumnTitle="Nro de Motor (ESN)"
+                                        OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "numeroMotor"))"></GridColumn>
+                            <GridColumn ColumnTitle="Nro de Chasis"
+                                        OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "Equipo"))"></GridColumn>
+                            <GridColumn ColumnTitle="Estado Actual"
+                                        OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "nombreEstadoIncidencium"))"></GridColumn>
+                            <GridColumn ColumnTitle="Sintoma"
+                                        OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "Sintoma"))"></GridColumn>
+                            <GridColumn ColumnTitle="EsGarantia"
+                                        OnSearchTextChanged="@(e => OnIncidenciaSearchTextChanged(e, "EsGarantia"))"></GridColumn>
+                            <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+                                <Authorized>
+                                    <GridColumn ColumnTitle="Actions"></GridColumn>
+                                </Authorized>
+                            </AuthorizeView>
+                            <AuthorizeView Roles="Dealer" Policy="SeniorEmployee">
+                                <Authorized>
+                                    <GridColumn ColumnTitle="Actions"></GridColumn>
+                                </Authorized>
+                            </AuthorizeView>
+                        </GridColumns>
+                        <GridRow Context="Incidencia">
+                            <td>
+                                <NavLink href=@string.Format("/Incidencias/Incidenciadetail/{0}", @Incidencia.Id)>
+                                    @Incidencia.Id
+                                </NavLink>
+                            </td>
+                            <td>@Incidencia.numeroIncidencia</td>
+                            <td>@Incidencia.fechaIncidencia</td>
+                            <td><a href=@string.Format("/detalleCliente/{0}", Incidencia.Id)>@Incidencia.nombreContacto</a></td>
+                            <td><a href=@string.Format("/detalleMotor/{0}", Incidencia.Id)>@Incidencia.numeroMotor</a></td>
+                            <td>@Incidencia.numeroChasis</td>
+                            <td>@Incidencia.nombreEstadoIncidencia</td>
+                            <td>@Incidencia.Sintoma</td>
+                            @if (Incidencia.EsGarantia)
+                                {
+                                <td>Si</td>
+                                }
+                                else
+                                {
+                                <td>No</td>
+                                }
+                            <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+                                <Authorized>
+                                    @if (Incidencia.nombreEstadoIncidencia == "Escalado")
+                                        {
+                                        <td>
+                                            <a class="btn btn-primary" style="color:white;background-color:blue" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id) data-toggle="tooltip" data-placement="top" title="Detalle de Reclamo"><i class="fa fa-info"></i></a>
+                                            <a class="btn btn-success" @onclick="(() => ProcesarIncidencia(Incidencia.Id))" data-toggle="tooltip" data-placement="top" title="Volver a 'En Proceso'"><i class="fa fa-reply"></i></a>
+                                        </td>
+                                        }
+                                        else
+                                        {
+                                        <td>
+                                            <a class="btn btn-primary" style="color:white;background-color:blue" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id)  data-toggle="tooltip" data-placement="top" title="Detalle de Reclamo"><i class="fa fa-info"></i></a>
+                                        </td>
+                                        }
+
+                                </Authorized>
+                            </AuthorizeView>
+                            <AuthorizeView Roles="OEM" Policy="SeniorEmployee">
+                                <Authorized>
+                                    <td>
+                                        <a class="btn btn-primary" style="color:white;background-color:blue" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id)  data-toggle="tooltip" data-placement="top" title="Detalle de Reclamo"><i class="fa fa-info"></i></a>
+                                    </td>
+                                </Authorized>
+                            </AuthorizeView>
+                            <AuthorizeView Roles="Dealer" Policy="SeniorEmployee">
+                                <Authorized>
+                                    @if (Incidencia.nombreEstadoIncidencia == "Pendiente")
+                                        {
+                                        <td>
+                                            <a class="btn btn-primary" style="color:white;background-color:blue" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id)  data-toggle="tooltip" data-placement="top" title="Detalle de Reclamo" ><i class="fa fa-info"></i></a>
+                                            <a class="btn btn-success" @onclick="(() => AceptarIncidencia(Incidencia.Id))"  data-toggle="tooltip" data-placement="top" title="Aceptar Reclamo"><i class="fa fa-check"></i></a>
+                                            <a class="btn btn-primary" @onclick="(() => RechazarIncidencia(Incidencia.Id))" data-toggle="tooltip" data-placement="top" title="Rechazar Reclamo"><i class="fa fa-remove"></i></a>
+                                        </td>
+                                        }
+                                        else if (Incidencia.nombreEstadoIncidencia == "En Proceso")
+                                        {
+                                        <td>
+                                            <a class="btn btn-primary" style="color:white;background-color:blue" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id)  data-toggle="tooltip" data-placement="top" title="Detalle de Reclamo"><i class="fa fa-info"></i></a>
+                                            <a class="btn btn-warning" @onclick="(() => EscalarIncidencia(Incidencia.Id))" data-toggle="tooltip" data-placement="top" title="Solicitar Asistencia"><i class="fa fa-warning"></i></a>
+                                            <a class="btn btn-success" @onclick="(() => CerrarIncidencia(Incidencia.Id))" data-toggle="tooltip" data-placement="top" title="Cerrar Reclamo"><i class="fa fa-close"></i></a>
+                                        </td>
+                                        }
+                                        else
+                                        {
+                                        <a class="btn btn-primary" style="color:white;background-color:blue" href=@string.Format("/incidenciaDetail/{0}", Incidencia.Id)  data-toggle="tooltip" data-placement="top" title="Detalle de Reclamo"><i class="fa fa-info"></i></a>
+
+                                        }
+                                </Authorized>
+                            </AuthorizeView>
+                        </GridRow>
+                    </GridView>
+                }
+            </ContentTemplate>
+        </SpinLoader>*@
 </div>
 
-@code {
 
+@code {
     public IncidenciaApi Incidenciaa { get; set; }
     public List<IncidenciaApi> IncidenciaList { get; set; }
     public List<IncidenciaApi> filteredIncidenciaList { get; set; }
     public List<Estado> estadosList { get; set; }
     public string SelectedCity { get; set; }
+    public List<IncidenciaSurvey> surveyList = new List<IncidenciaSurvey>();
 
     [CascadingParameter]
     private Task<AuthenticationState> authenticationStateTask { get; set; }
     ClaimsPrincipal user;
 
-    public User user1 { get; set; }
+    public SGRBlazorApp.Data.User user1 { get; set; }
     public RefreshRequest refreshRequest { get; set; }
+    bool IsUserAuthenticated;
 
     public bool IsVisible { get; set; }
     public bool Result { get; set; }
     public string RecordName { get; set; }
     public string[] Cities { get; set; }
     public bool IsGridViewFiltered { get; set; }
-    bool isLoading = true;
-    bool IsUserAuthenticated;
+    bool isLoading = false;
     bool IsDealer;
+    bool IsFab;
 
     ElementReference firstNameTextBox;
+
+    void ShowTooltip(ElementReference elementReference, TooltipOptions options = null)
+    {
+        tooltipService.Open(elementReference, options.Text, options);
+    }
+
+    void Redirect(string url)
+    {
+        navigationManager.NavigateTo(url);
+    }
 
     protected override void OnInitialized()
     {
@@ -160,11 +505,11 @@
 
     private async Task AceptarIncidencia(Guid ClienteId)
     {
-        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea confirmar que Acepta la Incidencia?", TipoMensajeSweetAlert.warning);
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea confirmar que Acepta el Reclamo?", TipoMensajeSweetAlert.warning);
         if (confirmado)
         {
             //var estadoo = estadosList.FirstOrDefault(o => o.Descripcion == "En Proceso");
-            //EstadoIncidencia estado = new EstadoIncidencia();
+            //EstadoIncidencium estado = new EstadoIncidencium();
             //estado.IncidenciaId = ClienteId;
             //estado.EstadoId = estadoo.Id;
             //estado.Created = DateTime.Now;
@@ -177,10 +522,10 @@
 
     private async Task RechazarIncidencia(Guid ClienteId)
     {
-        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea confirmar que Rechaza la Incidencia?", TipoMensajeSweetAlert.warning);
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea confirmar que Rechaza el Reclamo?", TipoMensajeSweetAlert.warning);
         if (confirmado)
         {
-            //EstadoIncidencia estado = new EstadoIncidencia();
+            //EstadoIncidencium estado = new EstadoIncidencium();
             //estado.IncidenciaId = ClienteId;
             //estado.EstadoId = estadoService.GetAllAsync("Estados/GetEstados").Result.ToList().FirstOrDefault(o => o.Descripcion == "Rechazado").Id;
             //estado.Created = DateTime.Now;
@@ -190,12 +535,52 @@
         //throw new Exception("DeleteCliente");
     }
 
+    private async Task ProcesarIncidencia(Guid ClienteId)
+    {
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea volver a En Proceso el Reclamo?", TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            //EstadoIncidencium estado = new EstadoIncidencium();
+            //estado.IncidenciaId = ClienteId;
+            //estado.EstadoId = estadoService.GetAllAsync("Estados/GetEstados").Result.ToList().FirstOrDefault(o => o.Descripcion == "Rechazado").Id;
+            //estado.Created = DateTime.Now;
+            //await estadoIncidenciaService.SaveAsync("EstadoIncidencia/CreateEstadoIncidencia/", estado);
+            navigationManager.NavigateTo("/procesarIncidencia/" + ClienteId.ToString());
+        }
+        //throw new Exception("DeleteCliente");
+    }
+
+    private async Task EnviarMail(Guid ClienteId)
+    {
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea confirmar el envio de la encuesta por Mail?", TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            surveyList = surveyList.Where(o => o.IdIncidencia == ClienteId).ToList();
+            if (surveyList.Count > 0)
+            {
+                MailRequest mail = new MailRequest();
+                string url = MyNavigationManager.BaseUri;
+                mail.Url = url + "/CompleteSurvey/" + ClienteId.ToString();
+                mail.Email = "briian.gomez@hotmail.com";
+                mail.Nombre = "Brian Gomez";
+                mail.Subject = "FAST - TEST";
+                emailService.SendEmailAsync(mail);
+                await JSRuntime.MostrarMensaje("Excelente!", "Mail enviado con exito!!", TipoMensajeSweetAlert.success);
+            }
+            else
+            {
+                await JSRuntime.MostrarMensaje("Atención!", "El reclamo no tiene asociada ninguna Encuesta!!", TipoMensajeSweetAlert.warning);
+            }
+        }
+        //throw new Exception("DeleteCliente");
+    }
+
     private async Task EscalarIncidencia(Guid ClienteId)
     {
         var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea solicitar asistencia para este Reclamo?", TipoMensajeSweetAlert.warning);
         if (confirmado)
         {
-            //EstadoIncidencia estado = new EstadoIncidencia();
+            //EstadoIncidencium estado = new EstadoIncidencium();
             //estado.IncidenciaId = ClienteId;
             //estado.EstadoId = estadoService.GetAllAsync("Estados/GetEstados").Result.ToList().FirstOrDefault(o => o.Descripcion == "Rechazado").Id;
             //estado.Created = DateTime.Now;
@@ -210,7 +595,7 @@
         var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea Cerrar este Reclamo?", TipoMensajeSweetAlert.warning);
         if (confirmado)
         {
-            //EstadoIncidencia estado = new EstadoIncidencia();
+            //EstadoIncidencium estado = new EstadoIncidencium();
             //estado.IncidenciaId = ClienteId;
             //estado.EstadoId = estadoService.GetAllAsync("Estados/GetEstados").Result.ToList().FirstOrDefault(o => o.Descripcion == "Rechazado").Id;
             //estado.Created = DateTime.Now;
@@ -222,15 +607,20 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("Incidencias - OnInitializedAsync");
-
-        Incidenciaa = new IncidenciaApi();
-        IncidenciaList = new List<IncidenciaApi>();
-        estadosList = new List<Estado>();
 
         user = (await authenticationStateTask).User;
 
+        if (!user.Identity.IsAuthenticated)
+        {
+            MyNavigationManager.NavigateTo("/");
+        }
+        Console.WriteLine("Incidencias - OnInitializedAsync");
 
+        Incidenciaa = new IncidenciaApi();
+        estadosList = await estadoService.GetAllAsync("Estados/GetEstados");
+        IncidenciaList = filteredIncidenciaList = await bookStoresService.GetAllAsync("Incidencia/GetIncidenciaApi");
+        string url = MyNavigationManager.BaseUri;
+        user = (await authenticationStateTask).User;
 
         if (user.Identity.IsAuthenticated)
             IsUserAuthenticated = true;
@@ -238,13 +628,54 @@
         if (user.IsInRole("Dealer"))
             IsDealer = true;
 
+        if (user.IsInRole("OEM"))
+            IsFab = true;
+
         refreshRequest = new RefreshRequest();
         refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
         refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
         user1 = await userService.RefreshTokenAsync(refreshRequest);
 
+
+
+
+        if (IncidenciaList == null)
+        {
+
+            //RefreshRequest refreshRequest = new RefreshRequest();
+            //refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+            //refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+            //var user1 = await userService.RefreshTokenAsync(refreshRequest);
+            await localStorageService.SetItemAsync("accessToken", user1.AccessToken);
+
+            IncidenciaList = filteredIncidenciaList = await bookStoresService.GetAllAsync("Incidencias/GetIncidenciasApi");
+        }
+
+        if (IsDealer)
+        {
+
+            IncidenciaList = filteredIncidenciaList = IncidenciaList.Where(o => o.IdConcesionario == user1.IdDealer).ToList();
+        }
+
+        if (IsFab)
+        {
+            string usId = user1.Id.ToString();
+            IncidenciaList = filteredIncidenciaList = IncidenciaList.Where(o => o.IdOem == user1.IdOem).ToList();
+        }
+
+        surveyList = await surveyIncidenciaService.GetAllAsync("IncidenciaSurvey/GetIncidenciaSurvey");
+
+
+        //if (IncidenciaList != null)
+        //    IncidenciaList = IncidenciaList.OrderByDescending(auth => auth.IncidenciaId).ToList();
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#example");
+
+        isLoading = true;
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#example");
+        //await LoadIncidencias();
         await base.OnInitializedAsync();
     }
+
 
     protected override void OnParametersSet()
     {
@@ -268,16 +699,19 @@
     protected override void OnAfterRender(bool firstRender)
     {
         Console.WriteLine("Incidencias - OnAfterRender - firstRender = " + firstRender);
+
         base.OnAfterRender(firstRender);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         Console.WriteLine("Incidencias - OnAfterRenderAsync - firstRender = " + firstRender);
-
-        if (firstRender)
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#incidencias");
+        if (isLoading && firstRender)
         {
-            await LoadIncidencias();
+
+            //await LoadIncidencias();
+            //await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#example");
 
             isLoading = false;
             StateHasChanged();
@@ -315,8 +749,14 @@
             IncidenciaList = filteredIncidenciaList = IncidenciaList.Where(o => o.IdConcesionario == user1.IdDealer).ToList();
         }
 
+        if (IsFab)
+        {
+            IncidenciaList = filteredIncidenciaList = IncidenciaList.Where(o => o.IdOem == user1.IdOem).ToList();
+        }
+
         //if (IncidenciaList != null)
         //    IncidenciaList = IncidenciaList.OrderByDescending(auth => auth.IncidenciaId).ToList();
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#example");
 
         StateHasChanged();
     }
@@ -363,7 +803,7 @@
             case "Equipo":
                 filteredIncidenciaList = IncidenciaList.Where(auth => auth.Equipo.ToLower().Contains(searchText) || auth.ModeloEquipo.ToLower().Contains(searchText)).ToList();
                 break;
-            case "nombreEstadoIncidencia":
+            case "nombreEstadoIncidencium":
                 filteredIncidenciaList = IncidenciaList.Where(auth => auth.nombreEstadoIncidencia.ToLower().Contains(searchText)).ToList();
                 break;
             case "Sintoma":

@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -9,12 +11,24 @@ namespace BookStoreWebAPI
 {
     public class Utility
     {
+
         public static string Encrypt(string password)
         {
             var provider = MD5.Create();
             string salt = "S0m3R@nd0mSalt";            
             byte[] bytes = provider.ComputeHash(Encoding.UTF32.GetBytes(salt + password));
             return BitConverter.ToString(bytes).Replace("-","").ToLower();
+        }
+
+        public static string DefaultPassEnc()
+        {
+            string password = ConfigurationManager.AppSetting["AppSettings:DefaultPass"];
+            return Encrypt(password);
+        }
+
+        public static string DefaultPass()
+        {
+            return ConfigurationManager.AppSetting["AppSettings:DefaultPass"];
         }
 
         public const double EarthRadius = 6371;
@@ -27,6 +41,18 @@ namespace BookStoreWebAPI
             double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
             distance = EarthRadius * c;
             return distance;
+        }
+    }
+
+    static class ConfigurationManager
+    {
+        public static IConfiguration AppSetting { get; }
+        static ConfigurationManager()
+        {
+            AppSetting = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json")
+                    .Build();
         }
     }
 }

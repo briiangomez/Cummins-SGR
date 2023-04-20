@@ -10,15 +10,29 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cummins-SGR</title>
+    <title>Field Assistance Tool  (FAST)</title>
     <base href="~/" />
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/default-base.css">
     <link href="css/site.css" rel="stylesheet" />
-    <link href="css/style.css" rel="stylesheet" />
-    <link href="~/assets/css/styles.css" rel="stylesheet" />
+    @*<link href="css/site.css" rel="stylesheet" />
+        <link href="css/style.css" rel="stylesheet" />
+        <link href="~/assets/css/styles.css" rel="stylesheet" />
+        <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+        <link rel="stylesheet" href="_content/Radzen.Blazor/css/default-base.css">*@
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="~/js/Utilidades.js"></script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
     <link href="_content/BlazorPro.Spinkit/spinkit.min.css" rel="stylesheet" />
+
+    @*<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>*@
+
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-1.5.1.js" type="text/javascript"></script>
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.10/jquery-ui.js" type="text/javascript"></script>
+    @*<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <link href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet" />
+        <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>*@
+
 </head>
 <body>
     <app>
@@ -26,11 +40,14 @@
 
     </app>
 
+
+
     <script src="_framework/blazor.server.js"></script>
-    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
     <script src="~/js/site.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCBhlrEoE5ndgXMCeI7zyq0dK4MJksa8Ak" async defer></script>
-    <script src="~/js/googleAddressLookup.js"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
+    <script src="_content/BlazorInputFile/inputfile.js"></script>
+    @*<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC_3NomX_jkTUbrz7y9VYFgawwAxRDmX6U" async defer></script>*@
+    @*<script src="~/js/googleAddressLookup.js"></script>*@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script>
         window.MyJSMethods =
@@ -39,6 +56,67 @@
                 window.alert(element.id);
             }
         };
+
+        //function TestDataTablesAdd(table) {
+        //    $(document).ready(function () {
+        //        $(table).DataTable({
+        //            pageLength: 25,
+        //            dom: '<"html5buttons"B>lTfgitp',
+        //            "language": {
+        //                "sProcessing": "Procesando...",
+        //                "sLengthMenu": "Mostrar _MENU_ registros",
+        //                "sZeroRecords": "No se encontraron resultados",
+        //                "sEmptyTable": "Ningún dato disponible en esta tabla",
+        //                "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+        //                "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
+        //                "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
+        //                "sInfoPostFix": "",
+        //                "sSearch": "Buscar:",
+        //                "sUrl": "",
+        //                "sInfoThousands": ",",
+        //                "sLoadingRecords": "Cargando...",
+        //                "oPaginate": {
+        //                    "sFirst": "Primero",
+        //                    "sLast": "Último",
+        //                    "sNext": "Siguiente",
+        //                    "sPrevious": "Anterior"
+        //                },
+        //                "oAria": {
+        //                    "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
+        //                    "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+        //                }
+        //            },
+        //            buttons: [
+        //                { extend: 'excel', title: 'Cummins SGR' },
+        //                { extend: 'pdf', title: 'Cummins SGR' },
+
+        //                {
+        //                    extend: 'print',
+        //                    customize: function (win) {
+        //                        $(win.document.body).addClass('white-bg');
+        //                        $(win.document.body).css('font-size', '10px');
+
+        //                        $(win.document.body).find('table')
+        //                            .addClass('compact')
+        //                            .css('font-size', 'inherit');
+        //                    }
+        //                }
+        //            ]
+
+        //        });
+        //    });
+        //}
     </script>
+
+    <script>
+        function TestDataTablesRemove(table) {
+            $(document).ready(function () {
+                $(table).DataTable().destroy();
+            });
+        }
+    </script>
+
+    <script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol?key=AqaykrlJ0t_eFwYIusxAlvqC1Yg2jS0TRFjrnHT5G6yZbOHgOfgo7rfhU2fUZwup'></script>
+    <script src="./ts/BingTsInterop.js"></script>
 </body>
 </html>

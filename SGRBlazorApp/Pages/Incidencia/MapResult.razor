@@ -13,7 +13,7 @@
 @implements IDisposable
 <div class="card bg-light mb-3">
     <div class="card-header">
-        <h4>Su incidencia ha sido cargada correctamente!!</h4>
+        <h4>Su Reclamo ha sido cargado correctamente!!</h4>
         <h4>A continuacion, le mostramos el Dealer mas Cercano asignado</h4>
     </div>
     @if (dealer != null)
@@ -25,19 +25,24 @@
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-12">
-                <Radzen.Blazor.RadzenGoogleMap Zoom="16"
-                                               style="height:500px"
-                                               ApiKey="AIzaSyCBhlrEoE5ndgXMCeI7zyq0dK4MJksa8Ak"
-                                               Center="@(new GoogleMapPosition() { Lat = dealer.LatitudGps.Value, Lng = dealer.LongitudGps.Value })">
-                    <Markers>
-                        <Radzen.Blazor.RadzenGoogleMapMarker Title="@dealer.Name" Label="@dealer.Name" Position="@(new GoogleMapPosition() { Lat = dealer.LatitudGps.Value, Lng = dealer.LongitudGps.Value })" />
+        @if (showMap)
+        {
+            <div class="row">
+                <div class="col-md-12">
+                    <MapaComponent Latitud="@dealer.LatitudGps.Value" Longitud="@dealer.LongitudGps.Value" zoom="16" posiciones="posiciones"></MapaComponent>
 
-                    </Markers>
-                </Radzen.Blazor.RadzenGoogleMap>
+                    @*<Radzen.Blazor.RadzenGoogleMap Zoom="16"
+                                                       style="height:500px"
+                                                       ApiKey="AIzaSyAPHRhaDoTeYi6g6Osx6d6ksw7v0I_fWyE"
+                                                       Center="@(new GoogleMapPosition() { Lat = dealer.LatitudGps.Value, Lng = dealer.LongitudGps.Value })">
+                            <Markers>
+                                <Radzen.Blazor.RadzenGoogleMapMarker Title="@dealer.Name" Label="@dealer.Name" Position="@(new GoogleMapPosition() { Lat = dealer.LatitudGps.Value, Lng = dealer.LongitudGps.Value })" />
+
+                            </Markers>
+                        </Radzen.Blazor.RadzenGoogleMap>*@
+                </div>
             </div>
-        </div>
+        }
     }
 </div>
 
@@ -49,17 +54,22 @@
     public Incidencia Incidencia { get; set; }
     public IncidenciaApi IncidenciaApi { get; set; }
     public List<IncidenciaApi> IncidenciaList { get; set; }
-    public List<EstadoIncidencia> estadoIncidencia { get; set; }
+    public List<EstadoIncidencium> estadoIncidencia { get; set; }
     public string Observaciones { get; set; }
     public Guid IdDealer { get; set; }
     public List<Dealer> Dealers { get; set; }
     public Dealer dealer { get; set; }
+    public List<CarPoint> posiciones { get; set; }
 
     private string __recoriddo_ruta = "Centro Parts S.R.L. ";
     private int __recorrido_distancia = 53;
     private string __map_data = "[{id:'CABA - Buenos Aires',name:'CABA - Buenos Aires',lat: -34.62009948, lon: -58.43518051, color:'#5DADE2'}, {id:'La Plata, Buenos Aires',name:'La Plata, Buenos Aires',lat: -34.9206797, lon: -57.9537638, color:'#099909'},{id:'CABA - Buenos Aires',name:'CABA - Buenos Aires',lat: -34.62009948, lon: -58.43518051, color:'#5DADE2'}]";
 
     bool isLoading = true;
+
+    bool showMap = false;
+
+    public int zoom { get; set; } = 16;
 
 
     protected async override void OnInitialized()
@@ -74,7 +84,12 @@
         Console.WriteLine("Dealers - OnInitializedAsync");
         dealer = new Dealer();
         dealer = await bookStoresService.GetByIdAsync("Dealer/GetDealer/", Id);
-
+        posiciones = new List<CarPoint>()
+{
+            new CarPoint(){ name = dealer.Name, Lat = dealer.LatitudGps.Value, Long = dealer.LongitudGps.Value }
+        };
+        zoom = 16;
+        showMap = true;
         await base.OnInitializedAsync();
 
         //addressSubject

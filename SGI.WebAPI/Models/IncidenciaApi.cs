@@ -18,8 +18,8 @@ namespace SGIWebApi.Models
         public int NroReclamoCummins { get; set; }
         public string Descripcion { get; set; }
         public string DireccionInspeccion { get; set; }
-        public long latitudGps { get; set; }
-        public long longitudGps { get; set; }
+        public double latitudGps { get; set; }
+        public double longitudGps { get; set; }
         public string PathImagenes { get; set; }
         public string Equipo { get; set; }
         public string ModeloEquipo { get; set; }
@@ -45,8 +45,11 @@ namespace SGIWebApi.Models
         public string telefonoFijoContacto { get; set; }
         public string telefonoCelularContacto { get; set; }
         public string emailContacto { get; set; }
-        public float latitudGpsContacto { get; set; }
-        public float longitudGpsContacto { get; set; }
+        public double latitudGpsContacto { get; set; }
+        public double longitudGpsContacto { get; set; }
+        public string nombreContactoCliente { get; set; }
+        public string emailContactoCliente { get; set; }
+        public string telefonoContactoCliente { get; set; }
         public long idFalla { get; set; }
         public string nombreFalla { get; set; }
         public string observacionesFalla { get; set; }
@@ -61,7 +64,19 @@ namespace SGIWebApi.Models
         public string Sintoma { get; set; }
         public string ImagenComprobante { get; set; }
         public bool EsGarantia { get; set; }
+
+        public string Garantia { get; set; }
         public int mostrarEnTv { get; set; }
         public int codigoSintoma { get; set; }
+
+
+        public Guid IdMotor { get; set; }
+        public Guid IdOem { get; set; }
+
+        public string observacionesAnulada { get; set; }
+
+        public string Aux1 { get; set; }
+        public string Aux2 { get; set; }
+        public string Aux3 { get; set; }
     }
 }

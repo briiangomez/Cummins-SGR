@@ -82,12 +82,12 @@ app {
 
         .nav-item a.active {
             background-color: rgba(255,255,255,0.25);
-            color: white;
+            color: #EF272C;
         }
 
         .nav-item a:hover {
             background-color: rgba(255,255,255,0.1);
-            color: white;
+            color: #EF272C;
         }
 
 .content {

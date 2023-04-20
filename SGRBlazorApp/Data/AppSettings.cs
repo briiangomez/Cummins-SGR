@@ -8,5 +8,6 @@ namespace SGRBlazorApp.Data
     public class AppSettings
     {
         public string BookStoresBaseAddress { get; set; }
+        public string DefaultPass { get; set; }
     }
 }
