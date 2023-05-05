@@ -43,7 +43,6 @@ namespace  SGRBlazorApp.Data
         public double Responses { get; set; }
     }
 
-
     public sealed class Colorss
     {
         private readonly static Colorss _instance = new Colorss();
@@ -87,5 +86,4 @@ namespace  SGRBlazorApp.Data
             return hexColors.Where(o => !o.StartsWith("#F")).ToList();
         }
     }
-
 }

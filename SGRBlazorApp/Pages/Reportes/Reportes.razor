@@ -49,7 +49,11 @@
     <div class="row">
         <div class="col-md-6 col-sm-12 p-4">
             <RadzenChart ColorScheme="@colorScheme">
+<<<<<<< HEAD
                 <RadzenPieSeries Data="@revenue" Title="Total" CategoryProperty="Nombre" ValueProperty="Total" Fills="this.fills" />
+=======
+                <RadzenPieSeries Data="@revenue" Title="Total" CategoryProperty="Nombre" ValueProperty="Total" />
+>>>>>>> b916e8232790d9654edad895b969e25a2f177a58
             </RadzenChart>
         </div>
         <div class="col-md-6 col-sm-12 p-4">
@@ -77,7 +81,7 @@
         <div class="col-md-12 col-sm-12 p-4">
             <RadzenChart ColorScheme="@colorScheme">
                 <RadzenDonutSeries Data="@revenue2022" CategoryProperty="Nombre" ValueProperty="Total" Fills="this.fills">
-                    <TitleTemplate>
+            <TitleTemplate>
                         <div class="rz-donut-content">
                             <div>Reclamos</div>
                             <div> por Sintoma</div>
