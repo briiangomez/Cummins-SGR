@@ -1,0 +1,622 @@
+﻿@page "/reportes"
+@using System.Globalization
+@inject ISgrService<IncidenciaApi> bookStoresService
+@inject ISgrService<EstadoIncidencium> estadoIncidenciaService
+@inject ISgrService<Motor> motorsService
+@inject ISgrService<Sintoma> sintomaService
+@inject ISgrService<Equipo> motorService
+@inject ISgrService<Oem> oemService
+@inject NavigationManager navigationManager
+
+<h3 style="font-weight:bold; color:#EF272C">Reportes de Reclamos registrados</h3>
+<div class="row">
+    <div class="col-md-3">
+        <a class="btn btn-primary" style="text-underline-position:below; cursor:pointer; " href="/estado-casos">Reporte por OEM</a>
+        <br />
+    </div>
+    <div class="col-md-3">
+        <a class="btn btn-primary" style="text-underline-position:below; cursor:pointer; " href="/estado-dealer">Reporte por Dealer</a>
+    </div>
+</div>
+<br />
+<div class="row">
+    <label class="col-1 font-weight-bold">Desde :</label>
+    <div class="col-md-3">
+        <RadzenDatePicker @bind-Value=@fechaDesde DateFormat="d" Change=@(args => OnChangeDesde(args, "DatePicker", "dd/MM/yyyy")) />
+    </div>
+    <label class="col-1 font-weight-bold">Hasta :</label>
+    <div class="col-md-3">
+        <RadzenDatePicker @bind-Value=@fechaHasta DateFormat="d" Change=@(args => OnChangeHasta(args, "DatePicker", "dd/MM/yyyy")) />
+    </div>
+    <label class="col-1 font-weight-bold">OEM: </label>
+    <div class="col-md-3">
+        <select class="form-control col-8" @onchange="OnChangeEvent" name="IdOem" id="IdOem">
+            <option value="">Seleccione OEM...</option>
+            @if (OemList != null)
+            {
+                foreach (var item in OemList.OrderBy(o => o.Nombre))
+                {
+                    <option value="@item.Id">@item.Nombre</option>
+                }
+            }
+        </select>
+        @*&nbsp;<ValidationMessage For="@(() => user.IdRole)" />*@
+    </div>
+</div>
+@if (isLoading)
+{
+    <h5 style="font-weight:bold; color:black">Reportes de Reclamos registrados por Equipo</h5>
+    <div class="row">
+        <div class="col-md-6 col-sm-12 p-4">
+            <RadzenChart ColorScheme="@colorScheme">
+                <RadzenPieSeries Data="@revenue" Title="Total" CategoryProperty="Nombre" ValueProperty="Total" />
+            </RadzenChart>
+        </div>
+        <div class="col-md-6 col-sm-12 p-4">
+            @*<RadzenChart>
+                    <RadzenPieSeries Data="@revenueInc" Title="Total" CategoryProperty="Nombre" ValueProperty="Total" />
+                </RadzenChart>*@
+            <RadzenChart>
+                <RadzenColumnSeries Data="@revenueInc" CategoryProperty="Nombre" Title="Reclamos por Estado" LineType="LineType.Dashed" ValueProperty="Total" />
+                <RadzenColumnOptions Radius="5" />
+                <RadzenValueAxis>
+                    <RadzenGridLines Visible="true" />
+                    <RadzenAxisTitle Text="Reclamos por Estado" />
+                </RadzenValueAxis>
+            </RadzenChart>
+        </div>
+        @*<div class="col-md-6 col-sm-12 p-4">
+                <RadzenChart>
+                    <RadzenPieSeries Data="@revenue" Title="Total" CategoryProperty="Nombre" ValueProperty="Total" />
+                </RadzenChart>
+            </div>*@
+    </div>
+    <h5 style="font-weight:bold; color:black">Reportes de Reclamos registrados por Sintoma</h5>
+    <div class="row">
+
+        <div class="col-md-12 col-sm-12 p-4">
+            <RadzenChart ColorScheme="@colorScheme">
+                <RadzenDonutSeries Data="@revenue2022" CategoryProperty="Nombre" ValueProperty="Total">
+                    <TitleTemplate>
+                        <div class="rz-donut-content">
+                            <div>Reclamos</div>
+                            <div> por Sintoma</div>
+                        </div>
+                    </TitleTemplate>
+                </RadzenDonutSeries>
+            </RadzenChart>
+            @*<RadzenChart ColorScheme="@colorScheme">
+                    <RadzenColumnSeries Data="@revenue2022" CategoryProperty="Nombre" Title="Reclamos por Sintoma" LineType="LineType.Dashed" ValueProperty="Total" />
+                    <RadzenColumnSeries Data="@revenue2021" CategoryProperty="Nombre" Title="2019" ValueProperty="Total" />
+                    <RadzenColumnOptions Margin="0" />
+                    <RadzenValueAxis>
+                        <RadzenAxisTitle Text="Reclamos por Sintoma" />
+                    </RadzenValueAxis>
+                </RadzenChart>*@
+        </div>
+    </div>
+}
+else
+{
+    <div class="col-12">
+        <br /><h3>No se encontraron reclamos cargados para los filtros seleccionados</h3><br />
+        @*<Chase Center="true" Color="#c21f13" Size="70px"></Chase>*@
+    </div>
+}
+@code {
+
+    IEnumerable<ColorScheme> colorSchemes = Enum.GetValues(typeof(ColorScheme)).Cast<ColorScheme>();
+    ColorScheme colorScheme = ColorScheme.Pastel;
+    DateTime? fechaDesde = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+    DateTime? fechaHasta = DateTime.Now;
+    public IncidenciaApi Incidenciaa { get; set; }
+    public List<IncidenciaApi> IncidenciaList { get; set; }
+    public List<IncidenciaApi> filteredIncidenciaList { get; set; }
+    public List<Equipo> motorList { get; set; }
+    public List<Sintoma> sintomaList { get; set; }
+    public List<Motor> MotorsList { get; set; }
+    public bool isLoading = false;
+    public List<Oem> OemList { get; set; }
+    public Guid IdOem { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Incidencias - OnInitialized");
+        base.OnInitialized();
+    }
+
+    async void OnChangeDesde(DateTime? value, string name, string format)
+    {
+        IncidenciaList = filteredIncidenciaList = await bookStoresService.GetAllAsync("Incidencia/GetIncidenciaApi");
+        IncidenciaList = IncidenciaList.Where(o => o.fechaIncidencia >= value && o.fechaIncidencia <= fechaHasta).ToList();
+        motorList = await motorService.GetAllAsync("Equipo/GetEquipo");
+        MotorsList = await motorsService.GetAllAsync("Motor/GetMotor");
+        var RenList = new List<DataItem>();
+        var IncList = new List<DataItem>();
+        var SintList = new List<DataItem>();
+        foreach (var motor in motorList)
+        {
+
+            if (motor.MotorId != null && MotorsList.Any(o => o.Id == motor.MotorId))
+            {
+                var mots = MotorsList.FirstOrDefault(o => o.Id == motor.MotorId);
+                var item = new DataItem()
+                {
+                    Nombre = mots.Codigo + "- " + motor.Modelo,
+                    Total = IncidenciaList.Where(o => o.ModeloMotor == mots.Codigo && o.ModeloEquipo == motor.Modelo).Count()
+                };
+
+                if (item.Total > 0)
+                {
+                    RenList.Add(item);
+                }
+            }
+        }
+
+        foreach (var motor in sintomaList)
+        {
+            var item = new DataItem()
+            {
+                Nombre = motor.Descripcion,
+                Total = IncidenciaList.Where(o => o.Sintoma == motor.Descripcion).Count()
+            };
+
+            if (item.Total > 0)
+            {
+                SintList.Add(item);
+            }
+        }
+
+
+        revenue = RenList.ToArray();
+        revenue2022 = SintList.ToArray();
+        revenueInc = new DataItem[] {
+                new DataItem
+                {
+                    Nombre = "Abierto",
+                    Total = IncidenciaList.Where(o => o.nombreEstadoIncidencia != "Cerrado").Count()
+                },
+                new DataItem
+                {
+                    Nombre = "Cerrado",
+                    Total = IncidenciaList.Where(o => o.nombreEstadoIncidencia == "Cerrado").Count()
+                }
+        };
+
+        if (revenue.Length > 0 || revenue2022.Length > 0 || IncidenciaList.Where(o => o.nombreEstadoIncidencia != "Cerrado").Count() > 0 || IncidenciaList.Where(o => o.nombreEstadoIncidencia == "Cerrado").Count() > 0)
+
+        {
+            isLoading = true;
+        }
+        else
+        {
+            isLoading = false;
+        }
+    }
+
+    async void OnChangeHasta(DateTime? value, string name, string format)
+    {
+        IncidenciaList = filteredIncidenciaList = await bookStoresService.GetAllAsync("Incidencia/GetIncidenciaApi");
+        IncidenciaList = IncidenciaList.Where(o => o.fechaIncidencia >= fechaDesde && o.fechaIncidencia <= value).ToList();
+        motorList = await motorService.GetAllAsync("Motor/GetMotor");
+        var RenList = new List<DataItem>();
+        var IncList = new List<DataItem>();
+        var SintList = new List<DataItem>();
+        foreach (var motor in motorList)
+        {
+            if (motor.MotorId != null && MotorsList.Any(o => o.Id == motor.MotorId))
+            {
+                var mots = MotorsList.FirstOrDefault(o => o.Id == motor.MotorId);
+                var item = new DataItem()
+                {
+                    Nombre = mots.Codigo + "- " + motor.Modelo,
+                    Total = IncidenciaList.Where(o => o.ModeloMotor == mots.Codigo && o.ModeloEquipo == motor.Modelo).Count()
+                };
+
+                if (item.Total > 0)
+                {
+                    RenList.Add(item);
+                }
+            }
+        }
+
+        foreach (var motor in sintomaList)
+        {
+            var item = new DataItem()
+            {
+                Nombre = motor.Descripcion,
+                Total = IncidenciaList.Where(o => o.Sintoma == motor.Descripcion).Count()
+            };
+
+            if (item.Total > 0)
+            {
+                SintList.Add(item);
+            }
+        }
+
+
+        revenue = RenList.ToArray();
+        revenue2022 = SintList.ToArray();
+        revenueInc = new DataItem[] {
+                new DataItem
+                {
+                    Nombre = "Abierto",
+                    Total = IncidenciaList.Where(o => o.nombreEstadoIncidencia != "Cerrado").Count()
+                },
+                new DataItem
+                {
+                    Nombre = "Cerrado",
+                    Total = IncidenciaList.Where(o => o.nombreEstadoIncidencia == "Cerrado").Count()
+                }
+        };
+
+        if (revenue.Length > 0 || revenue2022.Length > 0 || IncidenciaList.Where(o => o.nombreEstadoIncidencia != "Cerrado").Count() > 0 || IncidenciaList.Where(o => o.nombreEstadoIncidencia == "Cerrado").Count() > 0)
+
+        {
+            isLoading = true;
+        }
+        else
+        {
+            isLoading = false;
+        }
+    }
+
+
+    private async void OnChangeEvent(ChangeEventArgs changeEventArgs)
+    {
+        IncidenciaList = filteredIncidenciaList = await bookStoresService.GetAllAsync("Incidencia/GetIncidenciaApi");
+        motorList = await motorService.GetAllAsync("Equipo/GetEquipo");
+        MotorsList = await motorsService.GetAllAsync("Motor/GetMotor");
+        if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione OEM...")
+        {
+            IdOem = Guid.Parse((string)changeEventArgs.Value);
+            IncidenciaList = IncidenciaList.Where(o => o.fechaIncidencia >= fechaDesde && o.fechaIncidencia <= fechaHasta).ToList();
+        }
+        var RenList = new List<DataItem>();
+        var IncList = new List<DataItem>();
+        var SintList = new List<DataItem>();
+        motorList = motorList.Where(o => o.Oemid == IdOem).ToList();
+        foreach (var motor in motorList)
+        {
+            if (motor.MotorId != null && MotorsList.Any(o => o.Id == motor.MotorId))
+            {
+                var mots = MotorsList.FirstOrDefault(o => o.Id == motor.MotorId);
+                var item = new DataItem()
+                {
+                    Nombre = mots.Codigo + "- " + motor.Modelo,
+                    Total = IncidenciaList.Where(o => o.ModeloMotor == mots.Codigo && o.ModeloEquipo == motor.Modelo).Count()
+                };
+
+                if (item.Total > 0)
+                {
+                    RenList.Add(item);
+                }
+            }
+        }
+
+        foreach (var motor in sintomaList)
+        {
+            var item = new DataItem()
+            {
+                Nombre = motor.Descripcion,
+                Total = IncidenciaList.Where(o => o.Sintoma == motor.Descripcion).Count()
+            };
+
+            if (item.Total > 0)
+            {
+                SintList.Add(item);
+            }
+        }
+
+
+        revenue = RenList.ToArray();
+        revenue2022 = SintList.ToArray();
+        revenueInc = new DataItem[] {
+                new DataItem
+                {
+                    Nombre = "Abierto",
+                    Total = IncidenciaList.Where(o => o.nombreEstadoIncidencia != "Cerrado").Count()
+                },
+                new DataItem
+                {
+                    Nombre = "Cerrado",
+                    Total = IncidenciaList.Where(o => o.nombreEstadoIncidencia == "Cerrado").Count()
+                }
+        };
+
+        if (revenue.Length > 0 || revenue2022.Length > 0 || IncidenciaList.Where(o => o.nombreEstadoIncidencia != "Cerrado").Count() > 0 || IncidenciaList.Where(o => o.nombreEstadoIncidencia == "Cerrado").Count() > 0)
+
+        {
+            isLoading = true;
+        }
+        else
+        {
+            isLoading = false;
+        }
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+
+    public SGRBlazorApp.Data.User user1 { get; set; }
+    public RefreshRequest refreshRequest { get; set; }
+    bool IsUserAuthenticated;
+    bool IsDealer;
+    bool IsFab;
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+        Console.WriteLine("Incidencias - OnInitializedAsync");
+
+        Incidenciaa = new IncidenciaApi();
+        motorList = await motorService.GetAllAsync("Equipo/GetEquipo");
+        sintomaList = await sintomaService.GetAllAsync("Sintoma/GetSintoma");
+        OemList = await oemService.GetAllAsync("Oems/GetOems");
+        IncidenciaList = filteredIncidenciaList = await bookStoresService.GetAllAsync("Incidencia/GetIncidenciaApi");
+        IncidenciaList = IncidenciaList.Where(o => o.fechaIncidencia >= fechaDesde && o.fechaIncidencia <= fechaHasta).ToList();
+        MotorsList = await motorsService.GetAllAsync("Motor/GetMotor");
+        var RenList = new List<DataItem>();
+        var IncList = new List<DataItem>();
+        var SintList = new List<DataItem>();
+        foreach (var motor in motorList)
+        {
+            if (motor.MotorId != null && MotorsList.Any(o => o.Id == motor.MotorId))
+            {
+                var mots = MotorsList.FirstOrDefault(o => o.Id == motor.MotorId);
+                var item = new DataItem()
+                {
+                    Nombre = mots.Codigo + "- " + motor.Modelo,
+                    Total = IncidenciaList.Where(o => o.ModeloMotor == mots.Codigo && o.ModeloEquipo == motor.Modelo).Count()
+                };
+
+                if (item.Total > 0)
+                {
+                    RenList.Add(item);
+                }
+            }
+        }
+
+        foreach (var motor in sintomaList)
+        {
+            var item = new DataItem()
+            {
+                Nombre = motor.Descripcion,
+                Total = IncidenciaList.Where(o => o.Sintoma == motor.Descripcion).Count()
+            };
+
+            if (item.Total > 0)
+            {
+                SintList.Add(item);
+            }
+        }
+
+
+        revenue = RenList.ToArray();
+        revenue2022 = SintList.ToArray();
+        revenueInc = new DataItem[] {
+                new DataItem
+                {
+                    Nombre = "Abierto",
+                    Total = IncidenciaList.Where(o => o.nombreEstadoIncidencia != "Cerrado").Count()
+                },
+                new DataItem
+                {
+                    Nombre = "Cerrado",
+                    Total = IncidenciaList.Where(o => o.nombreEstadoIncidencia == "Cerrado").Count()
+                }
+        };
+
+        if (revenue.Length > 0 || revenue2022.Length > 0 || IncidenciaList.Where(o => o.nombreEstadoIncidencia != "Cerrado").Count() > 0 || IncidenciaList.Where(o => o.nombreEstadoIncidencia == "Cerrado").Count() > 0)
+        {
+            isLoading = true;
+        }
+        else
+        {
+            isLoading = false;
+        }
+        //await LoadIncidencias();
+        await base.OnInitializedAsync();
+    }
+
+
+    bool smooth = false;
+    class DataItem
+    {
+        public DateTime Date { get; set; }
+        public string Nombre { get; set; }
+        public double Total { get; set; }
+    }
+
+    DataItem[] revenue = new DataItem[] { };
+    DataItem[] revenueInc = new DataItem[] { };
+    string FormatAsUSD(object value)
+    {
+        return ((double)value).ToString("C0", CultureInfo.CreateSpecificCulture("en-US"));
+    }
+
+    DataItem[] revenue2019 = new DataItem[] {
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-01-01"),
+            Total = 234000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-02-01"),
+            Total = 269000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-03-01"),
+            Total = 233000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-04-01"),
+            Total = 244000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-05-01"),
+            Total = 214000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-06-01"),
+            Total = 253000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-07-01"),
+            Total = 274000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-08-01"),
+            Total = 284000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-09-01"),
+            Total = 273000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-10-01"),
+            Total = 282000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-11-01"),
+            Total = 289000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-12-01"),
+            Total = 294000
+        }
+    };
+
+    DataItem[] revenue2020 = new DataItem[] {
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-01-01"),
+            Total = 334000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-02-01"),
+            Total = 369000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-03-01"),
+            Total = 333000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-04-01"),
+            Total = 344000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-05-01"),
+            Total = 314000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-06-01"),
+            Total = 353000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-07-01"),
+            Total = 374000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-08-01"),
+            Total = 384000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-09-01"),
+            Total = 373000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-10-01"),
+            Total = 382000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-11-01"),
+            Total = 389000
+        },
+        new DataItem
+        {
+            Date = DateTime.Parse("2019-12-01"),
+            Total = 394000
+        }
+    };
+
+    DataItem[] revenue2021 = new DataItem[] {
+        new DataItem
+        {
+            Nombre = "Agosto",
+            Total = 234000
+        },
+        new DataItem
+        {
+            Nombre = "Septiembre",
+            Total = 284000
+        },
+        new DataItem
+        {
+            Nombre = "Octubre",
+            Total = 274000
+        },
+        new DataItem
+        {
+            Nombre = "Noviembre",
+            Total = 294000
+        },
+    };
+
+    DataItem[] revenue2022 = new DataItem[] {
+        new DataItem
+        {
+            Nombre = "Agosto",
+            Total = 254000
+        },
+        new DataItem
+        {
+            Nombre = "Septiembre",
+            Total = 324000
+        },
+        new DataItem
+        {
+            Nombre = "Noviembre",
+            Total = 354000
+        },
+        new DataItem
+        {
+            Nombre = "Q4",
+            Total = 394000
+        },
+
+    };
+}

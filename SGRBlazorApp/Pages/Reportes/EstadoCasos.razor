@@ -1,0 +1,285 @@
+﻿@page "/estado-casos"
+@using System.Globalization
+@inject ISgrService<IncidenciaApi> bookStoresService
+@inject ISgrService<Incidencia> incidenciaService
+@inject ISgrService<EstadoIncidencium> estadoIncidenciaService
+@inject ISgrService<Sintoma> sintomaService
+@inject ISgrService<Equipo> motorService
+@inject ISgrService<Oem> oemService
+@inject NavigationManager navigationManager
+
+<h3><b>Estado de Casos x OEM</b></h3>
+<br />
+<a class="btn btn-primary" style="text-underline-position:below; cursor:pointer; " href="/Reportes">Volver</a>
+<br />
+@if (isLoading)
+{
+    <div class="row">
+        <div class="col-md-6 col-sm-12 p-4">
+            <table id="equipos" class="table" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>OEM</th>
+                        <th>Abierto</th>
+                        <th>En Proceso</th>
+                        <th>Reparacion Terminada</th>
+                        <th>Cerrado</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        if (OemList != null && IncidenciaList != null)
+                        {
+                            foreach (var item in OemList)
+                            {
+                                var motos = motorList.Where(o => o.Oemid == item.Id).Select(o => o.Id).ToList();
+                                if (IncidenciaList.Where(o => motos.Contains(o.IdMotor)).Count() > 0)
+                                {
+                                    <tr>
+                                        <th>@item.Nombre</th>
+                                        <th>@IncidenciaList.Where(o => motos.Contains(o.IdMotor) && (o.nombreEstadoIncidencia != "En Proceso" && o.nombreEstadoIncidencia != "Cerrado" && o.nombreEstadoIncidencia != "Reparacion Terminada")).Count()</th>
+                                        <th>@IncidenciaList.Where(o => motos.Contains(o.IdMotor) && o.nombreEstadoIncidencia == "En Proceso").Count()</th>
+                                        <th>@IncidenciaList.Where(o => motos.Contains(o.IdMotor) && o.nombreEstadoIncidencia == "Reparacion Terminada").Count()</th>
+                                        <th>@IncidenciaList.Where(o => motos.Contains(o.IdMotor) && o.nombreEstadoIncidencia == "Cerrado").Count()</th>
+                                        <th>@IncidenciaList.Where(o => motos.Contains(o.IdMotor)).Count()</th>
+                                    </tr>
+                                }
+
+                            }
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-6 col-sm-12 p-4">
+            <RadzenChart>
+                <RadzenPieSeries Data="@revenue" Title="Estado de Casos x OEM" CategoryProperty="Nombre" ValueProperty="Total" />
+            </RadzenChart>
+        </div>
+        <div class="col-md-6 col-sm-12 p-4">
+            <h3><b>Estado de Casos derivados a OEM</b></h3>
+            <table id="equipos" class="table" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Mes</th>
+                        <th>Abierto</th>
+                        <th>En Proceso</th>
+                        <th>Reparacion Terminada</th>
+                        <th>Cerrado</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        if (IncidenciaList != null)
+                        {
+                            for (int i = 1; i < 13; i++)
+                            {
+                                var desde = new DateTime(DateTime.Now.Year, i, 1);
+                                var hasta = desde.AddMonths(1);
+                                string fullMonthName = desde.ToString("MMMM", CultureInfo.CreateSpecificCulture("es"));
+
+                                <tr>
+                                    <th>@fullMonthName.ToUpper()</th>
+                                    <th>@IncidenciaList.Where(o => o.fechaIncidencia > desde && o.fechaIncidencia < hasta && (o.nombreEstadoIncidencia != "En Proceso" && o.nombreEstadoIncidencia != "Cerrado" && o.nombreEstadoIncidencia != "Reparacion Terminada")).Count()</th>
+                                    <th>@IncidenciaList.Where(o => o.fechaIncidencia > desde && o.fechaIncidencia < hasta && o.nombreEstadoIncidencia == "En Proceso").Count()</th>
+                                    <th>@IncidenciaList.Where(o => o.fechaIncidencia > desde && o.fechaIncidencia < hasta && o.nombreEstadoIncidencia == "Reparacion Terminada").Count()</th>
+                                    <th>@IncidenciaList.Where(o => o.fechaIncidencia > desde && o.fechaIncidencia < hasta && o.nombreEstadoIncidencia == "Cerrado").Count()</th>
+                                    <th>@IncidenciaList.Where(o => o.fechaIncidencia > desde && o.fechaIncidencia < hasta).Count()</th>
+                                </tr>
+                            }
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-6 col-sm-12 p-4">
+            <RadzenChart>
+                <RadzenColumnSeries Data="@revenue2021" CategoryProperty="Nombre" Title="2021" LineType="LineType.Dashed" ValueProperty="Total" />
+                <RadzenColumnSeries Data="@revenue2020" CategoryProperty="Nombre" Title="2020" ValueProperty="Total" />
+                <RadzenColumnOptions Radius="5" />
+                <RadzenValueAxis>
+                    <RadzenGridLines Visible="true" />
+                    <RadzenAxisTitle Text="Total in USD" />
+                </RadzenValueAxis>
+            </RadzenChart>
+        </div>
+    </div>
+}
+else
+{
+    <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
+        <br /><br />
+        <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
+    </div>
+}
+
+@code {
+    public class DataItem
+    {
+        public string Nombre { get; set; }
+        public double Total { get; set; }
+    }
+
+    public IncidenciaApi Incidenciaa { get; set; }
+    public List<IncidenciaApi> IncidenciaList { get; set; }
+    public List<Incidencia> IncidenciasList { get; set; }
+    public List<IncidenciaApi> filteredIncidenciaList { get; set; }
+    public List<Equipo> motorList { get; set; }
+    public List<Sintoma> sintomaList { get; set; }
+    public bool isLoading = false;
+    public List<Oem> OemList { get; set; }
+    public Guid IdOem { get; set; }
+    public List<DataItem> RenList { get; set; }
+    public List<DataItem> IncList { get; set; }
+    public List<DataItem> SintList { get; set; }
+
+    string FormatAsUSD(object value)
+    {
+        return ((double)value).ToString("C0", CultureInfo.CreateSpecificCulture("en-US"));
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+
+    bool IsUserAuthenticated;
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+        Console.WriteLine("Incidencias - OnInitializedAsync");
+
+        Incidenciaa = new IncidenciaApi();
+        motorList = await motorService.GetAllAsync("Equipo/GetEquipo");
+        OemList = await oemService.GetAllAsync("Oems/GetOems");
+        sintomaList = await sintomaService.GetAllAsync("Sintoma/GetSintoma");
+
+        IncidenciaList = filteredIncidenciaList = await bookStoresService.GetAllAsync("Incidencia/GetIncidenciaApi");
+        RenList = new List<DataItem>();
+        IncList = new List<DataItem>();
+        SintList = new List<DataItem>();
+        foreach (var motor in OemList)
+        {
+            var motos = motorList.Where(o => o.Oemid == motor.Id).Select(o => o.Id).ToList();
+            var item = new DataItem()
+            {
+                Nombre = motor.Nombre,
+                Total = IncidenciaList.Where(o => motos.Contains(o.IdMotor)).Count()
+            };
+
+            if (item.Total > 0)
+            {
+                RenList.Add(item);
+            }
+        }
+
+        for (int i = 1; i < 13; i++)
+        {
+            var desde = new DateTime(DateTime.Now.Year, i, 1);
+            var hasta = desde.AddMonths(1);
+            string fullMonthName = desde.ToString("MMMM", CultureInfo.CreateSpecificCulture("es"));
+
+            var item = new DataItem()
+            {
+                Nombre = fullMonthName,
+                Total = IncidenciaList.Where(o => o.fechaIncidencia > desde && o.fechaIncidencia < hasta).Count()
+            };
+        }
+
+
+        revenue = RenList.ToArray();
+        revenue2021 = SintList.ToArray();
+        revenue2020 = new DataItem[] {
+                new DataItem
+                {
+                    Nombre = "Abierto",
+                    Total = IncidenciaList.Where(o => o.nombreEstadoIncidencia != "Cerrado").Count()
+                },
+                new DataItem
+                {
+                    Nombre = "Cerrado",
+                    Total = IncidenciaList.Where(o => o.nombreEstadoIncidencia == "Cerrado").Count()
+                }
+        };
+
+        if (revenue.Length > 0 || revenue2021.Length > 0 || IncidenciaList.Count() > 0)
+        {
+            isLoading = true;
+        }
+        else
+        {
+            isLoading = false;
+        }
+        //await LoadIncidencias();
+        await base.OnInitializedAsync();
+    }
+
+    DataItem[] revenue = new DataItem[] {
+        new DataItem
+        {
+            Nombre = "Abierto",
+            Total = 1
+        },
+        new DataItem
+        {
+            Nombre = "En Proceso",
+            Total = 2
+        },
+        new DataItem
+        {
+            Nombre = "Cerrado",
+            Total = 1
+        },
+
+    };
+
+    DataItem[] revenue2021 = new DataItem[] {
+        new DataItem
+        {
+            Nombre = "Abierto",
+            Total = 8
+        },
+        new DataItem
+        {
+            Nombre = "En Proceso",
+            Total = 3
+        },
+        new DataItem
+        {
+            Nombre = "Cerrado",
+            Total = 1
+        },
+    };
+
+    DataItem[] revenue2020 = new DataItem[] {
+        new DataItem
+        {
+            Nombre = "Abierto",
+            Total = 1
+        },
+        new DataItem
+        {
+            Nombre = "En Proceso",
+            Total = 2
+        },
+        new DataItem
+        {
+            Nombre = "Cerrado",
+            Total = 1
+        },
+
+    };
+}

@@ -1,0 +1,219 @@
+﻿@page "/deleteEquipo/{Id:guid}"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@using SGRBlazorApp.Shared
+@inject ISgrService<Equipo> bookStoresService
+@inject IUserService userService
+@inject ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navigationManager
+@implements IDisposable
+@using System.Reactive.Linq;
+@using System.Reactive.Subjects
+@using SGRBlazorApp.Services
+@inject GeocodingService GeocodingService
+@inject ISgrService<Oem> oemService
+@inject ISgrService<Motor> motorService
+<div class="col-12">
+    <h3><b>Eliminar Equipo</b></h3>
+    <hr />
+
+    <ServerValidations IsVisible="IsVisible" Result="Result">
+        @RecordName
+    </ServerValidations>
+
+    <EditForm Model="@Equipo" OnValidSubmit="@SaveEquipo">
+        @*<DataAnnotationsValidator />*@
+
+        @*<div class="col-12 row">
+                <label class="col-2 font-weight-bold">Numero de Equipo (ESN) :</label>
+                <input class="form-control col-3" @bind="Equipo.NumeroEquipo" placeholder="Name" disabled />
+                &nbsp;<ValidationMessage For="@(() => Equipo.NumeroEquipo)" />
+            </div>*@
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Modelo :</label>
+            <InputText class="form-control col-4" @bind-Value="Equipo.Modelo" placeholder="Location Code" disabled />
+            &nbsp;<ValidationMessage For="@(() => Equipo.Modelo)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">OEM :</label>
+            <select class="form-control col-4" value="@IdOem" name="IdOem" id="IdOem" disabled>
+                <option value="">Seleccione OEM...</option>
+                @if (OemList != null)
+                {
+                    foreach (var item in OemList.OrderBy(o => o.Nombre))
+                    {
+                        <option value="@item.Id">@item.Nombre</option>
+                    }
+                }
+            </select>
+            &nbsp;<ValidationMessage For="@(() => Equipo.Oemid)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Motor :</label>
+            <select class="form-control col-4" value="@IdMotor" name="MotorId" id="MotorId" disabled>
+                <option value="">Seleccione Motor...</option>
+                @if (Motores != null)
+                {
+                    foreach (var item in Motores.OrderBy(o => o.Codigo))
+                    {
+                        <option value="@item.Id">@item.Codigo</option>
+                    }
+                }
+            </select>
+        </div>
+        <br />
+        <div class="col-12 row">
+            <span class="col-2"></span>
+            <input type="submit" class="btn btn-success" value="Eliminar" />
+            <span>&nbsp;</span>
+            <a style="background-color:red;color:white" class="btn btn-success" href="/Equipos">Cancelar</a>
+        </div>
+    </EditForm>
+</div>
+<br />
+
+
+@code
+{
+    [Parameter]
+    public Guid Id { get; set; }
+    public Equipo Equipo { get; set; }
+    public bool IsVisible { get; set; }
+    public bool Result { get; set; }
+    public string RecordName { get; set; }
+    public Guid IdOem = Guid.Empty;
+    public List<Oem> OemList { get; set; }
+    public List<Motor> Motores { get; set; }
+    public Guid IdMotor = Guid.Empty;
+    Subject<string> addressSubject = new Subject<string>();
+
+    protected async override void OnInitialized()
+    {
+        Equipo = await bookStoresService.GetByIdAsync("Equipo/GetEquipo/", Id);
+        base.OnInitialized();
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+
+    bool IsUserAuthenticated;
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+        Console.WriteLine("Equipos - OnInitializedAsync");
+        Equipo = new Equipo();
+        Equipo = await bookStoresService.GetByIdAsync("Equipo/GetEquipo/", Id);
+        OemList = await oemService.GetAllAsync("Oems/GetOems");
+        Motores = await motorService.GetAllAsync("Motor/GetMotor");
+
+        if (Equipo.Oemid != null)
+        {
+            IdOem = Equipo.Oemid.Value;
+        }
+        if (Equipo.MotorId != null)
+        {
+            IdMotor = Equipo.MotorId.Value;
+        }
+        await base.OnInitializedAsync();
+    }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Equipos - Dispose");
+    }
+
+    private async Task SaveEquipo()
+    {
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea eliminar el Equipo?", TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            await bookStoresService.DeleteAsync("Equipo/DeleteEquipo/", Id);
+            navigationManager.NavigateTo("/Equipos");
+        }
+
+
+    }
+
+    int zoom = 5;
+
+    bool showMap;
+
+    public GoogleMapPosition pos;
+
+    public GoogleMapPosition posMap = new GoogleMapPosition() { Lat = -34.29403345819787, Lng = -64.03364269523182 };
+
+    public double? latitud;
+
+    public double? longitud;
+
+    Dictionary<DateTime, string> events = new Dictionary<DateTime, string>();
+
+    void MapClick(GoogleMapClickEventArgs args)
+    {
+        events.Add(DateTime.Now, $"Map clicked at Lat: {args.Position.Lat}, Lng: {args.Position.Lng}");
+        StateHasChanged();
+    }
+
+
+    public string Address { get; set; }
+
+    public string GeoLocation { get; set; }
+
+    public bool IsLoading { get; set; }
+
+    private GeocodingResult[] Results { get; set; } = new GeocodingResult[0];
+
+    void onTextChanged(ChangeEventArgs args)
+    {
+        addressSubject.OnNext(args.Value.ToString());
+    }
+
+
+    //private void OnRowSelect(GeocodingResult row)
+    //{
+    //    Address = row.FormattedAddress;
+    //    GeoLocation = $"Lat:{row.Geometry.Location.Lat}, Lng: {row.Geometry.Location.Lng}";
+    //    Results = new GeocodingResult[0];
+    //    pos = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
+    //    posMap = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
+    //    Equipo.LatitudGps = (long)row.Geometry.Location.Lat;
+    //    Equipo.LongitudGps = (long)row.Geometry.Location.Lng;
+    //    zoom = 16;
+    //    showMap = true;
+    //    StateHasChanged();
+    //}
+
+    //private async void OnAddressChanged(string address)
+    //{
+    //    Address = address;
+    //    IsLoading = true;
+    //    GeoLocation = "";
+    //    await InvokeAsync(() => StateHasChanged());
+
+    //    var response = await GeocodingService.FindAsync(address);
+    //    Results = response.Results;
+
+    //    IsLoading = false;
+
+    //    await InvokeAsync(() => StateHasChanged());
+    //}
+}

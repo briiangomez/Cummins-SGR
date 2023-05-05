@@ -7,7 +7,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <PlatformTarget>x64</PlatformTarget>
-    <DocumentationFile>D:\Desarrollo\Cummins\SGI.WebAPI\SGIWebApi.xml</DocumentationFile>
+    <DocumentationFile>C:\Users\santi\Documents\Cummins-SGR\SGI.WebAPI\SGIWebApi.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

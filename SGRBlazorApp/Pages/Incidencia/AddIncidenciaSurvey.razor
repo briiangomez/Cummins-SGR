@@ -1,0 +1,198 @@
+﻿@page "/surveyIncidencia/{Id:guid}"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@using SGRBlazorApp.Shared
+@using System.Security.Claims
+@using Radzen
+@using Radzen.Blazor
+@inject ISgrService<Incidencia> bookStoresService
+@inject ISgrService<IncidenciaApi> incidenciaApiService
+@inject ISgrService<Survey> surveyService
+@inject ISgrService<Estado> estadoService
+@inject ISgrService<IncidenciaSurvey> surveyIncidenciaService
+@inject IUserService userService
+@inject ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navigationManager
+@implements IDisposable
+@using System.Reactive.Linq;
+@using System.Reactive.Subjects
+@using SGRBlazorApp.Services
+@inject GeocodingService GeocodingService
+
+@if (isLoading)
+{
+<div class="col-12">
+    <h3><b>Informacion del Reclamo Nro @Incidencia.NumeroIncidencia</b></h3>
+    <hr />
+
+    <div class="col-12 row">
+        <label class="col-2 font-weight-bold">Estado Actual:</label>
+        <input class="form-control col-3" value="@IncidenciaApi.nombreEstadoIncidencia" readonly />
+    </div>
+    <br />
+    <div class="col-12 row">
+        <label class="col-2 font-weight-bold">Equipo:</label>
+        <input class="form-control col-3" value="@IncidenciaApi.numeroMotor" readonly />
+    </div>
+    <br />
+    <h3><b>A continuacion seleccione la encuesta que estara asociada a este Reclamo. Muchas gracias!</b></h3>
+    <br />
+    <div class="col-12 row">
+        <label class="col-4 font-weight-bold">Encuesta :</label> @*@onchange="OnChangeEvent2"*@
+        <select class="form-control col-10" @bind="IdEncuesta" name="IdEncuesta" id="IdEncuesta">
+            <option value="">Seleccione Encuesta...</option>
+            @if (Encuestas != null)
+            {
+                foreach (var item in Encuestas)
+                {
+                    <option value="@item.Id">@item.SurveyName</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="col-12 row">
+        <span class="col-2"></span>
+        <a class="col-1 btn btn-success" @onclick="(() => RechazarIncidencia(Incidencia.Id))">Aceptar </a>
+        <span>&nbsp;</span>
+        <a class="col-1 btn btn-primary" href="/Incidencias">Cancelar</a>
+    </div>
+</div>
+}
+else
+{
+    <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
+        <br /><br />
+        <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
+    </div>
+}
+
+
+
+@code
+{
+    [Parameter]
+    public Guid Id { get; set; }
+    public Incidencia Incidencia { get; set; }
+    public IncidenciaApi IncidenciaApi { get; set; }
+    public List<IncidenciaApi> IncidenciaList { get; set; }
+    public List<EstadoIncidencium> estadoIncidencia { get; set; }
+    public List<IncidenciaSurvey> estadosList { get; set; }
+    public string Observaciones { get; set; }
+    DateTime? value = DateTime.Now;
+    public Guid IdEncuesta { get; set; }
+    public List<Survey> Encuestas { get; set; }
+    public Survey encuesta { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+    bool IsUserAuthenticated;
+    bool IsDealer;
+    bool isLoading = false;
+    public SGRBlazorApp.Data.User user1 { get; set; }
+    public RefreshRequest refreshRequest { get; set; }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Motors - Dispose");
+    }
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Clientes - OnInitialized");
+        base.OnInitialized();
+    }
+
+    private void OnChangeEvent2(ChangeEventArgs changeEventArgs)
+    {
+        if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Encuesta...")
+        {
+            IdEncuesta = Guid.Parse((string)changeEventArgs.Value);
+            //Incidencia.IdDealer = IdDealer;
+        }
+        //else
+        //{
+        //      Incidencia.IdDealer = null;
+        //}
+    }
+
+    private async Task RechazarIncidencia(Guid ClienteId)
+    {
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea confirmar la asociacion de la Encuesta con el Reclamo?", TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            if (IdEncuesta != Guid.Empty)
+            {
+                IncidenciaSurvey estado = new IncidenciaSurvey();
+                estado.IdIncidencia = ClienteId;
+                estado.IdSurvey = IdEncuesta;
+                estado.Created = DateTime.Now;
+                await surveyIncidenciaService.SaveAsync("IncidenciaSurvey/CreateIncidenciaSurvey/", estado);
+                navigationManager.NavigateTo("/Incidencias");
+            }
+            else
+            {
+                await JSRuntime.MostrarMensaje("Atencion!", "Seleccione una Encuesta!!", TipoMensajeSweetAlert.warning);
+            }
+        }
+        //throw new Exception("DeleteCliente");
+    }
+
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+        Console.WriteLine("Clientes - OnInitializedAsync");
+        Incidencia = new Incidencia();
+        IncidenciaApi = new IncidenciaApi();
+        Incidencia = await bookStoresService.GetByIdAsync("Incidencia/GetIncidencia/", Id);
+        IncidenciaList = await incidenciaApiService.GetAllAsync("Incidencia/GetIncidenciaApi");
+        IncidenciaApi = IncidenciaList.FirstOrDefault(o => o.Id == Id);
+        Encuestas = await surveyService.GetAllAsync("Survey/GetSurvey");
+        //encuesta = Encuestas.FirstOrDefault(o => o.Id == Incidencia.IdDealer.Value);
+        estadosList = new List<IncidenciaSurvey>();
+        estadosList = await surveyIncidenciaService.GetAllAsync("IncidenciaSurvey/GetIncidenciaSurvey");
+        estadosList = estadosList.Where(o => o.IdIncidencia == Id).ToList();
+        if (estadosList.Count > 0)
+        {
+            var firstSurvey = estadosList.FirstOrDefault();
+            encuesta = Encuestas.FirstOrDefault(o => o.Id == firstSurvey.IdSurvey);
+            IdEncuesta = encuesta.Id;
+        }
+        else
+        {
+            IdEncuesta = Guid.Empty;
+        }
+        value = DateTime.Now;
+        user = (await authenticationStateTask).User;
+
+
+
+        if (user.Identity.IsAuthenticated)
+            IsUserAuthenticated = true;
+
+        if (user.IsInRole("Dealer"))
+            IsDealer = true;
+
+        refreshRequest = new RefreshRequest();
+        refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+        refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+        user1 = await userService.RefreshTokenAsync(refreshRequest);
+        isLoading = true;
+        await base.OnInitializedAsync();
+    }
+}

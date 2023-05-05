@@ -1,0 +1,20 @@
+﻿@page "/testsea"
+@inject IJSRuntime jsRuntime
+<div class="ui-widget">
+    <label for="searchBox">
+        Search:
+    </label>
+    <input id="searchBox" @onchange="ShowAlert" />
+    <button @onclick="ShowAlert">Show Alert</button>
+</div>
+<div id="searchResult" class="ui-widget" style="margin-top: 1em;">
+</div>
+@code 
+{
+    string message = "";
+
+    private async Task ShowAlert()
+    {
+        await jsRuntime.InvokeVoidAsync("autoCompleteBing", "searchBox", message);
+    }
+}

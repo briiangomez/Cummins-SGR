@@ -1,0 +1,145 @@
+﻿@page "/addCertificacion"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@inject ILocalStorageService localStorageService
+@inject ISgrService<Certificacion> bookStoresService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navigationManager
+@implements IDisposable
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+<div class="col-12">
+    <h3><b>Agregar Nueva Certficación</b></h3>
+    <hr />
+
+    <ServerValidations IsVisible="IsVisible" Result="Result">
+        @RecordName
+    </ServerValidations>
+
+    <EditForm Model="@Certificacion" OnValidSubmit="@SaveCertificacion">
+        @*<DataAnnotationsValidator />*@
+
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Nombre:</label>
+            <InputText class="form-control col-3" @bind-Value="Certificacion.Codigo" placeholder="Codigo" required/>
+            &nbsp;<ValidationMessage For="@(() => Certificacion.Codigo)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Valor :</label>
+            <InputText class="form-control col-3" @bind-Value="Certificacion.Descripcion" placeholder="Descripcion" required />
+            &nbsp;<ValidationMessage For="@(() => Certificacion.Descripcion)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <span class="col-2"></span>
+            <input type="submit" class="btn btn-success" value="Guardar" />
+            <span>&nbsp;</span>
+            <a style="background-color:red;color:white" class="btn btn-success" href="/Certificaciones">Cancelar</a>
+        </div>
+    </EditForm>
+</div>
+<br />
+
+
+@code
+{
+    public Certificacion Certificacion { get; set; }
+    public bool IsVisible { get; set; }
+    public bool Result { get; set; }
+    public string RecordName { get; set; }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Certificaciones - Dispose");
+    }
+
+    private Dictionary<string, object> htmlAttribute { get; set; } = new Dictionary<string, object>() {
+            {"maxlength", "8" }
+            };
+
+    //private async void OnChange(KeyboardEventArgs e)
+    //{
+    //    if(!String.IsNullOrEmpty(Certificacion.NumeroCertificacion))
+    //    {
+    //        if (Certificacion.NumeroCertificacion.Length > 7)
+    //        {
+    //            await JSRuntime.MostrarMensaje("Error!", "El Numero de Certificacion no puede ser mayor a 8 caracteres", TipoMensajeSweetAlert.error);
+    //            Certificacion.NumeroCertificacion = Certificacion.NumeroCertificacion.Substring(0,8);
+    //        }
+    //    }
+    //}
+
+    //string stringValue = "";
+
+    //private async Task SetValue(string Value)
+    //{
+    //    if (Value.Length > 7)
+    //    {
+    //        await JSRuntime.MostrarMensaje("Error!", "El Numero de Certificacion no puede ser mayor a 8 caracteres", TipoMensajeSweetAlert.error);
+    //        Certificacion.NumeroCertificacion = Value.Substring(0,8);
+    //    }
+    //    else
+    //    {
+    //        stringValue = Value;
+
+    //    }
+    //}
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Clientes - OnInitialized");
+        base.OnInitialized();
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+
+    bool IsUserAuthenticated;
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+        Console.WriteLine("Clientes - OnInitializedAsync");
+
+        Certificacion = new Certificacion();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task SaveCertificacion()
+    {
+        await bookStoresService.SaveAsync("Certificacion/CreateCertificacion", Certificacion);
+
+        //if(Certificacion.NumeroCertificacion.Length < 8)
+        //{
+        //    Certificacion.NumeroCertificacion = Certificacion.NumeroCertificacion.PadLeft(8, '0');
+        //    //Certificacion.NumeroCertificacion = Certificacion.NumeroCertificacion.ToString("00000000");
+        //    //Certificacion.NumeroCertificacion = Certificacion.NumeroCertificacion.ToString("D8");
+        //}
+        Result = true;
+        IsVisible = true;
+
+        //var firstName = Certificacion.NumeroCertificacion;
+        //var lastName = Certificacion.Certificacion;
+
+        //RecordName = firstName + " " + lastName;
+
+        Certificacion = new Certificacion();
+
+        navigationManager.NavigateTo("/Certificaciones");
+    }
+}

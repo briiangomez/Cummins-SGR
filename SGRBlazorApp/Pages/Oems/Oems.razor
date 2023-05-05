@@ -1,0 +1,320 @@
+﻿@page "/Oems"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@using SGRBlazorApp.Shared
+@inject ISgrService<Oem> bookStoresService
+@inject IUserService userService
+@inject ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+@inject NavigationManager navigationManager
+
+<div class="col-12">
+
+    <h3><b>Listado de Fabricantes/OEMs</b></h3>
+    <br />
+    <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+        <Authorized>
+            <a class="btn btn-primary" style="text-underline-position:below; cursor:pointer; " href="/addOem">Nuevo OEM</a>
+        </Authorized>
+    </AuthorizeView>
+    <br />
+    <br />
+
+    @if (isLoading)
+    {
+        <RadzenDataGrid AllowFiltering="true" AllowColumnResize="true"
+                        FilterMode="FilterMode.Simple" PageSize="20" AllowPaging="true" AllowSorting="true" Data="@OemList" TItem="Oem" ColumnWidth="300px"
+                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                        LogicalFilterOperator="LogicalFilterOperator.Or">
+            <Columns>
+                <RadzenDataGridColumn TItem="Oem" Property="Nombre" Title="Nombre" />
+                <RadzenDataGridColumn TItem="Oem" Context="sampleBlazorModelsSampleOrder" Title="Editar" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="100px">
+                    <Template Context="Oem">
+                        <RadzenButton Icon="edit" Size="ButtonSize.Medium" Click="@(args => EditRow(Oem.Id))" @onclick:stopPropagation="true">
+                        </RadzenButton>
+                    </Template>
+
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="Oem" Context="order" Filterable="false" Sortable="false" Title="Eliminar"  TextAlign="TextAlign.Center" Width="70px">
+                    <Template Context="Oem">
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Medium" Click="@(args => DeleteRow(Oem.Id))" @onclick:stopPropagation="true">
+                        </RadzenButton>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+        @*<table id="equipos" class="table" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Descripcion</th>
+                        <th style="width:15%"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var Oem in OemList)
+                    {
+                        <tr>
+                            <td>@Oem.Codigo</td>
+                            <td>@Oem.Descripcion</td>
+                            <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+                                <Authorized>
+                                    <td>
+                                        <a class="btn btn-success" href=@string.Format("/editOem/{0}", Oem.Id)><i class="fa fa-pencil"></i></a>
+                                        <a style="background-color:red;color:white" class="btn btn-success" href=@string.Format("/deleteOem/{0}", Oem.Id)><i class="fa fa-trash"></i></a>
+                                    </td>
+                                </Authorized>
+                            </AuthorizeView>
+                        </tr>
+                    }
+                </tbody>
+            </table>*@
+    }
+    else
+    {
+        <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
+            <br /><br />
+            <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
+        </div>
+    }
+    @*<SpinLoader IsLoading="isLoading">
+            <LoadingTemplate>
+                <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
+                    <br /><br />
+                    <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
+                </div>
+            </LoadingTemplate>
+            <ContentTemplate>
+                @if (filteredOemList != null)
+                {
+                    <GridView Items="filteredOemList" ReloadList="IsGridViewFiltered">
+                        <GridColumns>
+                            <GridColumn ColumnTitle="NumeroOem"
+                                        OnSearchTextChanged="@(e => OnOemearchTextChanged(e, "NumeroOem"))"></GridColumn>
+                            <GridColumn ColumnTitle="Modelo"
+                                        OnSearchTextChanged="@(e => OnOemearchTextChanged(e, "Modelo"))"></GridColumn>
+                            <GridColumn ColumnTitle="Oem"
+                                        OnSearchTextChanged="@(e => OnOemearchTextChanged(e, "Oem"))"></GridColumn>
+                            <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+                                <Authorized>
+                                    <GridColumn ColumnTitle="Actions"></GridColumn>
+                                </Authorized>
+                            </AuthorizeView>
+                        </GridColumns>
+                        <GridRow Context="Oem">
+                            <td>
+                                <NavLink href=@string.Format("/Oem/Oemdetail/{0}", @Oem.Id)>
+                                    @Oem.Id
+                                </NavLink>
+                            </td>
+
+                                <Authorized>
+                                    <th>
+                                        <a style="text-underline-position:below; cursor:pointer; color:blue" href=@string.Format("/editOem/{0}", Oem.Id)>Edit</a> |
+                                        <a style="text-underline-position:below; cursor:pointer; color:blue" @onclick="(() => DeleteOem(Oem.Id))">Delete</a>
+                                    </th>
+                                </Authorized>
+                            </AuthorizeView>
+                        </GridRow>
+                    </GridView>
+                }
+            </ContentTemplate>
+        </SpinLoader>*@
+</div>
+
+@code {
+
+    public Oem Oem { get; set; }
+    public List<Oem> OemList { get; set; }
+    public List<Oem> filteredOemList { get; set; }
+    public string SelectedCity { get; set; }
+
+    public bool IsVisible { get; set; }
+    public bool Result { get; set; }
+    public string RecordName { get; set; }
+    public string[] Cities { get; set; }
+    public bool IsGridViewFiltered { get; set; }
+    bool isLoading = false;
+
+    ElementReference firstNameTextBox;
+
+    void EditRow(Guid id)
+    {
+        navigationManager.NavigateTo(string.Format("/editOem/{0}", id));
+    }
+
+    void DeleteRow(Guid id)
+    {
+        navigationManager.NavigateTo(string.Format("/deleteOem/{0}", id));
+    }
+
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Oem - OnInitialized");
+        base.OnInitialized();
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+
+    bool IsUserAuthenticated;
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+        Console.WriteLine("Oem - OnInitializedAsync");
+
+        Oem = new Oem();
+        OemList = filteredOemList = await bookStoresService.GetAllAsync("Oems/GetOems");
+
+        if (OemList == null)
+        {
+
+            RefreshRequest refreshRequest = new RefreshRequest();
+            refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+            refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+            var user1 = await userService.RefreshTokenAsync(refreshRequest);
+            await localStorageService.SetItemAsync("accessToken", user1.AccessToken);
+
+            OemList = filteredOemList = await bookStoresService.GetAllAsync("Oems/GetOems");
+        }
+        isLoading = true;
+
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#equipos");
+        await base.OnInitializedAsync();
+    }
+
+    protected override void OnParametersSet()
+    {
+        Console.WriteLine("Oem - OnParametersSet");
+        base.OnParametersSet();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Console.WriteLine("Oem - OnParametersSetAsync");
+        await base.OnParametersSetAsync();
+    }
+
+    protected override bool ShouldRender()
+    {
+        base.ShouldRender();
+        Console.WriteLine("Oem - ShouldRender");
+
+        return true;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        Console.WriteLine("Oem - OnAfterRender - firstRender = " + firstRender);
+        base.OnAfterRender(firstRender);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Console.WriteLine("Oem - OnAfterRenderAsync - firstRender = " + firstRender);
+        ////await JSRuntime.InvokeAsync<object>("TestDataTablesRemove", "#equipos");
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#equipos");
+        if (firstRender)
+        {
+            //await LoadOem();
+
+            //isLoading = false;
+            StateHasChanged();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Oem - Dispose");
+    }
+
+    private async Task LoadOem()
+    {
+        await Task.Delay(500);
+
+        OemList = filteredOemList = await bookStoresService.GetAllAsync("Oems/GetOems");
+
+        if (OemList == null)
+        {
+
+            RefreshRequest refreshRequest = new RefreshRequest();
+            refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+            refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+            var user1 = await userService.RefreshTokenAsync(refreshRequest);
+            await localStorageService.SetItemAsync("accessToken", user1.AccessToken);
+
+            OemList = filteredOemList = await bookStoresService.GetAllAsync("Oems/GetOems");
+        }
+
+        isLoading = true;
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesRemove", "#equipos");
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#equipos");
+
+        StateHasChanged();
+    }
+
+
+
+    private async Task DeleteOem(Guid OemId)
+    {
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea eliminar el Oem?", TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            await bookStoresService.DeleteAsync("Oems/DeleteOems/", OemId);
+            await LoadOem();
+        }
+        //throw new Exception("DeleteOem");
+    }
+
+    private void EditOem(Oem argOem)
+    {
+        Oem = argOem;
+    }
+
+    private void OnSelectCityChange(ChangeEventArgs changeEventArgs)
+    {
+        SelectedCity = (string)changeEventArgs.Value;
+    }
+
+    private void OnOemearchTextChanged(ChangeEventArgs changeEventArgs, string columnTitle)
+    {
+        //string searchText = changeEventArgs.Value.ToString();
+        //IsGridViewFiltered = true;
+
+        //switch (columnTitle)
+        //{
+        //    case "NumeroOem":
+        //        filteredOemList = OemList.Where(auth => auth.NumeroOem.ToLower().Contains(searchText)).ToList();
+        //        break;
+        //    case "Modelo":
+        //        filteredOemList = OemList.Where(auth => auth.Modelo.ToLower().Contains(searchText)).ToList();
+        //        break;
+        //    case "Oem":
+        //        filteredOemList = OemList.Where(auth => auth.Oem.ToLower().Contains(searchText)).ToList();
+        //        break;
+        //    default:
+        //        Console.WriteLine("Default case");
+        //        break;
+        //}
+    }
+
+}

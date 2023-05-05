@@ -1,0 +1,129 @@
+﻿@page  "/changepass"
+@using SGRBlazorApp.Data
+@using Newtonsoft.Json
+@using SGRBlazorApp.Interfaces
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject Blazored.LocalStorage.ILocalStorageService localStorageService
+@inject IUserService userService
+@inject IJSRuntime jsRunTime
+@inject ISgrService<SGRBlazorApp.Data.User> bookStoresService
+
+@if (user != null)
+{
+<EditForm Model="@user" OnValidSubmit="@ValidateUser">
+    <div>
+        <h3 style="font-weight:bold; color:#EF272C">Para continuar por favor actualice su contraseña.</h3>
+    </div>
+    <div>
+        <br />
+    </div>
+    <div class="col-12 row">
+        <input type="password" class="form-control col-12" @bind="user.OldPassword" placeholder="Password Actual" required/>
+    </div>
+    <br />
+    <div class="col-12 row">
+        <input type="password" class="form-control col-12" @bind="user.Password" placeholder="Nueva Password" required/>
+    </div>
+    <br />
+    <div class="col-12 row">
+        <input type="password" class="form-control col-12" @bind="user.ConfirmPassword" placeholder="Confirmar Password" required/>
+    </div>
+    <br />
+    <div class="col-12 row">
+        <span class="col-12"></span>
+        <input type="submit" class="col-6 btn btn-primary" value="Login" />
+        @*<a href="/signup" class="col-3">Sign up</a>*@
+    </div>
+    <br />
+    <div class="col-12 row" style="text-align:left; font-weight:bold;color:red">
+        <span class="col-12">@LoginMesssage</span>
+    </div>
+</EditForm>}
+
+@code { public string LoginMesssage { get; set; }
+    public string PassTemp { get; set; }
+    ClaimsPrincipal claimsPrincipal;
+    private SGRBlazorApp.Data.User user;
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        try
+        {
+            user = new SGRBlazorApp.Data.User();
+            user.OldPassword = String.Empty;
+            user.Password = String.Empty;
+            user.ConfirmPassword = String.Empty;
+            LoginMesssage = String.Empty;
+
+            claimsPrincipal = (await authenticationStateTask).User;
+
+            var users = await bookStoresService.GetAllAsync("Users/GetUsers");
+            var user2 = users.FirstOrDefault(o => o.EmailAddress == claimsPrincipal.Identity.Name);
+            string password = Utility.DefaultPassEnc();
+            if (claimsPrincipal.Identity.IsAuthenticated)
+            {
+                if(!user2.Password.Contains(password))
+                {
+                    NavigationManager.NavigateTo("/index");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            string test = ex.Message;
+        }
+
+    }
+
+    private async Task<bool> ValidateUser()
+    {
+        //assume that user is valid
+        //call an API
+
+        LoginMesssage = "Aguarde un instante por favor...";
+
+        PassTemp = user.Password;
+
+        try
+        {
+            claimsPrincipal = (await authenticationStateTask).User;
+
+            var users = await bookStoresService.GetAllAsync("Users/GetUsers");
+            var user2 = users.FirstOrDefault(o => o.EmailAddress == claimsPrincipal.Identity.Name);
+            var actualPass = Utility.Encrypt(user.OldPassword);
+            if (user2.Password != actualPass)
+            {
+                LoginMesssage = "La contraseña actual es incorrecta. Por favor, intente nuevamente";
+                user.OldPassword = String.Empty;
+                user.Password = String.Empty;
+                user.ConfirmPassword = String.Empty;
+            }
+            else if (user.Password != user.ConfirmPassword)
+            {
+                LoginMesssage = "La contraseñas ingresadas no coinciden. Por favor, intente nuevamente";
+                user.OldPassword = String.Empty;
+                user.Password = String.Empty;
+                user.ConfirmPassword = String.Empty;
+            }
+            else
+            {
+                user2.Password = Utility.Encrypt(user.Password);
+                await bookStoresService.UpdateAsync("Users/UpdateUser/", user2.Id, user2);
+                await jsRunTime.MostrarMensaje("OK!", "Password actualizada con exito!", TipoMensajeSweetAlert.success);
+                NavigationManager.NavigateTo("/index");
+
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.AddLine(String.Format("Error desde Login.razor - {0}-{1}-{2}", DateTime.Now.ToString(), ex.Message, ex.StackTrace));
+            LoginMesssage = "Ocurrio un error al iniciar sesión. Por favor, intente nuevamente";
+            user.Password = String.Empty;
+        }
+
+        return await Task.FromResult(true);
+    } }

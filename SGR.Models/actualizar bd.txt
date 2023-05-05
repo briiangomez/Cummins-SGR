@@ -1,0 +1,3 @@
+ejecutar en consola de admin de paquetes la siguiente instruccion
+Scaffold-DbContext "Server=DESKTOP-1CD4841;Database=FASS-DB;Trusted_Connection=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Context SGIDbContext -force
+Luego, actualiza el SGIDbContext con  Name=SGI

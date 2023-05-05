@@ -1,0 +1,185 @@
+﻿@page "/editMotor/{Id:guid}"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@using SGRBlazorApp.Shared
+@inject ISgrService<Motor> bookStoresService
+@inject IUserService userService
+@inject ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navigationManager
+@implements IDisposable
+@using System.Reactive.Linq;
+@using System.Reactive.Subjects
+@using SGRBlazorApp.Services
+@inject GeocodingService GeocodingService
+<div class="col-12">
+    <h3><b>Editar Motor</b></h3>
+    <hr />
+
+    <ServerValidations IsVisible="IsVisible" Result="Result">
+        @RecordName
+    </ServerValidations>
+
+    <EditForm Model="@Motor" OnValidSubmit="@SaveMotor">
+        @*<DataAnnotationsValidator />*@
+
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Nombre:</label>
+            <InputText class="form-control col-3" @bind-Value="Motor.Codigo" placeholder="Codigo" />
+            &nbsp;<ValidationMessage For="@(() => Motor.Codigo)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <span class="col-2"></span>
+            <input type="submit" class="btn btn-success" value="Guardar" />
+            <span>&nbsp;</span>
+            <a style="background-color:red;color:white" class="btn btn-success" href="/Motores">Cancelar</a>
+        </div>
+    </EditForm>
+</div>
+<br />
+
+
+@code
+{
+    [Parameter]
+    public Guid Id { get; set; }
+    public Motor Motor { get; set; }
+    public bool IsVisible { get; set; }
+    public bool Result { get; set; }
+    public string RecordName { get; set; }
+
+    Subject<string> addressSubject = new Subject<string>();
+
+    protected async override void OnInitialized()
+    {
+        Motor = await bookStoresService.GetByIdAsync("Motor/GetMotor/", Id);
+        base.OnInitialized();
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+
+    bool IsUserAuthenticated;
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+        Console.WriteLine("Motores - OnInitializedAsync");
+        Motor = new Motor();
+        Motor = await bookStoresService.GetByIdAsync("Motor/GetMotor/", Id);
+
+        await base.OnInitializedAsync();
+    }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Motores - Dispose");
+    }
+
+    private async Task SaveMotor()
+    {
+        try
+        {
+            if (Motor.Id == Guid.Empty)
+                await bookStoresService.SaveAsync("Motor/CreateMotor", Motor);
+            else
+                await bookStoresService.UpdateAsync("Motor/UpdateMotor/", Motor.Id, Motor);
+
+            Result = true;
+            IsVisible = true;
+
+            //var firstName = Motor.NumeroMotor;
+            //var lastName = Motor.Motor;
+
+            //RecordName = firstName + " " + lastName;
+
+            Motor = new Motor();
+
+            navigationManager.NavigateTo("/Motores");
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.MostrarMensaje("Error!", "Ocurrio un error actualizando, por favor intente nuevamente!", TipoMensajeSweetAlert.error);
+            Logger.AddLine(String.Format("{0}-{1}-{2}", DateTime.Now.ToString(), ex.Message, ex.StackTrace));
+        }
+    }
+
+    int zoom = 5;
+
+    bool showMap;
+
+    public GoogleMapPosition pos;
+
+    public GoogleMapPosition posMap = new GoogleMapPosition() { Lat = -34.29403345819787, Lng = -64.03364269523182 };
+
+    public double? latitud;
+
+    public double? longitud;
+
+    Dictionary<DateTime, string> events = new Dictionary<DateTime, string>();
+
+    void MapClick(GoogleMapClickEventArgs args)
+    {
+        events.Add(DateTime.Now, $"Map clicked at Lat: {args.Position.Lat}, Lng: {args.Position.Lng}");
+        StateHasChanged();
+    }
+
+
+    public string Address { get; set; }
+
+    public string GeoLocation { get; set; }
+
+    public bool IsLoading { get; set; }
+
+    private GeocodingResult[] Results { get; set; } = new GeocodingResult[0];
+
+    void onTextChanged(ChangeEventArgs args)
+    {
+        addressSubject.OnNext(args.Value.ToString());
+    }
+
+
+    //private void OnRowSelect(GeocodingResult row)
+    //{
+    //    Address = row.FormattedAddress;
+    //    GeoLocation = $"Lat:{row.Geometry.Location.Lat}, Lng: {row.Geometry.Location.Lng}";
+    //    Results = new GeocodingResult[0];
+    //    pos = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
+    //    posMap = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
+    //    Motor.LatitudGps = (long)row.Geometry.Location.Lat;
+    //    Motor.LongitudGps = (long)row.Geometry.Location.Lng;
+    //    zoom = 16;
+    //    showMap = true;
+    //    StateHasChanged();
+    //}
+
+    //private async void OnAddressChanged(string address)
+    //{
+    //    Address = address;
+    //    IsLoading = true;
+    //    GeoLocation = "";
+    //    await InvokeAsync(() => StateHasChanged());
+
+    //    var response = await GeocodingService.FindAsync(address);
+    //    Results = response.Results;
+
+    //    IsLoading = false;
+
+    //    await InvokeAsync(() => StateHasChanged());
+    //}
+}

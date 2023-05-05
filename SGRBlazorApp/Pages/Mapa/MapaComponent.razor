@@ -1,0 +1,37 @@
+﻿@inject IJSRuntime JS
+
+<div class="col-12 row">
+    <div class="col-md-12">
+        <div style="display:flex; justify-content: space-around">
+            <div class="m-3" id="newMap" style="position:relative;width:550px;height:500px;"></div>
+        </div>
+    </div>
+</div>
+
+@code 
+{
+    [Parameter]
+    public double Latitud { get; set; }
+    [Parameter]
+    public double Longitud { get; set; }
+    [Parameter]
+    public int zoom { get; set; }
+
+    [Parameter]
+    public List<CarPoint> posiciones { get; set; }
+
+    protected override Task OnParametersSetAsync()
+    {
+        JS.InvokeVoidAsync("generarPin", Latitud, Longitud, zoom, posiciones.ToArray());
+        return base.OnParametersSetAsync();
+
+    }
+
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        OnParametersSetAsync();
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+}
