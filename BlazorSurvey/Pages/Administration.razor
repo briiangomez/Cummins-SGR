@@ -1,0 +1,182 @@
+﻿@page "/administration"
+@using Microsoft.Identity.Client;
+@using Newtonsoft.Json;
+@using Newtonsoft.Json.Linq;
+@inject IConfiguration _configuration
+@inject ProtectedApiCallHelper ProtectedApiCallHelper
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject DialogService dialogService
+<h3>Administration</h3>
+@strError
+@if (isAdmin)
+{
+    <RadzenTextBox Placeholder="Search Text..." @bind-Value="strSearch" 
+                   Style="margin-bottom: 20px; width: 150px" />
+    <RadzenButton Click="Search" Text="Search" Style="margin-bottom: 20px; width: 150px" />
+    <RadzenGrid AllowFiltering="false" 
+                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" 
+                AllowPaging="false" PageSize="5"
+                AllowSorting="false" Data="@colGraphUsers.OrderBy(x => x.displayName)" 
+                TItem="GraphUser" ColumnWidth="200px">
+        <Columns>
+            <RadzenGridColumn TItem="GraphUser" Property="id" Width="50px" Title="">
+                <Template Context="GraphUser">
+                    <RadzenButton Text="Edit" Size="Radzen.ButtonSize.Small" 
+                                  Click="@(args => 
+                                           dialogService.Open<EditUser>($"Edit {GraphUser.displayName}",
+                                           new Dictionary<string, object>() { { "GraphUser", GraphUser } },
+                                           new DialogOptions(){ Width = "700px", Height = "450px" }))" 
+                                  />
+                </Template>
+            </RadzenGridColumn>
+            <RadzenGridColumn TItem="GraphUser" Property="displayName" Title="DisplayName" />
+            <RadzenGridColumn TItem="GraphUser" Property="surname" Title="First Name" />
+            <RadzenGridColumn TItem="GraphUser" Property="givenName" Title="Last Name" />
+        </Columns>
+    </RadzenGrid>
+}
+
+@code {
+    HttpClient httpClient;
+    ProtectedApiCallHelper apiCaller;
+    AuthenticationResult result = null;
+
+    string strError = "";
+    string strSearch = "";
+    string AdministrationGroup;
+    bool isAdmin = false;
+    // Collection to hold all the Tasks
+    List<GraphUser> colGraphUsers = new List<GraphUser>();
+    List<GraphGroup> colGroups = new List<GraphGroup>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // detect when a dialog has closed
+            /*dialogService.OnClose += DialogClose;
+
+            AdministrationGroup = _configuration["AzureAdB2CManagement:AdministrationGroup"];
+
+            IConfidentialClientApplication confidentialClientApplication =
+                ConfidentialClientApplicationBuilder
+                .Create(_configuration["AzureAdB2CManagement:ClientId"])
+                .WithTenantId(_configuration["AzureAdB2CManagement:Tenant"])
+                .WithClientSecret(_configuration["AzureAdB2CManagement:ClientSecret"])
+                .Build();
+
+            // With client credentials flows the scopes is ALWAYS of the shape
+            // "resource/.default", as the
+            // application permissions need to be set statically
+            // (in the portal or by PowerShell),
+            // and then granted by a tenant administrator
+            string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
+
+            result = await confidentialClientApplication.AcquireTokenForClient(scopes)
+                .ExecuteAsync();
+
+            httpClient = new HttpClient();
+
+            apiCaller = new ProtectedApiCallHelper(httpClient);
+
+            await apiCaller
+                .CallWebApiAndProcessResultASync(
+                "https://graph.microsoft.com/v1.0/users",
+                result.AccessToken,
+                DisplayUsers
+                );
+
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+            var user = authState.User;
+
+            var UserID = 
+                user.Claims.FirstOrDefault(
+                    c => c.Type == 
+                    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?
+                    .Value;
+
+            if (UserID != null)
+            {
+                await apiCaller.CallWebApiAndProcessResultASync(
+                    $"https://graph.microsoft.com/v1.0/users/{UserID}/memberOf",
+                    result.AccessToken,
+                    DisplayGroups
+                    );
+            }*/
+
+        }
+        catch (Exception ex)
+        {
+            strError = ex.GetBaseException().Message;
+        }
+    }
+
+    void DialogClose(dynamic result)
+    {
+        if (result != null)
+        {
+            if (result)
+            {
+                Task.Run(Search);
+            }
+            StateHasChanged();
+        }
+    }
+
+    async Task Search()
+    {
+        if (strSearch.Trim() != "")
+        {
+            await apiCaller.CallWebApiAndProcessResultASync(
+                $"https://graph.microsoft.com/v1.0/users?" +
+                $"$filter=startswith(displayName,'{strSearch}') " +
+                $"or startswith(surname, '{strSearch}') " +
+                $"or startswith(givenName, '{strSearch}')",
+                result.AccessToken,
+                DisplayUsers
+                );
+        }
+        else
+        {
+            await apiCaller.CallWebApiAndProcessResultASync(
+                "https://graph.microsoft.com/v1.0/users",
+                result.AccessToken,
+                DisplayUsers
+                );
+        }
+    }
+
+    private void DisplayUsers(JObject result)
+    {
+        colGraphUsers = new List<GraphUser>();
+        foreach (JProperty child in result.Properties()
+            .Where(p => !p.Name.StartsWith("@")))
+        {
+            colGraphUsers.AddRange(
+                child.Value.ToObject<List<GraphUser>>()
+                );
+        }
+    }
+
+    private void DisplayGroups(JObject result)
+    {
+        colGroups = new List<GraphGroup>();
+
+        foreach (JProperty child in result.Properties()
+            .Where(p => !p.Name.StartsWith("@")))
+        {
+            colGroups.AddRange(
+            child.Value.ToObject<List<GraphGroup>>()
+            );
+        }
+
+        if (AdministrationGroup != "")
+        {
+            isAdmin = 
+                (colGroups
+                .Where(x => x.displayName.ToLower() == AdministrationGroup.ToLower())
+                .FirstOrDefault() != null);
+        }
+    }
+}

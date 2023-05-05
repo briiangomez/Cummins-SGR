@@ -1,0 +1,436 @@
+﻿@page "/surveyadmin"
+@using Microsoft.Identity.Client;
+@using Models;
+@using Newtonsoft.Json.Linq;
+@using BlazorSurvey.Data;
+@inject IConfiguration _configuration
+@inject ProtectedApiCallHelper ProtectedApiCallHelper
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject DialogService dialogService
+@inject TooltipService tooltipService
+@inherits OwningComponentBase<SimpleSurveyService>
+@strError
+
+    <div>
+        <div>
+            <h2>
+                <RadzenButton ButtonStyle="ButtonStyle.Success"
+                              Size="Radzen.ButtonSize.Medium"
+                              MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "New Survey" }))"
+                              Icon="addchart" Click="@(args =>
+                                  dialogService.Open<EditSurvey>($"New Survey",
+                                  new Dictionary<string, object>() { { "SelectedSurvey", new Survey() { Id = -1 } } },
+                                  new DialogOptions() { Width = "500px", Height = "280px" }))" />
+                Survey Administration
+            </h2>
+            <br />
+        </div>
+        @if (ExistingSurveys == null)
+        {
+            <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="margin-bottom: 20px" />
+        }
+        else
+        {
+            @if (ExistingSurveys.Value == true)
+            {
+                <RadzenButton ButtonStyle="ButtonStyle.Success"
+                              Style="vertical-align:top"
+                              Size="Radzen.ButtonSize.Medium"
+                              Icon="add"
+                              MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "New Survey Item" }))"
+                              Click="@(args =>
+                                  dialogService.Open<EditSurveyItem>($"New Survey Item",
+                                  new Dictionary<string, object>() { { "SelectedSurveyItem", new SurveyItem() { Id = -1, SurveyNavigation = SelectedSurvey } } },
+                                  new DialogOptions() { Width = "500px", Height = "380px" }))" />
+                <RadzenButton ButtonStyle="ButtonStyle.Secondary"
+                              Style="vertical-align:top"
+                              Size="Radzen.ButtonSize.Medium"
+                              MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text= "Edit Survey" }))"
+                              Icon="edit" Click="@(args =>
+                                  dialogService.Open<EditSurvey>($"Edit Survey",
+                                  new Dictionary<string, object>() { { "SelectedSurvey", SelectedSurvey } },
+                                  new DialogOptions() { Width = "500px", Height = "280px" }))" />
+                <RadzenDropDown TValue="Survey"
+                                Data="@colSurveys"
+                                TextProperty="SurveyName"
+                                @bind-Value="SelectedSurvey"
+                                Change="@(args => SelectedSurveyChange(args))" />
+
+                <br /><br />
+                <div>
+                    @foreach (var SurveyItem in SelectedSurvey.SurveyItem.OrderBy(x => x.Position))
+                    {
+                        <div class="row">
+                            <div class="col-md-2" style="text-align:right">
+                                @if (SurveyItem.Position > 1)
+                                {
+                                    <RadzenButton ButtonStyle="ButtonStyle.Light"
+                                                  Size="Radzen.ButtonSize.Medium"
+                                                  Icon="arrow_circle_up"
+                                                  Style="margin-top: 20px"
+                                                  Click="@(args => SelectedSurveyMoveUp(SurveyItem))" />
+                                }
+                                @if (SurveyItem.Position < SelectedSurvey.SurveyItem.Count())
+                                {
+                                    <RadzenButton ButtonStyle="ButtonStyle.Light"
+                                                  Size="Radzen.ButtonSize.Medium"
+                                                  Icon="arrow_circle_down"
+                                                  Style="margin-top: 20px"
+                                                  Click="@(args => SelectedSurveyMoveDown(SurveyItem))" />
+                                }
+                                <RadzenButton ButtonStyle="ButtonStyle.Light"
+                                              Size="Radzen.ButtonSize.Medium"
+                                              Icon="edit"
+                                              Style="margin-top: 20px"
+                                              Click="@(args =>
+                                                   dialogService.Open<EditSurveyItem>($"Edit Survey Item",
+                                                   new Dictionary<string, object>() { { "SelectedSurveyItem", SurveyItem } },
+                                                   new DialogOptions() { Width = "500px", Height = "380px" }))" />
+                            </div>
+                            <div class="col-md-10" style="text-align: left;margin-bottom: 20px">
+                                <b>@SurveyItem.ItemLabel</b>
+                                <br />
+                                @if (SurveyItem.ItemType == "Text Box")
+                                {
+                                    <RadzenTextBox MaxLength="4000" />
+                                }
+                                @if (SurveyItem.ItemType == "Text Area")
+                                {
+                                    <RadzenTextArea MaxLength="4000" />
+                                }
+                                @if (SurveyItem.ItemType == "Date")
+                                {
+                                    <RadzenDatePicker DateFormat="d" TValue="DateTime?" ShowTime="false" />
+                                }
+                                @if (SurveyItem.ItemType == "Date Time")
+                                {
+                                    <RadzenDatePicker TValue="DateTime?" ShowTime="true" />
+                                }
+                                @if (SurveyItem.ItemType == "Dropdown")
+                                {
+                                    <RadzenDropDown AllowClear="true" TValue="string" 
+                                                    Data="@SurveyItem.SurveyItemOption.OrderBy(x => x.Id)"
+                                                    TextProperty="OptionLabel" ValueProperty="OptionLabel"
+                                                    @bind-Value="@Answer.AnswerValueString" 
+                                                    Style="width:300px;" />
+                                }
+                                @if (SurveyItem.ItemType == "Multi-Select Dropdown")
+                                {
+                                    <RadzenDropDown TValue="IEnumerable<string>"
+                                                    Multiple="true"
+                                                    AllowClear="true"
+                                                    AllowFiltering="true"
+                                                    Placeholder="Select..."
+                                                    Data="@SurveyItem.SurveyItemOption.OrderBy(x => x.Id)"
+                                                    @bind-Value="Answer.AnswerValueList"
+                                                    TextProperty="OptionLabel"
+                                                    ValueProperty="OptionLabel" 
+                                                    Style="width:300px;" />
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+                @if (SelectedSurvey.SurveyItem.Count == 0)
+                {
+                    <h4>No Survey Items</h4>
+                }
+                <br />
+            }
+        }
+    </div>
+    <br />
+
+@code {
+    HttpClient httpClient;
+    ProtectedApiCallHelper apiCaller;
+    AuthenticationResult result = null;
+
+    string strError = "";
+    bool? ExistingSurveys = null;
+    string AdministrationGroup;
+    bool isAdmin = false;
+
+    public DTOSurveyItem Answer = new DTOSurveyItem();
+
+    List<GraphUser> colGraphUsers = new List<GraphUser>();
+    List<GraphGroup> colGroups = new List<GraphGroup>();
+
+    List<Survey> colSurveys = new List<Survey>();
+    Survey SelectedSurvey = new Survey();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // detect when a dialog has closed
+            dialogService.OnClose += DialogClose;
+
+            /*AdministrationGroup = _configuration["AzureAdB2CManagement:AdministrationGroup"];
+
+            IConfidentialClientApplication confidentialClientApplication =
+                ConfidentialClientApplicationBuilder
+                .Create(_configuration["AzureAdB2CManagement:ClientId"])
+                .WithTenantId(_configuration["AzureAdB2CManagement:Tenant"])
+                .WithClientSecret(_configuration["AzureAdB2CManagement:ClientSecret"])
+                .Build();
+
+            // With client credentials flows the scopes is ALWAYS of the shape
+            // "resource/.default", as the
+            // application permissions need to be set statically
+            // (in the portal or by PowerShell),
+            // and then granted by a tenant administrator
+            string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
+
+            result = await confidentialClientApplication.AcquireTokenForClient(scopes)
+                .ExecuteAsync();
+
+            httpClient = new HttpClient();
+
+            apiCaller = new ProtectedApiCallHelper(httpClient);
+
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+            var user = authState.User;
+
+            var UserID =
+                user.Claims.FirstOrDefault(
+                    c => c.Type ==
+                    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?
+                    .Value;
+
+            if (UserID != null)
+            {
+                await apiCaller.CallWebApiAndProcessResultASync(
+                    $"https://graph.microsoft.com/v1.0/users/{UserID}/memberOf",
+                    result.AccessToken,
+                    DisplayGroups
+                    );
+            }*/
+
+            colSurveys = await @Service.GetAllSurveysAsync();
+
+            if (colSurveys.Count > 0)
+            {
+                ExistingSurveys = true;
+                SelectedSurvey = colSurveys.FirstOrDefault();
+            }
+            else
+            {
+                ExistingSurveys = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            strError = ex.GetBaseException().Message;
+        }
+    }
+
+    void ShowTooltip(ElementReference elementReference, TooltipOptions options = null)
+    {
+        tooltipService.Open(elementReference, options.Text, options);
+    }
+
+    private void DisplayGroups(JObject result)
+    {
+        colGroups = new List<GraphGroup>();
+
+        foreach (JProperty child in result.Properties()
+            .Where(p => !p.Name.StartsWith("@")))
+        {
+            colGroups.AddRange(
+            child.Value.ToObject<List<GraphGroup>>()
+            );
+        }
+
+        if (AdministrationGroup != "")
+        {
+            isAdmin =
+                (colGroups
+                .Where(x => x.displayName.ToLower() == AdministrationGroup.ToLower())
+                .FirstOrDefault() != null);
+        }
+    }
+
+    // SelectedSurveyChange
+
+    async Task SelectedSurveyChange(object value)
+    {
+        await RefreshSurveys(SelectedSurvey.Id);
+    }
+
+    // Refresh RefreshSurveys
+
+    async Task RefreshSurveys(int SurveyId)
+    {
+        colSurveys = await @Service.GetAllSurveysAsync();
+        SelectedSurvey = colSurveys.Where(x => x.Id == SurveyId).FirstOrDefault();
+    }
+
+    // Refresh RefreshSurvey
+
+    async Task RefreshSurvey(int SurveyId)
+    {
+        SelectedSurvey = await @Service.GetSurvey(SurveyId);
+    }
+
+    async Task SelectedSurveyMoveUp(object value)
+    {
+        SurveyItem objSurveyItem = (SurveyItem)value;
+        int DesiredPosition = (objSurveyItem.Position - 1);
+
+        // Move the current element in that position
+        var CurrentSurveyItem =
+            await @Service.GetSurveyItemAsync(
+                SelectedSurvey.SurveyItem
+                .Where(x => x.Position == DesiredPosition)
+                .FirstOrDefault().Id);
+
+        if (CurrentSurveyItem != null)
+        {
+            // Move it down
+            CurrentSurveyItem.Position = CurrentSurveyItem.Position + 1;
+            // Update it
+            await Service.UpdateSurveyItemAsync(CurrentSurveyItem);
+        }
+
+        // Move Item Up
+        var SurveyItemToMoveUp =
+            await @Service.GetSurveyItemAsync(
+                SelectedSurvey.SurveyItem
+                .Where(x => x.Id == objSurveyItem.Id)
+                .FirstOrDefault().Id);
+
+        if (SurveyItemToMoveUp != null)
+        {
+            // Move it up
+            SurveyItemToMoveUp.Position = SurveyItemToMoveUp.Position - 1;
+            // Update it
+            await Service.UpdateSurveyItemAsync(SurveyItemToMoveUp);
+        }
+
+        // Refresh SelectedSurvey
+        SelectedSurvey = await @Service.GetSurvey(SelectedSurvey.Id);
+    }
+
+    async Task SelectedSurveyMoveDown(object value)
+    {
+        SurveyItem objSurveyItem = (SurveyItem)value;
+        int DesiredPosition = (objSurveyItem.Position + 1);
+
+        // Move the current element in that position
+        var CurrentSurveyItem =
+            await @Service.GetSurveyItemAsync(
+                SelectedSurvey.SurveyItem
+                .Where(x => x.Position == DesiredPosition)
+                .FirstOrDefault().Id);
+
+        if (CurrentSurveyItem != null)
+        {
+            // Move it up
+            CurrentSurveyItem.Position = CurrentSurveyItem.Position - 1;
+            // Update it
+            await Service.UpdateSurveyItemAsync(CurrentSurveyItem);
+        }
+
+        // Move Item Down
+        var SurveyItemToMoveDown =
+            await @Service.GetSurveyItemAsync(
+                SelectedSurvey.SurveyItem
+                .Where(x => x.Id == objSurveyItem.Id)
+                .FirstOrDefault().Id);
+
+        if (SurveyItemToMoveDown != null)
+        {
+            // Move it up
+            SurveyItemToMoveDown.Position = SurveyItemToMoveDown.Position + 1;
+            // Update it
+            await Service.UpdateSurveyItemAsync(SurveyItemToMoveDown);
+        }
+
+        // Refresh SelectedSurvey
+        await RefreshSurvey(SelectedSurvey.Id);
+    }
+
+    void DialogClose(dynamic result)
+    {
+        if (result != null)
+        {
+            Survey objSurvey = result as Survey;
+            SurveyItem objSurveyItem = result as SurveyItem;
+
+            if (objSurveyItem != null) // A SurveyItem was edited
+            {
+                // Refresh the SurveyItem
+                var ExistingSurveyItem = SelectedSurvey.SurveyItem.Where(x => x.Id == objSurveyItem.Id).FirstOrDefault();
+
+                if (objSurveyItem.Id == -1)
+                {
+                    // It was deleted
+                    SelectedSurvey.SurveyItem.Remove(ExistingSurveyItem);
+                }
+                else
+                {
+                    // Update existing Survey
+                    SelectedSurvey.SurveyItem.Remove(ExistingSurveyItem);
+                    SelectedSurvey.SurveyItem.Add(objSurveyItem);
+                }
+
+                StateHasChanged();
+                return;
+            }
+
+            if (objSurvey != null) // A Survey was Edited
+            {
+                // See if Survey is already in the list
+                var ExistingSurvey = colSurveys.Where(x => x.Id == objSurvey.Id).FirstOrDefault();
+
+                if (ExistingSurvey == null)
+                {
+                    // Survey does not exist - Add it
+                    colSurveys.Add(objSurvey);
+                }
+                else
+                {
+                    // Update existing Survey
+                    colSurveys.Remove(ExistingSurvey);
+                    colSurveys.Add(objSurvey);
+
+                    return;
+                }
+
+                ExistingSurveys = true;
+                SelectedSurvey = colSurveys.Where(x => x.Id == objSurvey.Id).FirstOrDefault();
+                StateHasChanged();
+            }
+            else
+            {
+                // A Survey was deleted
+                int? SurveyDeletedId = result as int?;
+
+                if (SurveyDeletedId != null)
+                {
+                    var SurveyToDelete = colSurveys.Where(x => x.Id == SurveyDeletedId).FirstOrDefault();
+
+                    if (SurveyToDelete != null)
+                    {
+                        colSurveys.Remove(SurveyToDelete);
+                    }
+
+                    if (colSurveys.Count > 0)
+                    {
+                        ExistingSurveys = true;
+                        SelectedSurvey = colSurveys.FirstOrDefault();
+                    }
+                    else
+                    {
+                        ExistingSurveys = false;
+                        SelectedSurvey = null;
+                    }
+
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+}

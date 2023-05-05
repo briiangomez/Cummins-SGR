@@ -1,0 +1,115 @@
+﻿@page "/deleteCamara/{Id:guid}"
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@inject ITBService<Camara> roleService
+@inject ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navigationManager
+@implements IDisposable
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject Blazored.LocalStorage.ILocalStorageService localStorageService
+<div class="col-12">
+
+    <EditForm Model="@user" OnValidSubmit="@RegisterUser">
+        <div>
+            <h3 style="font-weight:bold; color:#EF272C">Eliminar Camara</h3>
+        </div>
+        <div>
+            <br />
+        </div>
+        <div class="col-12 row">
+            <label class="col-4 font-weight-bold">Nombre :</label>
+            <input class="form-control col-8" @bind="user.Nombre" placeholder="Nombre" disabled />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-4 font-weight-bold">Direccion IP :</label>
+            <input type="text" class="form-control col-8" @bind="user.Ip" placeholder="Direccion IP" disabled />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <span class="col-2"></span>
+            <input type="submit" class="btn btn-danger" value="Eliminar" />
+            <span>&nbsp;</span>
+            <a class="btn btn-success" href="/Camaras">Cancelar</a>
+        </div>
+        <br />
+        <div class="col-12 row" style="text-align:left; font-weight:bold">
+            <span class="col-12">@LoginMesssage</span>
+        </div>
+    </EditForm>
+</div>
+<br />
+
+
+@code
+{
+    [Parameter]
+    public Guid Id { get; set; }
+    private Camara user;
+    public string LoginMesssage { get; set; }
+    public List<Role> Roles { get; set; }
+
+    public bool isDealer { get; set; }
+    public string TipoDNI { get; set; }
+    public string RecordName { get; set; }
+    public Guid IdRole { get; set; }
+
+    //private void OnChangeEvent(ChangeEventArgs changeEventArgs)
+    //{
+
+    //    if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Rol...")
+    //    {
+    //        IdRole = Guid.Parse((string)changeEventArgs.Value);
+    //        user.IdRole = IdRole;
+    //    }
+    //    else
+    //    {
+    //        isDealer = false;
+    //    }
+    //}
+
+    //private void OnChangeEvent2(ChangeEventArgs changeEventArgs)
+    //{
+    //    if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Dealer...")
+    //    {
+    //        IdDealer = Guid.Parse((string)changeEventArgs.Value);
+    //        user.IdDealer = IdDealer;
+    //    }
+    //    else
+    //    {
+    //          user.IdDealer = null;
+    //    }
+    //}
+
+    protected async override Task OnInitializedAsync()
+    {   
+        user = new Camara();
+        user = await roleService.GetByIdAsync("Camaras/GetCamara/", Id);
+        isDealer = false;
+        //Dealers = await dealerService.GetAllAsync("Dealer/GetDealer");
+        //Roles = await roleService.GetAllAsync("Role/GetRole");
+        //return base.OnInitializedAsync();
+
+    }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Users - Dispose");
+    }
+
+    private async Task<bool> RegisterUser()
+    {
+        //assume that user is valid
+        var confirmado = await JSRuntime.Confirmar("Atencion!","¿Desea eliminar la Camara?",TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            await roleService.DeleteAsync("Camaras/DeleteCamara/", Id);
+
+            navigationManager.NavigateTo("/Camaras");
+        }
+
+        return await Task.FromResult(true);
+    }
+}

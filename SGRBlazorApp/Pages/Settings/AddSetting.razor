@@ -1,0 +1,153 @@
+﻿@page "/addSetting"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@inject ILocalStorageService localStorageService
+@inject ISgrService<Setting> bookStoresService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navigationManager
+@implements IDisposable
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+<div class="col-12">
+    <h3><b>Agregar Nueva Configuración</b></h3>
+    <hr />
+
+    <ServerValidations IsVisible="IsVisible" Result="Result">
+        @RecordName
+    </ServerValidations>
+
+    <EditForm Model="@Setting" OnValidSubmit="@SaveSetting">
+        @*<DataAnnotationsValidator />*@
+
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Nombre:</label>
+            <InputText class="form-control col-3" @bind-Value="Setting.Key" placeholder="Nombre"  required/>
+            &nbsp;<ValidationMessage For="@(() => Setting.Key)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Valor :</label>
+            <InputText class="form-control col-3" @bind-Value="Setting.Value" placeholder="Valor"  required/>
+            &nbsp;<ValidationMessage For="@(() => Setting.Value)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <span class="col-2"></span>
+            <input type="submit" class="btn btn-success" value="Guardar" />
+            <span>&nbsp;</span>
+            <a style="background-color:red;color:white" class="btn btn-success" href="/Settings">Cancelar</a>
+        </div>
+    </EditForm>
+</div>
+<br />
+
+
+@code
+{
+    public Setting Setting { get; set; }
+    public bool IsVisible { get; set; }
+    public bool Result { get; set; }
+    public string RecordName { get; set; }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Settings - Dispose");
+    }
+
+    private Dictionary<string, object> htmlAttribute { get; set; } = new Dictionary<string, object>() {
+            {"maxlength", "8" }
+            };
+
+    //private async void OnChange(KeyboardEventArgs e)
+    //{
+    //    if(!String.IsNullOrEmpty(Setting.NumeroSetting))
+    //    {
+    //        if (Setting.NumeroSetting.Length > 7)
+    //        {
+    //            await JSRuntime.MostrarMensaje("Error!", "El Numero de Setting no puede ser mayor a 8 caracteres", TipoMensajeSweetAlert.error);
+    //            Setting.NumeroSetting = Setting.NumeroSetting.Substring(0,8);
+    //        }
+    //    }
+    //}
+
+    //string stringValue = "";
+
+    //private async Task SetValue(string Value)
+    //{
+    //    if (Value.Length > 7)
+    //    {
+    //        await JSRuntime.MostrarMensaje("Error!", "El Numero de Setting no puede ser mayor a 8 caracteres", TipoMensajeSweetAlert.error);
+    //        Setting.NumeroSetting = Value.Substring(0,8);
+    //    }
+    //    else
+    //    {
+    //        stringValue = Value;
+
+    //    }
+    //}
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Clientes - OnInitialized");
+        base.OnInitialized();
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+
+    bool IsUserAuthenticated;
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+        Console.WriteLine("Clientes - OnInitializedAsync");
+
+        Setting = new Setting();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task SaveSetting()
+    {
+        try
+        {
+            await bookStoresService.SaveAsync("Settings/CreateSettings", Setting);
+
+            //if(Setting.NumeroSetting.Length < 8)
+            //{
+            //    Setting.NumeroSetting = Setting.NumeroSetting.PadLeft(8, '0');
+            //    //Setting.NumeroSetting = Setting.NumeroSetting.ToString("00000000");
+            //    //Setting.NumeroSetting = Setting.NumeroSetting.ToString("D8");
+            //}
+            Result = true;
+            IsVisible = true;
+
+            //var firstName = Setting.NumeroSetting;
+            //var lastName = Setting.Setting;
+
+            //RecordName = firstName + " " + lastName;
+
+            Setting = new Setting();
+
+            navigationManager.NavigateTo("/Settings");
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.MostrarMensaje("Error!", "Ocurrio un error actualizando, por favor intente nuevamente!", TipoMensajeSweetAlert.error);
+            Logger.AddLine(String.Format("{0}-{1}-{2}", DateTime.Now.ToString(), ex.Message, ex.StackTrace));
+        }
+    }
+}

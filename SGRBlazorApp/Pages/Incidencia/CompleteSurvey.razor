@@ -1,0 +1,334 @@
+﻿@page "/completeSurvey/{Id:guid}"
+@layout EmptyLayout
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@using SGRBlazorApp.Shared
+@using System.Security.Claims
+@using Radzen
+@using Radzen.Blazor
+@inject ISgrService<Incidencia> bookStoresService
+@inject ISgrService<IncidenciaApi> incidenciaApiService
+@inject ISgrService<Survey> surveyService
+@inject ISgrService<Estado> estadoService
+@inject ISgrService<IncidenciaSurvey> surveyIncidenciaService
+@inject ISgrService<SurveyAnswer> answerService
+@inject ISgrService<DTOSurvey> dtoAnswerService
+@inject IUserService userService
+@inject ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navigationManager
+@implements IDisposable
+@using System.Reactive.Linq;
+@using System.Reactive.Subjects
+@using SGRBlazorApp.Services
+@inject GeocodingService GeocodingService
+
+<div class="col-12">
+    <h3><b>Encuesta sobre el Reclamo Nro @Incidencia.NroIncidencia</b></h3>
+    <hr />
+
+    @*<div class="col-12 row">
+            <label class="col-2 font-weight-bold">Estado Actual:</label>
+            <input class="form-control col-3" value="@IncidenciaApi.nombreEstadoIncidencia" readonly />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Equipo:</label>
+            <input class="form-control col-3" value="@IncidenciaApi.numeroMotor" readonly />
+        </div>*@
+    <br />
+    <h3><b>A continuacion responda la siguiente encuesta sobre este Reclamo. Muchas gracias!</b></h3>
+    <br />
+    @strError
+    <RadzenTabs>
+        <Tabs>
+            <RadzenTabsItem Text="Responder Encuesta">
+                @if (ShowSurveyComplete)
+                {
+                    <h4>Encuesta completada con exito! Muchas gracias!!!</h4>
+                }
+                else
+                {
+                    <RadzenTemplateForm TItem="DTOSurvey" Data="@SelectedSurvey" Submit="@SaveSurvey">
+                        <div>
+                            @if (SelectedSurvey.SurveyItem != null)
+                            {
+                                foreach (var SurveyItem in SelectedSurvey.SurveyItem.OrderBy(x => x.Position))
+                                {
+                                    <div class="row">
+                                        <div class="col-md-9" style="text-align: left;margin-bottom: 20px">
+                                            <b>@SurveyItem.ItemLabel</b>
+                                            <br />
+                                            @if (SurveyItem.ItemType == "Text Box")
+                                            {
+                                                <RadzenTextBox MaxLength="4000" Name="@SurveyItem.Id.ToString()"
+                                                               @bind-Value="@SurveyItem.AnswerValueString" />
+                                            }
+                                            @if (SurveyItem.ItemType == "Text Area")
+                                            {
+                                                <RadzenTextArea MaxLength="4000" Name="@SurveyItem.Id.ToString()"
+                                                                @bind-Value="@SurveyItem.AnswerValueString" />
+                                            }
+                                            @if (SurveyItem.ItemType == "Date")
+                                            {
+                                                <RadzenDatePicker DateFormat="d" Name="@SurveyItem.Id.ToString()"
+                                                                  @bind-Value="@SurveyItem.AnswerValueDateTime"
+                                                                  TValue="DateTime?" ShowTime="false" />
+                                            }
+                                            @if (SurveyItem.ItemType == "Date Time")
+                                            {
+                                                <RadzenDatePicker TValue="DateTime?" Name="@SurveyItem.Id.ToString()"
+                                                                  @bind-Value="@SurveyItem.AnswerValueDateTime"
+                                                                  ShowTime="true" />
+                                            }
+                                            @if (SurveyItem.ItemType == "Dropdown")
+                                            {
+                                                <RadzenDropDown AllowClear="true" TValue="string" Name="@SurveyItem.Id.ToString()"
+                                                                Data="@SurveyItem.SurveyItemOption.OrderBy(x => x.Id)"
+                                                                TextProperty="OptionLabel" ValueProperty="OptionLabel"
+                                                                @bind-Value="@SurveyItem.AnswerValueString"
+                                                                Style="width:300px;" />
+                                            }
+                                            @if (SurveyItem.ItemType == "Multi-Select Dropdown")
+                                            {
+                                                <RadzenDropDown Name="@SurveyItem.Id.ToString()"
+                                                                TValue="IEnumerable<string>"
+                                                                Multiple="true"
+                                                                AllowClear="true"
+                                                                AllowFiltering="true"
+                                                                @bind-Value="SurveyItem.AnswerValueList"
+                                                                Placeholder="Select..."
+                                                                Data="@SurveyItem.SurveyItemOption"
+                                                                TextProperty="OptionLabel"
+                                                                ValueProperty="OptionLabel"
+                                                                Style="width:300px;" />
+                                            }
+                                            @if (SurveyItem.Required == 1)
+                                            {
+                                                <br /><RadzenRequiredValidator Component="@SurveyItem.Id.ToString()"
+                                                                               Text="Required" Popup="false"
+                                                                               Style="position: absolute" />
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                        <div class="row">
+                            <RadzenButton ButtonType="ButtonType.Submit" Text="Enviar"></RadzenButton>
+                        </div>
+                    </RadzenTemplateForm>
+                }
+                @if (SelectedSurvey.SurveyItem != null)
+                {
+                    if (SelectedSurvey.SurveyItem.Count == 0)
+                    {
+                        <h4>No Survey Items</h4>
+                    }
+                }
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
+</div>
+
+@code
+{
+    [Parameter]
+    public Guid Id { get; set; }
+    public Incidencia Incidencia { get; set; }
+    public IncidenciaApi IncidenciaApi { get; set; }
+    public List<IncidenciaApi> IncidenciaList { get; set; }
+    public List<EstadoIncidencium> estadoIncidencia { get; set; }
+    public List<IncidenciaSurvey> estadosList { get; set; }
+    public string Observaciones { get; set; }
+    DateTime? value = DateTime.Now;
+    public Guid IdEncuesta { get; set; }
+    public List<Survey> Encuestas { get; set; }
+    public Survey encuesta { get; set; }
+    bool ShowSurveyComplete = false;
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+    bool IsUserAuthenticated;
+    bool IsDealer;
+    DTOSurvey SelectedSurvey = new DTOSurvey();
+    public SGRBlazorApp.Data.User user1 { get; set; }
+    public RefreshRequest refreshRequest { get; set; }
+    string strError = "";
+    public void Dispose()
+    {
+        Console.WriteLine("Motors - Dispose");
+    }
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Clientes - OnInitialized");
+        base.OnInitialized();
+    }
+
+    private void OnChangeEvent2(ChangeEventArgs changeEventArgs)
+    {
+        if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Encuesta...")
+        {
+            IdEncuesta = Guid.Parse((string)changeEventArgs.Value);
+            //Incidencia.IdDealer = IdDealer;
+        }
+        //else
+        //{
+        //      Incidencia.IdDealer = null;
+        //}
+    }
+
+    private async Task RechazarIncidencia(Guid ClienteId)
+    {
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea confirmar la asociacion de la Encuesta con el Reclamo?", TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            if (IdEncuesta != Guid.Empty)
+            {
+                IncidenciaSurvey estado = new IncidenciaSurvey();
+                estado.IdIncidencia = ClienteId;
+                estado.IdSurvey = IdEncuesta;
+                estado.Created = DateTime.Now;
+                await surveyIncidenciaService.SaveAsync("IncidenciaSurvey/CreateIncidenciaSurvey/", estado);
+                navigationManager.NavigateTo("/Incidencias");
+            }
+            else
+            {
+                await JSRuntime.MostrarMensaje("Atencion!", "Seleccione una Encuesta!!", TipoMensajeSweetAlert.warning);
+            }
+        }
+        //throw new Exception("DeleteCliente");
+    }
+
+    private DTOSurvey ConvertToDTO(Survey objSurvey)
+    {
+        DTOSurvey objDTOSurvey = new DTOSurvey();
+        objDTOSurvey.Id = objSurvey.Id;
+        objDTOSurvey.SurveyName = objSurvey.SurveyName;
+        objDTOSurvey.UserId = user1.Id;
+
+        objDTOSurvey.SurveyItem = new List<DTOSurveyItem>();
+
+        foreach (var SurveyItem in objSurvey.SurveyItems)
+        {
+            DTOSurveyItem objDTOSurveyItem = new DTOSurveyItem();
+
+            objDTOSurveyItem.Id = SurveyItem.Id;
+            objDTOSurveyItem.ItemLabel = SurveyItem.ItemLabel;
+            objDTOSurveyItem.ItemType = SurveyItem.ItemType;
+            objDTOSurveyItem.Position = SurveyItem.Position;
+            objDTOSurveyItem.Required = SurveyItem.Required;
+
+            objDTOSurveyItem.SurveyItemOption =
+                new List<DTOSurveyItemOption>();
+
+            foreach (var SurveyItemOption in SurveyItem.SurveyItemOptions.OrderBy(x => x.Id))
+            {
+                DTOSurveyItemOption objDTOSurveyItemOption = new DTOSurveyItemOption();
+
+                objDTOSurveyItemOption.Id = SurveyItemOption.Id;
+                objDTOSurveyItemOption.OptionLabel = SurveyItemOption.OptionLabel;
+
+                objDTOSurveyItem.SurveyItemOption.Add(objDTOSurveyItemOption);
+            }
+
+            objDTOSurvey.SurveyItem.Add(objDTOSurveyItem);
+        }
+
+
+        return objDTOSurvey;
+    }
+
+    // Submit
+
+    async Task SaveSurvey()
+    {
+        try
+        {
+            var result = await dtoAnswerService.SaveAsync("SurveyAnswer/CreateSurveyAnswer", SelectedSurvey);
+
+            FinishSurvey();
+        }
+        catch (Exception ex)
+        {
+            strError = ex.GetBaseException().Message;
+            await JSRuntime.MostrarMensaje("Error!", "Ocurrio un error actualizando, por favor intente nuevamente!", TipoMensajeSweetAlert.error);
+            Logger.AddLine(String.Format("{0}-{1}-{2}", DateTime.Now.ToString(), ex.Message, ex.StackTrace));
+        }
+    }
+
+    void FinishSurvey()
+    {
+        ShowSurveyComplete = true;
+
+        // Clear Answers
+        foreach (var item in SelectedSurvey.SurveyItem)
+        {
+            item.AnswerValueString = null;
+            item.AnswerValueDateTime = null;
+            item.AnswerValueList = null;
+        }
+    }
+
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+        Console.WriteLine("Clientes - OnInitializedAsync");
+        Incidencia = new Incidencia();
+        IncidenciaApi = new IncidenciaApi();
+        Incidencia = await bookStoresService.GetByIdAsync("Incidencia/GetIncidencia/", Id);
+        IncidenciaList = await incidenciaApiService.GetAllAsync("Incidencia/GetIncidenciaApi");
+        IncidenciaApi = IncidenciaList.FirstOrDefault(o => o.Id == Id);
+        Encuestas = await surveyService.GetAllAsync("Survey/GetSurvey");
+        //encuesta = Encuestas.FirstOrDefault(o => o.Id == Incidencia.IdDealer.Value);
+        estadosList = new List<IncidenciaSurvey>();
+        estadosList = await surveyIncidenciaService.GetAllAsync("IncidenciaSurvey/GetIncidenciaSurvey");
+        estadosList = estadosList.Where(o => o.IdIncidencia == Id).ToList();
+
+        user = (await authenticationStateTask).User;
+        if (user.Identity.IsAuthenticated)
+            IsUserAuthenticated = true;
+
+        if (user.IsInRole("Dealer"))
+            IsDealer = true;
+
+        refreshRequest = new RefreshRequest();
+        refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+        refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+        user1 = await userService.RefreshTokenAsync(refreshRequest);
+        if (estadosList.Count > 0)
+        {
+            var firstSurvey = estadosList.FirstOrDefault();
+            encuesta = Encuestas.FirstOrDefault(o => o.Id == firstSurvey.IdSurvey);
+            SelectedSurvey = ConvertToDTO(encuesta);
+            IdEncuesta = encuesta.Id;
+        }
+        else
+        {
+            IdEncuesta = Guid.Empty;
+        }
+        value = DateTime.Now;
+
+
+
+
+
+        await base.OnInitializedAsync();
+    }
+}
+

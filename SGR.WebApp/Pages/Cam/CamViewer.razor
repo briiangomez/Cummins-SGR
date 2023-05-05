@@ -1,0 +1,24 @@
+﻿@page "/camviewer"
+@inject IJSRuntime JSRuntime
+
+<div class="card mb-3">
+    <h3 class="card-header">Camara TheaBot</h3>
+    <div class="card-body">
+        <h5 class="card-title">Video Deteccion</h5>
+    </div>
+    <div style="width:50%;height:auto;text-align:center;">
+        <CamComponent Address="@Address"></CamComponent>
+    </div>
+    <div class="card-footer text-muted">
+        Recibiendo streaming....
+    </div>
+</div>
+
+
+@code {
+
+    [Parameter]
+    public string Address { get; set; }
+
+}
+

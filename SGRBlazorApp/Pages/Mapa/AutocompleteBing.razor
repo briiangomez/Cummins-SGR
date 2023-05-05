@@ -1,0 +1,121 @@
+﻿@using System.Reactive.Subjects
+@inject IJSRuntime JS
+<div>
+    <div class="ui-widget">
+        <RadzenRadioButtonList @bind-Value=@KmOrHs TValue="int" Change=@((args) => OnChangeRB(args, "RadioButtonList with horizontal orientation")) Style="width:50%">
+            <Items>
+                <RadzenRadioButtonListItem Text="Direccion" Value="1" />
+                <RadzenRadioButtonListItem Text="Coordenadas" Value="2" />
+            </Items>
+        </RadzenRadioButtonList>
+    </div>
+    @if (KmOrHs == 1)
+    {
+        <div class="ui-widget">
+            <label>Direccion:</label>
+            <input id="searchBox" class="form-control" placeholder="Ingrese Direccion" @onchange="onChange" />
+        </div>
+    }
+    else
+    {
+        <div class="ui-widget">
+            <label>Latitud:</label>
+            <input id="searchBox" class="form-control" placeholder="Ingrese Latitud (-31.45665)" @onchange="NameChanged" />
+        </div>
+
+
+        <div class="ui-widget">
+            <label>Longitud:</label>
+            <input id="searchBox" class="form-control" placeholder="Ingrese Longitud (-56.45665)" @onchange="NameChanged2" />
+        </div>
+
+        <div class="ui-widget">
+            <label>Direccion:</label>
+            <input id="searchBox2" class="form-control" placeholder="Ingrese Direccion" @onchange="onChange2" />
+        </div>
+    }
+
+    <input type="hidden" id="Dir" class="form-control" />
+    <input type="hidden" id="Lat" class="form-control" />
+    <input type="hidden" id="Long" class="form-control" />
+
+    <div class="col-12 row">
+        <div class="col-md-12">
+            <div style="display:flex; justify-content: space-around">
+                <div class="m-3" id="newMap" style="position:relative;width:550px;height:500px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+@code
+{
+    public bool showMap = false;
+    public string Data { get; set; }
+    public string Lat { get; set; }
+
+    Subject<string> addressSubject = new Subject<string>();
+
+    public string Long { get; set; }
+
+    public double? Latitud { get; set; }
+
+    public string Direc  = String.Empty;
+
+    public double? Longitud { get; set; }
+
+    public List<CarPoint> posiciones { get; set; }
+
+    public int KmOrHs = 1;
+
+    void OnChangeRB(int? value, string name)
+    {
+        KmOrHs = value.Value;
+    }
+
+    void onTextChanged(ChangeEventArgs args)
+    {
+        addressSubject.OnNext(args.Value.ToString());
+    }
+
+    private string value { get; set; }
+    private void onChange(Microsoft.AspNetCore.Components.ChangeEventArgs args)
+    {
+        value = (string)args.Value;
+    }
+
+    private void onChange2(Microsoft.AspNetCore.Components.ChangeEventArgs args)
+    {
+        Direc = (string)args.Value;
+    }
+
+
+    private void NameChanged(Microsoft.AspNetCore.Components.ChangeEventArgs args)
+    {
+        Latitud = Convert.ToDouble(args.Value.ToString());
+    }
+
+    private void NameChanged2(Microsoft.AspNetCore.Components.ChangeEventArgs args)
+    {
+        Longitud = Convert.ToDouble(args.Value.ToString());
+    }
+
+    protected override Task OnParametersSetAsync()
+    {
+        if(KmOrHs == 1)
+        {
+            var name = JS.InvokeVoidAsync("AutoCompleteBing", "searchBox");
+        }
+        else if (KmOrHs == 2 && Latitud != 0 && Longitud != 0)
+        {
+            var name = JS.InvokeVoidAsync("addPin", Latitud.ToString().Replace(',', '.'), Longitud.ToString().Replace(',', '.'), Direc);
+        }
+        return base.OnParametersSetAsync();
+
+    }
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        OnParametersSetAsync();
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+}

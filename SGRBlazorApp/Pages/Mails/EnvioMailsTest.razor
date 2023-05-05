@@ -1,0 +1,161 @@
+﻿@page "/enviarMail"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@inject IEmailSenderService emailService
+@inject IJSRuntime JSRuntime
+
+<div class="col-12">
+    <h3><b>Generacion de Envio de Mails - FAST</b></h3>
+    <hr />
+
+    <ServerValidations IsVisible="IsVisible" Result="Result">
+        @RecordName
+    </ServerValidations>
+
+    <EditForm Model="@Oem" OnValidSubmit="@SaveOem">
+        @*<DataAnnotationsValidator />*@
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">From (Email):</label>
+            <InputText class="form-control col-3" @bind-Value="Oem.SenderEmail" placeholder="From (Mail)" required />
+            &nbsp;<ValidationMessage For="@(() => Oem.SenderEmail)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">From (Name):</label>
+            <InputText class="form-control col-3" @bind-Value="Oem.SenderName" placeholder="From (Name)" required />
+            &nbsp;<ValidationMessage For="@(() => Oem.SenderName)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">To (Email):</label>
+            <InputText class="form-control col-3" @bind-Value="Oem.Email" placeholder="To (Mail)" required />
+            &nbsp;<ValidationMessage For="@(() => Oem.SenderEmail)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">To (Name):</label>
+            <InputText class="form-control col-3" @bind-Value="Oem.Nombre" placeholder="To (Name)" required />
+            &nbsp;<ValidationMessage For="@(() => Oem.SenderName)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Server:</label>
+            <InputText class="form-control col-3" @bind-Value="Oem.Server" placeholder="Server" required />
+            &nbsp;<ValidationMessage For="@(() => Oem.Server)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Puerto:</label>
+            <InputNumber class="form-control col-3" @bind-Value="Oem.Port" placeholder="Puerto" required />
+            &nbsp;<ValidationMessage For="@(() => Oem.Port)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Username:</label>
+            <InputText class="form-control col-3" @bind-Value="Oem.UserName" placeholder="Password" required />
+            &nbsp;<ValidationMessage For="@(() => Oem.UserName)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Password:</label>
+            <InputText class="form-control col-3" @bind-Value="Oem.Password" placeholder="Password" required />
+            &nbsp;<ValidationMessage For="@(() => Oem.Password)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Asunto:</label>
+            <InputText class="form-control col-3" @bind-Value="Oem.Subject" placeholder="Asunto" required />
+            &nbsp;<ValidationMessage For="@(() => Oem.Subject)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Mensaje:</label>
+            <InputText class="form-control col-3" @bind-Value="Oem.Body" placeholder="Mensaje" required />
+            &nbsp;<ValidationMessage For="@(() => Oem.Body)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <span class="col-2"></span>
+            <input type="submit" class="btn btn-success" value="Guardar" />
+            <span>&nbsp;</span>
+            <a style="background-color:red;color:white" class="btn btn-success" href="/Oems">Cancelar</a>
+        </div>
+    </EditForm>
+</div>
+<br />
+
+
+@code
+{
+    public MailRequest Oem { get; set; }
+    public bool IsVisible { get; set; }
+    public bool Result { get; set; }
+    public string RecordName { get; set; }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Oems - Dispose");
+    }
+
+    private Dictionary<string, object> htmlAttribute { get; set; } = new Dictionary<string, object>() {
+            {"maxlength", "8" }
+            };
+
+    //private async void OnChange(KeyboardEventArgs e)
+    //{
+    //    if(!String.IsNullOrEmpty(Oem.NumeroOem))
+    //    {
+    //        if (Oem.NumeroOem.Length > 7)
+    //        {
+    //            await JSRuntime.MostrarMensaje("Error!", "El Numero de Oem no puede ser mayor a 8 caracteres", TipoMensajeSweetAlert.error);
+    //            Oem.NumeroOem = Oem.NumeroOem.Substring(0,8);
+    //        }
+    //    }
+    //}
+
+    //string stringValue = "";
+
+    //private async Task SetValue(string Value)
+    //{
+    //    if (Value.Length > 7)
+    //    {
+    //        await JSRuntime.MostrarMensaje("Error!", "El Numero de Oem no puede ser mayor a 8 caracteres", TipoMensajeSweetAlert.error);
+    //        Oem.NumeroOem = Value.Substring(0,8);
+    //    }
+    //    else
+    //    {
+    //        stringValue = Value;
+
+    //    }
+    //}
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Clientes - OnInitialized");
+        base.OnInitialized();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("Clientes - OnInitializedAsync");
+
+        Oem = new MailRequest();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task SaveOem()
+    {
+        try
+        {
+            emailService.SendEmailFullAsync(Oem);
+            await JSRuntime.MostrarMensaje("OK!", "Email enviado con Exito!!", TipoMensajeSweetAlert.success);
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.MostrarMensaje("Error!", "Ocurrio un error enviando Email, por favor intente nuevamente!", TipoMensajeSweetAlert.error);
+            Logger.AddLine(String.Format("ERROR - ENVIO DE MAIL - {0}-{1}-{2}", DateTime.Now.ToString(), ex.Message, ex.StackTrace));
+        }
+    }
+}

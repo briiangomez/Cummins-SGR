@@ -1,0 +1,62 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Pages\Camara\**" />
+    <Compile Remove="Pages\Cam\**" />
+    <Compile Remove="Pages\Eventos\**" />
+    <Compile Remove="Pages\Productos\**" />
+    <Compile Remove="Pages\Setting\**" />
+    <Compile Remove="Pages\Usuarios\**" />
+    <Content Remove="Pages\Camara\**" />
+    <Content Remove="Pages\Cam\**" />
+    <Content Remove="Pages\Eventos\**" />
+    <Content Remove="Pages\Productos\**" />
+    <Content Remove="Pages\Setting\**" />
+    <Content Remove="Pages\Usuarios\**" />
+    <EmbeddedResource Remove="Pages\Camara\**" />
+    <EmbeddedResource Remove="Pages\Cam\**" />
+    <EmbeddedResource Remove="Pages\Eventos\**" />
+    <EmbeddedResource Remove="Pages\Productos\**" />
+    <EmbeddedResource Remove="Pages\Setting\**" />
+    <EmbeddedResource Remove="Pages\Usuarios\**" />
+    <None Remove="Pages\Camara\**" />
+    <None Remove="Pages\Cam\**" />
+    <None Remove="Pages\Eventos\**" />
+    <None Remove="Pages\Productos\**" />
+    <None Remove="Pages\Setting\**" />
+    <None Remove="Pages\Usuarios\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Services\AuthorService.cs" />
+    <Compile Remove="Services\IAuthorService.cs" />
+    <Compile Remove="Services\IPublisherService.cs" />
+    <Compile Remove="Services\PublisherService.cs" />
+    <Compile Remove="Services\TBService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Pages\Authors - Copy.razor" />
+    <Content Remove="Shared\GridView - Copy.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazored.LocalStorage" Version="2.1.5" />
+    <PackageReference Include="BlazorPro.Spinkit" Version="1.2.0" />
+    <PackageReference Include="EmbeddedBlazorContent" Version="1.10.0" />
+    <PackageReference Include="Microsoft.Azure.SignalR" Version="1.4.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Radzen.Blazor" Version="2.17.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CuriousDriveRazorLibrary\CuriousDriveRazorLibrary\CuriousDriveRazorLibrary.csproj" />
+    <ProjectReference Include="..\SGR.Models\SGR.Models.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,183 @@
+﻿@page "/deleteSetting/{Id:guid}"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@using SGRBlazorApp.Shared
+@inject ISgrService<Setting> bookStoresService
+@inject IUserService userService
+@inject ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navigationManager
+@implements IDisposable
+@using System.Reactive.Linq;
+@using System.Reactive.Subjects
+@using SGRBlazorApp.Services
+@inject GeocodingService GeocodingService
+<div class="col-12">
+    <h3><b>Eliminar Configuración</b></h3>
+    <hr />
+
+    <ServerValidations IsVisible="IsVisible" Result="Result">
+        @RecordName
+    </ServerValidations>
+
+    <EditForm Model="@Setting" OnValidSubmit="@SaveSetting">
+        @*<DataAnnotationsValidator />*@
+
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Nombre:</label>
+            <input class="form-control col-3" @bind="Setting.Key" placeholder="Name" disabled />
+            &nbsp;<ValidationMessage For="@(() => Setting.Key)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Valor :</label>
+            <InputText class="form-control col-3" @bind-Value="Setting.Value" placeholder="Location Code" disabled />
+            &nbsp;<ValidationMessage For="@(() => Setting.Value)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <span class="col-2"></span>
+            <input type="submit" class="btn btn-success" value="Eliminar" />
+            <span>&nbsp;</span>
+            <a style="background-color:red;color:white" class="btn btn-success" href="/Settings">Cancelar</a>
+        </div>
+    </EditForm>
+</div>
+<br />
+
+
+@code
+{
+    [Parameter]
+    public Guid Id { get; set; }
+    public Setting Setting { get; set; }
+    public bool IsVisible { get; set; }
+    public bool Result { get; set; }
+    public string RecordName { get; set; }
+
+    Subject<string> addressSubject = new Subject<string>();
+
+    protected async override void OnInitialized()
+    {
+        Setting = await bookStoresService.GetByIdAsync("Settings/GetSettings/", Id);
+        base.OnInitialized();
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+
+    bool IsUserAuthenticated;
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+        Console.WriteLine("Settings - OnInitializedAsync");
+        Setting = new Setting();
+        Setting = await bookStoresService.GetByIdAsync("Settings/GetSettings/", Id);
+
+        await base.OnInitializedAsync();
+    }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Settings - Dispose");
+    }
+
+    private async Task SaveSetting()
+    {
+        try
+        {
+            var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea eliminar el Setting?", TipoMensajeSweetAlert.warning);
+            if (confirmado)
+            {
+                await bookStoresService.DeleteAsync("Settings/DeleteSettings/", Id);
+                navigationManager.NavigateTo("/Settings");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.MostrarMensaje("Error!", "Ocurrio un error, por favor intente nuevamente!", TipoMensajeSweetAlert.error);
+            Logger.AddLine(String.Format("Error desde Login.razor - {0}-{1}-{2}", DateTime.Now.ToString(), ex.Message, ex.StackTrace));
+        }
+
+
+    }
+
+    int zoom = 5;
+
+    bool showMap;
+
+    public GoogleMapPosition pos;
+
+    public GoogleMapPosition posMap = new GoogleMapPosition() { Lat = -34.29403345819787, Lng = -64.03364269523182 };
+
+    public double? latitud;
+
+    public double? longitud;
+
+    Dictionary<DateTime, string> events = new Dictionary<DateTime, string>();
+
+    void MapClick(GoogleMapClickEventArgs args)
+    {
+        events.Add(DateTime.Now, $"Map clicked at Lat: {args.Position.Lat}, Lng: {args.Position.Lng}");
+        StateHasChanged();
+    }
+
+
+    public string Address { get; set; }
+
+    public string GeoLocation { get; set; }
+
+    public bool IsLoading { get; set; }
+
+    private GeocodingResult[] Results { get; set; } = new GeocodingResult[0];
+
+    void onTextChanged(ChangeEventArgs args)
+    {
+        addressSubject.OnNext(args.Value.ToString());
+    }
+
+
+    //private void OnRowSelect(GeocodingResult row)
+    //{
+    //    Address = row.FormattedAddress;
+    //    GeoLocation = $"Lat:{row.Geometry.Location.Lat}, Lng: {row.Geometry.Location.Lng}";
+    //    Results = new GeocodingResult[0];
+    //    pos = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
+    //    posMap = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
+    //    Setting.LatitudGps = (long)row.Geometry.Location.Lat;
+    //    Setting.LongitudGps = (long)row.Geometry.Location.Lng;
+    //    zoom = 16;
+    //    showMap = true;
+    //    StateHasChanged();
+    //}
+
+    //private async void OnAddressChanged(string address)
+    //{
+    //    Address = address;
+    //    IsLoading = true;
+    //    GeoLocation = "";
+    //    await InvokeAsync(() => StateHasChanged());
+
+    //    var response = await GeocodingService.FindAsync(address);
+    //    Results = response.Results;
+
+    //    IsLoading = false;
+
+    //    await InvokeAsync(() => StateHasChanged());
+    //}
+}

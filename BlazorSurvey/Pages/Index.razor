@@ -1,0 +1,21 @@
+﻿@page "/"
+@using System.Security.Claims
+
+<h1>Blazor Simple Survey</h1>
+
+<img src="images/BlazorSimpleSurveyLogo_Large.png" />
+
+@code {
+    private string identityprovider;
+
+    protected override async Task OnInitializedAsync()
+    {
+       /*var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        var user = authState.User;
+        if (user.Identity.IsAuthenticated)
+        {
+            identityprovider = user.Claims.FirstOrDefault(c => c.Type == "http://schemas.microsoft.com/identity/claims/identityprovider")?.Value;
+        }*/
+    }
+}

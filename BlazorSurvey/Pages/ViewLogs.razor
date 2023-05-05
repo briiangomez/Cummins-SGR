@@ -1,0 +1,144 @@
+﻿@page "/logs"
+@using Microsoft.Identity.Client;
+@using Microsoft.EntityFrameworkCore;
+@using System.Linq.Dynamic.Core
+@using BlazorSurvey.Models;
+@using Newtonsoft.Json.Linq;
+@using BlazorSurvey.Data;
+@inject IConfiguration _configuration
+@inject ProtectedApiCallHelper ProtectedApiCallHelper
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject SimpleSurveyContext dbContext
+<h3>Logs</h3>
+@strError
+@if (isAdmin)
+{
+    <RadzenGrid Count="@count"
+                Data="@logs"
+                LoadData="@LoadData"
+                AllowSorting="true"
+                AllowFiltering="true"
+                AllowPaging="true"
+                PageSize="10" TItem="Logs"
+                ColumnWidth="200px">
+        <Columns>
+            <RadzenGridColumn TItem="Logs" Property="LogDate" Title="Log Date" />
+            <RadzenGridColumn TItem="Logs" Property="LogUser.DisplayName" Title="User" />
+            <RadzenGridColumn TItem="Logs" Property="LogType" Title="Log Type" />
+            <RadzenGridColumn TItem="Logs" Property="LogDetail" Title="Log Detail" />
+        </Columns>
+    </RadzenGrid>
+}
+
+@code {
+    HttpClient httpClient;
+    ProtectedApiCallHelper apiCaller;
+    AuthenticationResult result = null;
+
+    int count;
+    IEnumerable<Logs> logs;
+
+    string strError = "";
+    string AdministrationGroup;
+    bool isAdmin = false;
+    // Collection to hold all the Tasks
+    List<GraphUser> colGraphUsers = new List<GraphUser>();
+    List<GraphGroup> colGroups = new List<GraphGroup>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            AdministrationGroup = _configuration["AzureAdB2CManagement:AdministrationGroup"];
+
+            IConfidentialClientApplication confidentialClientApplication =
+                ConfidentialClientApplicationBuilder
+                .Create(_configuration["AzureAdB2CManagement:ClientId"])
+                .WithTenantId(_configuration["AzureAdB2CManagement:Tenant"])
+                .WithClientSecret(_configuration["AzureAdB2CManagement:ClientSecret"])
+                .Build();
+
+            // With client credentials flows the scopes is ALWAYS of the shape
+            // "resource/.default", as the
+            // application permissions need to be set statically
+            // (in the portal or by PowerShell),
+            // and then granted by a tenant administrator
+            string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
+
+            result = await confidentialClientApplication.AcquireTokenForClient(scopes)
+                .ExecuteAsync();
+
+            httpClient = new HttpClient();
+
+            apiCaller = new ProtectedApiCallHelper(httpClient);
+
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+            var user = authState.User;
+
+            var UserID =
+                user.Claims.FirstOrDefault(
+                    c => c.Type ==
+                    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?
+                    .Value;
+
+            if (UserID != null)
+            {
+                await apiCaller.CallWebApiAndProcessResultASync(
+                    $"https://graph.microsoft.com/v1.0/users/{UserID}/memberOf",
+                    result.AccessToken,
+                    DisplayGroups
+                    );
+            }
+
+        }
+        catch (Exception ex)
+        {
+            strError = ex.GetBaseException().Message;
+        }
+    }
+
+    private void DisplayGroups(JObject result)
+    {
+        colGroups = new List<GraphGroup>();
+
+        foreach (JProperty child in result.Properties()
+            .Where(p => !p.Name.StartsWith("@")))
+        {
+            colGroups.AddRange(
+            child.Value.ToObject<List<GraphGroup>>()
+            );
+        }
+
+        if (AdministrationGroup != "")
+        {
+            isAdmin =
+                (colGroups
+                .Where(x => x.displayName.ToLower() == AdministrationGroup.ToLower())
+                .FirstOrDefault() != null);
+        }
+    }
+
+    async Task LoadData(LoadDataArgs args)
+    {
+        var query = dbContext.Logs
+            .Include(x => x.LogUser)
+            .OrderByDescending(x => x.LogDate).AsQueryable();
+
+        if (!string.IsNullOrEmpty(args.Filter))
+        {
+            query = query.Where(args.Filter);
+        }
+
+        if (!string.IsNullOrEmpty(args.OrderBy))
+        {
+            query = query.OrderBy(args.OrderBy);
+        }
+
+        logs = query.Skip(args.Skip.Value).Take(args.Top.Value).ToList();
+
+        count = dbContext.Logs.Count();
+
+        await InvokeAsync(StateHasChanged);
+    }
+}

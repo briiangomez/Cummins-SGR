@@ -1,0 +1,288 @@
+﻿@page "/deleteCliente/{Id:guid}"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@using SGRBlazorApp.Shared
+@inject ISgrService<Cliente> bookStoresService
+@inject IUserService userService
+@inject ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navigationManager
+@implements IDisposable
+@using System.Reactive.Linq;
+@using System.Reactive.Subjects
+@using SGRBlazorApp.Services
+@inject GeocodingService GeocodingService
+<div class="col-12">
+    <h3><b>Eliminar Cliente</b></h3>
+    <hr />
+
+    <ServerValidations IsVisible="IsVisible" Result="Result">
+        @RecordName
+    </ServerValidations>
+
+    <EditForm Model="@Cliente" OnValidSubmit="@SaveCliente">
+        @*<DataAnnotationsValidator />*@
+
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Nombre :</label>
+            <input class="form-control col-3" @bind="Cliente.Nombre" placeholder="Nombre" disabled />
+            &nbsp;<ValidationMessage For="@(() => Cliente.Nombre)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Telefono :</label>
+            <InputText class="form-control col-3" @bind-Value="Cliente.Telefono" placeholder="Telefono"  disabled />
+            &nbsp;<ValidationMessage For="@(() => Cliente.Telefono)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Celular :</label>
+            <InputText class="form-control col-3" @bind-Value="Cliente.Telefono" placeholder="Telefono" disabled />
+            &nbsp;<ValidationMessage For="@(() => Cliente.Telefono)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Email :</label>
+            <InputText class="form-control col-3" @bind-Value="Cliente.Email" placeholder="Email" disabled />
+            &nbsp;<ValidationMessage For="@(() => Cliente.Email)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Tipo de Documento :</label>
+            <select class="form-control col-3" @onchange="OnChangeEvent" name="TipoDni" id="TipoDni"  disabled >
+                <option value="">select city..</option>
+                <option value="DNI">DNI</option>
+                <option value="Pasaporte">Pasaporte</option>
+                <option value="LE">LE</option>
+                <option value="LC">LC</option>
+                <option value="CUIT">CUIT</option>
+            </select>
+            &nbsp;<ValidationMessage For="@(() => Cliente.TipoDni)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Nro de Documento :</label>
+            <InputText class="form-control col-3" @bind-Value="Cliente.Dni" placeholder="DNI" disabled />
+            &nbsp;<ValidationMessage For="@(() => Cliente.Dni)" />
+        </div>
+        <br />
+
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Direccion :</label>
+            <InputText class="form-control col-3" @bind-Value="Cliente.Direccion" placeholder="Direccion" Name="Address" disabled />
+            @*<Radzen.Blazor.RadzenTextBox Change="" @bind-Value="@(Cliente.Direccion)" Placeholder="Direccion:" Name="Address" style="width: 25%" ></Radzen.Blazor.RadzenTextBox>*@
+            <InputNumber class="form-control col-3" @bind-Value="Cliente.LatitudGpsContacto" Style="visibility:hidden" Name="LatitudGpsContacto" placeholder="State" />
+            <InputNumber class="form-control col-3" @bind-Value="Cliente.LongitudGpsContacto" Style="visibility:hidden" Name="LongitudGpsContacto" placeholder="State" />
+
+            @if (IsLoading)
+            {
+                <Radzen.Blazor.RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="margin: 100%"></Radzen.Blazor.RadzenProgressBar>
+            }
+
+            @if (Results.Length > 0)
+            {
+                <Radzen.Blazor.RadzenGrid Data="Results" RowSelect="@OnRowSelect" TItem="GeocodingResult">
+                    <Columns>
+                        <Radzen.Blazor.RadzenGridColumn Width="200px" TItem="GeocodingResult" Property="FormattedAddress" Title="Address">
+                            <FooterTemplate>
+                                Total Results: <b>@Results.Count()</b>
+                            </FooterTemplate>
+                        </Radzen.Blazor.RadzenGridColumn>
+                    </Columns>
+                </Radzen.Blazor.RadzenGrid>
+            }
+
+        </div>
+        <div class="col-12 row">
+
+
+            @if (showMap)
+            {
+                <MapaComponent Latitud="@pos.Lat" Longitud="@pos.Lng" zoom="zoom" posiciones="posiciones"></MapaComponent>
+
+                @*<Radzen.Blazor.RadzenGoogleMap Zoom="@zoom"
+                                           style="height:400px;width:50%"
+                                           ApiKey="AIzaSyAPHRhaDoTeYi6g6Osx6d6ksw7v0I_fWyE"
+                                           Center="@(posMap)"
+                                           MapClick="@MapClick">
+                <Markers>
+                    @if (pos != null)
+                    {
+                        <Radzen.Blazor.RadzenGoogleMapMarker Title="@Address" Label="@Address" Position="@(pos)" />
+                    }
+                </Markers>
+            </Radzen.Blazor.RadzenGoogleMap>*@
+            }
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Localidad :</label>
+            <InputText class="form-control col-3" @bind-Value="Cliente.Localidad" placeholder="Localidad" disabled />
+            &nbsp;<ValidationMessage For="@(() => Cliente.Localidad)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Provincia :</label>
+            <InputText class="form-control col-3" @bind-Value="Cliente.Provincia" placeholder="Provincia" disabled />
+            &nbsp;<ValidationMessage For="@(() => Cliente.Provincia)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <span class="col-2"></span>
+            <input type="submit" class="btn btn-success" value="Eliminar" />
+            <span>&nbsp;</span>
+            <a style="background-color:red;color:white" class="btn btn-success" href="/Clientes">Cancelar</a>
+        </div>
+    </EditForm>
+</div>
+
+
+
+@code
+{
+    [Parameter]
+    public Guid Id { get; set; }
+    public Cliente Cliente { get; set; }
+    public bool IsVisible { get; set; }
+    public bool Result { get; set; }
+    public string TipoDNI { get; set; }
+    public string RecordName { get; set; }
+
+
+    private void OnChangeEvent(ChangeEventArgs changeEventArgs)
+    {
+        TipoDNI = (string)changeEventArgs.Value;
+    }
+
+    Subject<string> addressSubject = new Subject<string>();
+
+    protected async override void OnInitialized()
+    {
+        Cliente = await bookStoresService.GetByIdAsync("Clientes/GetClientes/", Id);
+        base.OnInitialized();
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+
+    bool IsUserAuthenticated;
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+        Console.WriteLine("Clientes - OnInitializedAsync");
+
+        Cliente = new Cliente();
+        Cliente = await bookStoresService.GetByIdAsync("Clientes/GetClientes/", Id);
+        await base.OnInitializedAsync();
+
+        addressSubject
+            .Throttle(TimeSpan.FromMilliseconds(300))
+            .DistinctUntilChanged()
+            .Subscribe(OnAddressChanged);
+    }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Clientes - Dispose");
+    }
+
+    private async Task SaveCliente()
+    {
+        var confirmado = await JSRuntime.Confirmar("Atencion!","¿Desea eliminar el Cliente?",TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            await bookStoresService.DeleteAsync("Clientes/DeleteClientes/", Id);
+            navigationManager.NavigateTo("/Clientes");
+        }
+
+    }
+
+    int zoom = 5;
+
+    bool showMap;
+
+    public GoogleMapPosition pos;
+
+    public GoogleMapPosition posMap = new GoogleMapPosition() { Lat = -34.29403345819787, Lng = -64.03364269523182 };
+
+    public double? latitud;
+
+    public double? longitud;
+
+    public List<CarPoint> posiciones { get; set; }
+
+
+    Dictionary<DateTime, string> events = new Dictionary<DateTime, string>();
+
+    void MapClick(GoogleMapClickEventArgs args)
+    {
+        events.Add(DateTime.Now, $"Map clicked at Lat: {args.Position.Lat}, Lng: {args.Position.Lng}");
+        StateHasChanged();
+    }
+
+
+    public string Address { get; set; }
+
+    public string GeoLocation { get; set; }
+
+    public bool IsLoading { get; set; }
+
+    private GeocodingResult[] Results { get; set; } = new GeocodingResult[0];
+
+    void onTextChanged(ChangeEventArgs args)
+    {
+        addressSubject.OnNext(args.Value.ToString());
+    }
+
+
+    private void OnRowSelect(GeocodingResult row)
+    {
+        Address = row.FormattedAddress;
+        GeoLocation = $"Lat:{row.Geometry.Location.Lat}, Lng: {row.Geometry.Location.Lng}";
+        Results = new GeocodingResult[0];
+        pos = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
+        posMap = new GoogleMapPosition() { Lat = row.Geometry.Location.Lat, Lng = row.Geometry.Location.Lng };
+        Cliente.LatitudGpsContacto = (long)row.Geometry.Location.Lat;
+        Cliente.LongitudGpsContacto = (long)row.Geometry.Location.Lng;
+        Cliente.Direccion = Address;
+        zoom = 16;
+        posiciones = new List<CarPoint>()
+{
+            new CarPoint(){ name = row.FormattedAddress, Lat = row.Geometry.Location.Lat, Long = row.Geometry.Location.Lng }
+        };
+        zoom = 16;
+
+        showMap = true;
+        StateHasChanged();
+    }
+
+    private async void OnAddressChanged(string address)
+    {
+        Address = address;
+        IsLoading = true;
+        GeoLocation = "";
+        await InvokeAsync(() => StateHasChanged());
+
+        var response = await GeocodingService.FindAsync(address);
+        Results = response.Results;
+
+        IsLoading = false;
+
+        await InvokeAsync(() => StateHasChanged());
+    }
+}

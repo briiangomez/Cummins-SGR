@@ -1,0 +1,79 @@
+﻿@page "/testauto"
+@using System.Reactive.Subjects
+@inject IJSRuntime JS
+<div>
+    <div class="ui-widget">
+        <label for="searchBox">
+            Search:
+        </label>
+        <input id="searchBox" class="form-control" @onchange="onChange" />
+    </div>
+
+    <label>Direccion</label>
+    <input type="hidden" id="Dir" class="form-control" />
+    <label>Lat</label>
+    <input type="hidden"  id="Lat" class="form-control" />
+
+    <label>Long</label>
+    <input type="hidden"   id="Long" class="form-control" />
+
+    <div class="col-12 row">
+        <div class="col-md-12">
+            <div style="display:flex; justify-content: space-around">
+                <div class="m-3" id="newMap" style="position:relative;width:550px;height:500px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+@code
+{
+    public bool showMap = false;
+    public string Data { get; set; }
+    public string Lat { get; set; }
+
+    Subject<string> addressSubject = new Subject<string>();
+
+    public string Long { get; set; }
+
+    public double? Latitud { get; set; }
+
+    public double? Longitud { get; set; }
+
+    public List<CarPoint> posiciones { get; set; }
+
+    void onTextChanged(ChangeEventArgs args)
+    {
+        addressSubject.OnNext(args.Value.ToString());
+    }
+
+    private string value { get; set; }
+    private void onChange(Microsoft.AspNetCore.Components.ChangeEventArgs args)
+    {
+        value = (string)args.Value;
+    }
+
+
+
+    private void NameChanged(Microsoft.AspNetCore.Components.ChangeEventArgs args)
+    {
+        Latitud = Convert.ToDouble(args.Value.ToString());
+    }
+
+    private void NameChanged2(Microsoft.AspNetCore.Components.ChangeEventArgs args)
+    {
+        Longitud = Convert.ToDouble(args.Value.ToString());
+    }
+
+    protected override Task OnParametersSetAsync()
+    {
+        var name = JS.InvokeVoidAsync("AutoCompleteBing", "searchBox");
+        return base.OnParametersSetAsync();
+
+    }
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        OnParametersSetAsync();
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+}

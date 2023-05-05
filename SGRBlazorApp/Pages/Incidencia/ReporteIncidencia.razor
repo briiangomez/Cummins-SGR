@@ -1,0 +1,286 @@
+﻿@page "/incidenciaReporte/{Id:guid}"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@using SGRBlazorApp.Shared
+@using System.Security.Claims
+@inject ISgrService<Incidencia> bookStoresService
+@inject ISgrService<IncidenciaApi> incidenciaApiService
+@inject ISgrService<Dealer> dealerService
+@inject ISgrService<Estado> estadoService
+@inject ISgrService<EstadoIncidencium> estadoIncidenciaService
+@inject ISgrService<Setting> settingService
+@inject IUserService userService
+@inject ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navigationManager
+@inject IEmailSenderService emailService
+@implements IDisposable
+@using System.Reactive.Linq;
+@using System.Reactive.Subjects
+@using SGRBlazorApp.Services
+@inject GeocodingService GeocodingService
+@if (isLoading)
+{
+    <div class="col-12 row">
+        <div class="col-md-12">
+            <h3><b>Informacion del Reclamo Nro @Incidencia.NumeroIncidencia</b></h3>
+            <hr />
+        </div>
+
+        <div class="col-md-6">
+            <label class="col-12 font-weight-bold">Fecha Carga:</label>
+            <input class="form-control col-12" value="@IncidenciaApi.fechaIncidencia" readonly />
+        </div>
+        <br />
+        <div class="col-md-6">
+            <label class="col-12 font-weight-bold">Estado Actual:</label>
+            <input class="form-control col-12" value="@IncidenciaApi.nombreEstadoIncidencia" readonly />
+        </div>
+        <br />
+        <div class="col-6">
+            <label class="col-12 font-weight-bold">Equipo:</label>
+            <input class="form-control col-12" value="@IncidenciaApi.Equipo" readonly />
+        </div>
+
+        <div class="col-md-6">
+            <label class="col-12 font-weight-bold">Nombre Contacto:</label>
+            <input class="form-control col-12" value="@IncidenciaApi.nombreContacto" readonly />
+        </div>
+        <br />
+        <div class="col-md-6">
+            <label class="col-12 font-weight-bold">Telefono:</label>
+            <input class="form-control col-12" value="@IncidenciaApi.telefonoFijoContacto" readonly />
+        </div>
+        <br />
+        <div class="col-6">
+            <label class="col-12 font-weight-bold">Email Contacto:</label>
+            <input class="form-control col-12" value="@IncidenciaApi.emailContacto" readonly />
+        </div>
+        <br />
+        <div class="col-6">
+            <label class="col-12 font-weight-bold">Hs o Km del Motor: </label>
+            <div class="input-group mb-3">
+                <input class="form-control col-12" value="@IncidenciaApi.horasTractor" readonly />
+                <div class="input-group-append">
+                    <span class="input-group-text" id="basic-addon2">@(IncidenciaApi.Aux3 == "1" ? "KM" : "HS")</span>
+                </div>
+            </div>
+        </div>
+        <br />
+        <div class="col-6">
+            <label class="col-12 font-weight-bold">Fecha de compra: </label>
+            <input class="form-control col-12" value="@IncidenciaApi.fechaCompra" readonly />
+        </div>
+        <br />
+        <div class="col-md-6">
+            <label class="col-12 font-weight-bold">Numero Motor (ESN):</label>
+            <input class="form-control col-12" value="@IncidenciaApi.numeroMotor" readonly />
+        </div>
+        <br />
+        <div class="col-md-6">
+            <label class="col-12 font-weight-bold">Modelo Motor:</label>
+            <input class="form-control col-12" value="@IncidenciaApi.ModeloMotor" readonly />
+        </div>
+        <br />
+        <div class="col-6">
+            <label class="col-12 font-weight-bold">Modelo Equipo: </label>
+            <input class="form-control col-12" value="@IncidenciaApi.ModeloEquipo" readonly />
+        </div>
+        <br />
+        <div class="col-6">
+            <label class="col-12 font-weight-bold">Direccion Contacto: </label>
+            <input class="form-control col-12" value="@IncidenciaApi.domicilioContacto" readonly />
+        </div>
+
+        <br />
+        <div class="col-12">
+            <label class="col-12 font-weight-bold">Direccion de Inspeccion: </label>
+            <input class="form-control col-12" value="@IncidenciaApi.DireccionInspeccion" readonly />
+        </div><br />
+        <div class="col-md-12">
+            <label class="col-12 font-weight-bold">Sintoma:</label>
+            <input class="form-control col-12" value="@IncidenciaApi.Sintoma" readonly />
+        </div>
+        <br />
+        <div class="col-12 row" style="margin-top:15px;margin-bottom:20px">
+            <h3><b>Ud ha seleccionado el faltante de Informe Final, a continuacion por favor deje un comentario. Muchas gracias!</b></h3>
+        </div>
+        <br />
+        <div class="col-12 row">
+            <span class="col-2"></span>
+            <textarea class="form-control" cols="10" rows="10" @bind="@Observaciones"></textarea>
+        </div>
+        <div class="col-12 row" style="margin-top:15px;margin-bottom:20px">
+            <span class="col-2"></span>
+            <a class="col-4 btn btn-primary" style="color:white" @onclick="(() => RechazarIncidencia(Incidencia.Id))">Cambiar de Estado </a>
+            <span>&nbsp;</span>
+            <a class="col-2 btn btn-success" href="/Incidencias">Cancelar</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
+        <br /><br />
+        <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
+    </div>
+}
+
+
+@code
+{
+    [Parameter]
+    public Guid Id { get; set; }
+    public Incidencia Incidencia { get; set; }
+    public IncidenciaApi IncidenciaApi { get; set; }
+    public List<IncidenciaApi> IncidenciaList { get; set; }
+    public List<EstadoIncidencium> estadoIncidencia { get; set; }
+    public List<Estado> estadosList { get; set; }
+    public string Observaciones { get; set; }
+    public Guid IdDealer { get; set; }
+    public List<Dealer> Dealers { get; set; }
+    public Dealer dealer { get; set; }
+    bool isLoading = false;
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+    bool IsUserAuthenticated;
+    bool IsDealer;
+
+    public SGRBlazorApp.Data.User user1 { get; set; }
+    public RefreshRequest refreshRequest { get; set; }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Motors - Dispose");
+    }
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Clientes - OnInitialized");
+        base.OnInitialized();
+    }
+
+    private void OnChangeEvent2(ChangeEventArgs changeEventArgs)
+    {
+        if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Dealer...")
+        {
+            IdDealer = Guid.Parse((string)changeEventArgs.Value);
+            Incidencia.IdDealer = IdDealer;
+        }
+        //else
+        //{
+        //      Incidencia.IdDealer = null;
+        //}
+    }
+
+    private async Task RechazarIncidencia(Guid ClienteId)
+    {
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea confirmar que Actualizar el Reclamo?", TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            try
+            {
+                EstadoIncidencium estado = new EstadoIncidencium();
+                estado.IncidenciaId = ClienteId;
+                estado.EstadoId = estadosList.FirstOrDefault(o => o.Descripcion == "Reporte Pendiente").Id;
+                estado.Created = DateTime.Now;
+                estado.IdUser = user1.Id;
+                estado.Observacion = Observaciones;
+                await estadoIncidenciaService.SaveAsync("EstadoIncidencia/CreateEstadoIncidencia/", estado);
+                try
+                {
+                    if (!String.IsNullOrEmpty(dealer.Email))
+                    {
+                        if (dealer.Email.Contains(';'))
+                        {
+                            var mails = dealer.Email.Split(';');
+                            foreach (var item in mails)
+                            {
+                                if (!String.IsNullOrEmpty(item))
+                                {
+                                    MailRequest mail1 = new MailRequest();
+                                    mail1.Email = item;
+                                    mail1.Nombre = dealer.Name;
+                                    mail1.NumeroInc = IncidenciaApi.numeroIncidencia.ToString();
+                                    mail1.EstadoInc = "En Proceso";
+                                    mail1.Subject = "FAST - TEST";
+                                    emailService.SendEmailAsyncEstado(mail1);
+                                }
+                            }
+                        }
+                    }
+                    var settings = await settingService.GetAllAsync("Settings/GetSettings");
+                    settings = settings.Where(o => o.Key == "Mail Aviso Estado").ToList();
+                    foreach (var item in settings)
+                    {
+                        MailRequest mail = new MailRequest();
+                        mail.Email = item.Value;
+                        mail.Nombre = "Administrador";
+                        mail.NumeroInc = IncidenciaApi.numeroIncidencia.ToString();
+                        mail.EstadoInc = "En Proceso";
+                        mail.Subject = "FAST - TEST";
+                        emailService.SendEmailAsyncEstado(mail);
+                    }
+                }
+                catch (Exception)
+                {
+
+                }
+                navigationManager.NavigateTo("/Incidencias");
+            }
+            catch (Exception ex)
+            {
+                await JSRuntime.MostrarMensaje("Error!", "Ocurrio un error actualizando, por favor intente nuevamente!", TipoMensajeSweetAlert.error);
+                Logger.AddLine(String.Format("{0}-{1}-{2}", DateTime.Now.ToString(), ex.Message, ex.StackTrace));
+            }
+        }
+        //throw new Exception("DeleteCliente");
+    }
+
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+        Console.WriteLine("Clientes - OnInitializedAsync");
+        Incidencia = new Incidencia();
+        IncidenciaApi = new IncidenciaApi();
+        Incidencia = await bookStoresService.GetByIdAsync("Incidencia/GetIncidencia/", Id);
+        IncidenciaList = await incidenciaApiService.GetAllAsync("Incidencia/GetIncidenciaApi");
+        IncidenciaApi = IncidenciaList.FirstOrDefault(o => o.Id == Id);
+        Dealers = await dealerService.GetAllAsync("Dealer/GetDealer");
+        dealer = Dealers.FirstOrDefault(o => o.Id == Incidencia.IdDealer.Value);
+        estadosList = new List<Estado>();
+        estadosList = await estadoService.GetAllAsync("Estados/GetEstados");
+
+        user = (await authenticationStateTask).User;
+
+
+
+        if (user.Identity.IsAuthenticated)
+            IsUserAuthenticated = true;
+
+        if (user.IsInRole("Dealer"))
+            IsDealer = true;
+
+        refreshRequest = new RefreshRequest();
+        refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+        refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+        user1 = await userService.RefreshTokenAsync(refreshRequest);
+        isLoading = true;
+        await base.OnInitializedAsync();
+    }
+}

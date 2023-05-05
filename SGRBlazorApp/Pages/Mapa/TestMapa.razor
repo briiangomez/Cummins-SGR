@@ -1,0 +1,23 @@
+﻿@page "/testmapa"
+
+<MapaComponent Latitud="-34.62009948" Longitud="-58.43518051" zoom="12" posiciones="posiciones"></MapaComponent>
+
+
+@code 
+{
+    public List<CarPoint> posiciones { get; set; }
+
+    protected override void OnInitialized()
+    {
+        posiciones = new List<CarPoint>()
+{
+            new CarPoint(){ name = "Test 1", Lat = -34.62009948, Long = -58.43518051 },
+            new CarPoint(){ name = "Test 2",Lat = -34.6444948, Long =    -58.4318051 },
+            new CarPoint(){ name = "Test 3",Lat = -34.5866948, Long =    -58.4128051 },
+            new CarPoint(){ name = "Test 4",Lat = -34.5943948, Long =    -58.4118051 },
+            new CarPoint(){name = "Test 5", Lat= -34.62009948, Long =    -58.4128051}
+        };
+
+
+    }
+}

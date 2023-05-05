@@ -1,0 +1,250 @@
+﻿@page "/detalleCliente/{Id:guid}"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@using System.Security.Claims
+
+@using SGRBlazorApp.Shared
+@inject ISgrService<Estado> estadoService
+
+@inject ISgrService<Incidencia> bookStoresService
+@inject ISgrService<IncidenciaApi> incidenciaApiService
+@inject ISgrService<Dealer> dealerService
+@inject IUserService userService
+@inject ILocalStorageService localStorageService
+@inject ISgrService<EstadoIncidencium> estadoIncidenciaService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navigationManager
+@implements IDisposable
+@using System.Reactive.Linq;
+@using System.Reactive.Subjects
+@using SGRBlazorApp.Services
+@inject GeocodingService GeocodingService
+
+@if (isLoading)
+{
+<div class="row">
+    <div class="col-md-12">
+        <h3><b>Informacion de Cliente del Reclamo Nro @Incidencia.NroIncidencia</b></h3>
+    </div>
+    <hr />
+    <div class="col-md-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Fecha Carga:</label>
+        <input class="form-control col-8" value="@IncidenciaApi.fechaIncidencia" readonly />
+    </div>
+    <br />
+    <div class="col-md-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Estado Actual:</label>
+        <input class="form-control col-8" value="@IncidenciaApi.nombreEstadoIncidencia" readonly />
+    </div>
+    <br />
+    <div class="col-md-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Cliente:</label>
+        <input class="form-control col-8" value="@IncidenciaApi.nombreContacto" readonly />
+    </div>
+    <br />
+    <div class="col-md-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Telefono:</label>
+        <input class="form-control col-8" value="@IncidenciaApi.telefonoFijoContacto" readonly />
+    </div>
+    <br />
+    <div class="col-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Email:</label>
+        <input class="form-control col-8" value="@IncidenciaApi.emailContacto" readonly />
+    </div>
+    <br />
+    <div class="col-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Direccion Contacto:</label>
+        <input class="form-control col-8" value="@IncidenciaApi.domicilioContacto" readonly />
+    </div>
+    <br />
+    <div class="col-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Nombre Contacto:</label>
+        <input class="form-control col-8" value="@IncidenciaApi.nombreContactoCliente" readonly />
+    </div>
+    <br />
+    <div class="col-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Email Contacto:</label>
+        <input class="form-control col-8" value="@IncidenciaApi.emailContactoCliente" readonly />
+    </div>
+    <br />
+    <div class="col-6" style="margin-top:15px">
+        <label class="col-12 font-weight-bold">Telefono Contacto:</label>
+        <input class="form-control col-8" value="@IncidenciaApi.telefonoContactoCliente" readonly />
+    </div>
+    <br />
+    <div class="col-12 row" style="margin-top:15px;margin-bottom:20px">
+        <span class="col-4"></span>
+        <span>&nbsp;</span>
+        <a class="col-1 btn btn-primary" href="/Incidencias">Volver </a>
+    </div>
+
+    @*<h3>Dealer Asignado </h3>
+
+        @if (dealer != null)
+        {
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card-body">
+                        <div class="card bg-info">
+                            <div class="card-body text-white">
+                                <h4 class="card-title">Dealer Asignado: <b>@dealer.Name - @dealer.Address, @dealer.City, @dealer.Country </b></h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <Radzen.Blazor.RadzenGoogleMap Zoom="16"
+                                                   style="height:500px"
+                                                   ApiKey="AIzaSyAPHRhaDoTeYi6g6Osx6d6ksw7v0I_fWyE"
+                                                   Center="@(new GoogleMapPosition() { Lat = dealer.LatitudGps.Value, Lng = dealer.LongitudGps.Value })">
+                        <Markers>
+                            <Radzen.Blazor.RadzenGoogleMapMarker Title="@dealer.Name" Label="@dealer.Name" Position="@(new GoogleMapPosition() { Lat = dealer.LatitudGps.Value, Lng = dealer.LongitudGps.Value })" />
+
+                        </Markers>
+                    </Radzen.Blazor.RadzenGoogleMap>
+                </div>
+            </div>
+        }*@
+
+    @*if (IncidenciaApi.nombreEstadoIncidencia == "En Proceso")
+        {
+        <br />
+        <div class="col-12 row">
+            <textarea class="form-control" cols="10" rows="10" @bind="@Observaciones"></textarea>
+        </div>
+        <br />
+        <div class="col-12 row">
+
+        </div>
+        }
+        else*@
+</div>
+}
+else
+{
+    <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
+        <br /><br />
+        <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
+    </div>
+}
+
+
+
+@code
+{
+    [Parameter]
+    public Guid Id { get; set; }
+    public Incidencia Incidencia { get; set; }
+    public IncidenciaApi IncidenciaApi { get; set; }
+    public List<IncidenciaApi> IncidenciaList { get; set; }
+    public List<EstadoIncidencium> estadoIncidencia { get; set; }
+    public List<Estado> estadosList { get; set; }
+    public string Observaciones { get; set; }
+    public Guid IdDealer { get; set; }
+    public List<Dealer> Dealers { get; set; }
+    public Dealer dealer { get; set; }
+    bool isLoading = false;
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+    bool IsUserAuthenticated;
+    bool IsDealer;
+
+    public SGRBlazorApp.Data.User user1 { get; set; }
+    public RefreshRequest refreshRequest { get; set; }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Motors - Dispose");
+    }
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Clientes - OnInitialized");
+        base.OnInitialized();
+    }
+
+    private void OnChangeEvent2(ChangeEventArgs changeEventArgs)
+    {
+        if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Dealer...")
+        {
+            IdDealer = Guid.Parse((string)changeEventArgs.Value);
+            Incidencia.IdDealer = IdDealer;
+        }
+        //else
+        //{
+        //      Incidencia.IdDealer = null;
+        //}
+    }
+
+
+    private async Task RechazarIncidencia(Guid ClienteId)
+    {
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea confirmar la asignacion del nuevo Dealer para el Reclamo?", TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            EstadoIncidencium estado = new EstadoIncidencium();
+            estado.IncidenciaId = ClienteId;
+            estado.EstadoId = estadosList.FirstOrDefault(o => o.Descripcion == "En Proceso").Id;
+            estado.Created = DateTime.Now;
+            estado.IdUser = user1.Id;
+            estado.Observacion = Observaciones;
+            await estadoIncidenciaService.SaveAsync("EstadoIncidencia/CreateEstadoIncidencia/", estado);
+            await bookStoresService.UpdateAsync("Incidencia/UpdateIncidencia/", Id, Incidencia);
+            //await bookStoresService.UpdateAsync("Incidencia/UpdateIncidencia/", Id,Incidencia);
+            navigationManager.NavigateTo("/Incidencias");
+        }
+        //throw new Exception("DeleteCliente");
+    }
+
+
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+        Console.WriteLine("Clientes - OnInitializedAsync");
+        Incidencia = new Incidencia();
+        IncidenciaApi = new IncidenciaApi();
+        Incidencia = await bookStoresService.GetByIdAsync("Incidencia/GetIncidencia/", Id);
+        IncidenciaList = await incidenciaApiService.GetAllAsync("Incidencia/GetIncidenciaApi");
+        IncidenciaApi = IncidenciaList.FirstOrDefault(o => o.Id == Id);
+        Dealers = await dealerService.GetAllAsync("Dealer/GetDealer");
+        dealer = Dealers.FirstOrDefault(o => o.Id == Incidencia.IdDealer.Value);
+
+
+        estadosList = new List<Estado>();
+        estadosList = await estadoService.GetAllAsync("Estados/GetEstados");
+        user = (await authenticationStateTask).User;
+
+
+
+        if (user.Identity.IsAuthenticated)
+            IsUserAuthenticated = true;
+
+        if (user.IsInRole("Dealer"))
+            IsDealer = true;
+
+        refreshRequest = new RefreshRequest();
+        refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+        refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+        user1 = await userService.RefreshTokenAsync(refreshRequest);
+        isLoading = true;
+        await base.OnInitializedAsync();
+    }
+}

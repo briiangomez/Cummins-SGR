@@ -1,0 +1,32 @@
+﻿@page "/logout"
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="col-12 row">
+    <div class="col-md-12">
+        <h3><b>¿Confirma que desea cerrar la sesion activa?</b></h3>
+        <hr />
+    </div>
+    <div class="col-12 row" style="margin-top:15px;margin-bottom:20px">
+        <a class="col-5 btn btn-success" style="color:white" @onclick="(() => LogoutUser())">Confirmar </a>
+        <span>&nbsp;</span>
+        <a class="col-4 btn btn-primary" href="/index">Cancelar</a>
+    </div>
+</div>
+
+
+@code{
+    public async Task LogoutUser()
+    {
+        try
+        {
+            await ((CustomAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsLoggedOut();
+            NavigationManager.NavigateTo("");
+        }
+        catch (Exception ex)
+        {
+            NavigationManager.NavigateTo("");
+
+        }
+    }
+}

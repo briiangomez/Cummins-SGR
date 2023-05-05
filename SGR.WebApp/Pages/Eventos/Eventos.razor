@@ -1,0 +1,366 @@
+﻿@page "/Eventos"
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@inject ITBService<Evento> bookStoresService
+@inject ITBService<Camara> camaraService
+@inject IUserService userService
+@inject ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<div class="col-12">
+    <h3 style="font-weight:bold; color:#EF272C">Listado de Eventos Almacenados</h3>
+    <br />
+    <div class="form-group row">
+        <div class="col-md-3">
+            <label>Desde:</label>
+            <RadzenDatePicker @bind-Value=@desde DateFormat="d" Change=@(args => OnChangeDesde(args, "DatePicker", "dd/MM/yyyy")) />
+        </div>
+        <div class="col-md-3">
+            <label>Hasta:</label>
+            <RadzenDatePicker @bind-Value=@hasta DateFormat="d" Change=@(args => OnChangeHasta(args, "DatePicker", "dd/MM/yyyy")) />
+        </div>
+        <div class="col-md-4">
+            <label>Camara:</label>
+            <select class="form-control col-8" @onchange="OnChangeEvent" name="IdCamara" id="IdCamara">
+                <option value="">Seleccione Camara...</option>
+                @if (CamaraList != null)
+                {
+                    foreach (var item in CamaraList)
+                    {
+                        <option value="@item.Id">@item.Nombre</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <a class="btn btn-success" style="color:white" @onclick="(() => Filtrar())">Filtrar</a>
+        </div>
+    </div>
+    @if (isLoading)
+    {
+        <table id="equipos" class="display" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Camara</th>
+                    <th>Producto</th>
+                    <th>Presicion</th>
+                    <th style="width:15%"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in EquipoList)
+                {
+                <tr>
+                    <td>@item.Fecha?.ToString("dd/MM/yyyy")</td>
+                    @if (Equipo.IdCamara != null)
+                    {
+                        <td>@Equipo.IdCamaraNavigation.Nombre</td>
+                    }
+                    else
+                    {
+                        <td></td>
+                    }
+                    @if (Equipo.IdProductoNavigation != null)
+                    {
+                        <td>@Equipo.IdProductoNavigation.Descripcion</td>
+                    }
+                    else
+                    {
+                        <td></td>
+                    }
+                    <td>@item.Presicion</td>
+                    <td>
+                        <a class="btn btn-success" href=@string.Format("/visualizarImagen/{0}", item.Id)><i class="fa fa-photo"></i> Ver Imagen Capturada</a>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
+            <br /><br />
+            <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
+        </div>
+    }
+
+    @*<SpinLoader IsLoading="isLoading">
+            <ContentTemplate>
+                @if (filteredEquipoList != null)
+                {
+                    <GridView Items="filteredEquipoList" ReloadList="IsGridViewFiltered">
+                        <GridColumns>
+                            <GridColumn ColumnTitle="Usuario"
+                                        OnSearchTextChanged="@(e => OnUserearchTextChanged(e, "Usuario"))"></GridColumn>
+                            <GridColumn ColumnTitle="Nombre"
+                                        OnSearchTextChanged="@(e => OnUserearchTextChanged(e, "Nombre"))"></GridColumn>
+                            <GridColumn ColumnTitle="Rol"
+                                        OnSearchTextChanged="@(e => OnUserearchTextChanged(e, "Rol"))"></GridColumn>
+                            <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+                                <Authorized>
+                                    <GridColumn ColumnTitle="Actions"></GridColumn>
+                                </Authorized>
+                            </AuthorizeView>
+                        </GridColumns>
+                        <GridRow Context="Equipo">
+                            <td>@Equipo.EmailAddress</td>
+                            <td>@Equipo.FirstName @Equipo.LastName</td>
+                            @if (Equipo.IdRoleNavigation != null)
+                                {
+                                <td>@Equipo.IdRoleNavigation.Descripcion</td>
+                                }
+                                else
+                                {
+                                <td></td>
+                                }
+                            /**/
+                            <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+                                <Authorized>
+                                    <th>
+                                        <a style="text-underline-position:below; cursor:pointer; color:blue" @onclick="(() => EditEquipo(Equipo))">Edit</a> |
+                                        <a style="text-underline-position:below; cursor:pointer; color:blue" @onclick="(() => DeleteEquipo(Equipo.Id))">Delete</a>
+                                    </th>
+                                </Authorized>
+                            </AuthorizeView>
+                        </GridRow>
+                    </GridView>
+                }
+            </ContentTemplate>
+        </SpinLoader>*@
+</div>
+
+@code {
+    DateTime? desde = DateTime.Now;
+    DateTime? hasta = DateTime.Now;
+    public Evento Equipo { get; set; }
+    public List<Evento> EquipoList { get; set; }
+    public List<Camara> CamaraList { get; set; }
+    public List<Evento> filteredEquipoList { get; set; }
+    public string SelectedCity { get; set; }
+
+    public bool IsVisible { get; set; }
+    public bool Result { get; set; }
+    public string RecordName { get; set; }
+    public string[] Cities { get; set; }
+    public bool IsGridViewFiltered { get; set; }
+    bool isLoading = false;
+
+    private async Task Filtrar()
+    {
+        if(hasta < desde)
+        {
+            await JSRuntime.MostrarMensaje("Atencion!", "La Fecha Hasta no debe ser menor a la fecha Hasta", TipoMensajeSweetAlert.warning);
+        }
+        else if(IdCamara != Guid.Empty)
+        {
+            EquipoList = filteredEquipoList = EquipoList.Where(o => o.IdCamara == IdCamara).ToList();
+        }
+
+        EquipoList = filteredEquipoList = EquipoList.Where(o => o.Fecha >= desde && o.Fecha <= hasta).ToList();
+    }
+
+    ElementReference firstNameTextBox;
+
+    public Guid IdCamara { get; set; }
+
+    private void OnChangeEvent(ChangeEventArgs changeEventArgs)
+    {
+
+        if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Camara...")
+        {
+            IdCamara = Guid.Parse((string)changeEventArgs.Value);
+        }
+    }
+
+    void OnChange(object value)
+    {
+
+        if (!String.IsNullOrEmpty((string)value) && (string)value != "Seleccione Camara...")
+        {
+            IdCamara = Guid.Parse((string)value);
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("User - OnInitialized");
+        base.OnInitialized();
+    }
+
+    void OnChangeDesde(DateTime? value, string name, string format)
+    {
+        if(value != null)
+        {
+            desde = new DateTime(value.Value.Year, value.Value.Month, value.Value.Day);
+        }
+    }
+
+    void OnChangeHasta(DateTime? value, string name, string format)
+    {
+        if(value != null)
+        {
+            hasta = new DateTime(value.Value.Year, value.Value.Month, value.Value.Day);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("User - OnInitializedAsync");
+
+        Equipo = new Evento();
+        EquipoList = filteredEquipoList = await bookStoresService.GetAllAsync("Eventos/GetEventos");
+        CamaraList = await camaraService.GetAllAsync("Camaras/GetCamaras");
+        if (EquipoList == null)
+        {
+
+            RefreshRequest refreshRequest = new RefreshRequest();
+            refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+            refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+            var user1 = await userService.RefreshTokenAsync(refreshRequest);
+            await localStorageService.SetItemAsync("accessToken", user1.AccessToken);
+
+            EquipoList = filteredEquipoList = await bookStoresService.GetAllAsync("Eventos/GetEventos");
+        }
+
+        isLoading = true;
+        IdCamara = Guid.Empty;
+        await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#equipos");
+
+        await base.OnInitializedAsync();
+    }
+
+    protected override void OnParametersSet()
+    {
+        Console.WriteLine("User - OnParametersSet");
+        base.OnParametersSet();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Console.WriteLine("User - OnParametersSetAsync");
+        await base.OnParametersSetAsync();
+    }
+
+    protected override bool ShouldRender()
+    {
+        base.ShouldRender();
+        Console.WriteLine("User - ShouldRender");
+
+        return true;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        Console.WriteLine("User - OnAfterRender - firstRender = " + firstRender);
+        base.OnAfterRender(firstRender);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Console.WriteLine("User - OnAfterRenderAsync - firstRender = " + firstRender);
+        //
+
+        if (isLoading)
+        {
+            await JSRuntime.InvokeAsync<object>("TestDataTablesRemove", "#equipos");
+            await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#equipos");
+        }
+        //else
+        //{
+        //    await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#equipos");
+        //}
+
+        if (firstRender)
+        {
+
+            //await LoadUser();
+
+            //isLoading = false;
+            StateHasChanged();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    public void Dispose()
+    {
+        Console.WriteLine("User - Dispose");
+    }
+
+    private async Task LoadUser()
+    {
+        await Task.Delay(500);
+
+        EquipoList = filteredEquipoList = await bookStoresService.GetAllAsync("Eventos/GetEventos");
+
+        if (EquipoList == null)
+        {
+
+            RefreshRequest refreshRequest = new RefreshRequest();
+            refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+            refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+            var user1 = await userService.RefreshTokenAsync(refreshRequest);
+            await localStorageService.SetItemAsync("accessToken", user1.AccessToken);
+
+            EquipoList = filteredEquipoList = await bookStoresService.GetAllAsync("Eventos/GetEventos");
+        }
+
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesRemove", "#equipos");
+        if (isLoading)
+        {
+            //await JSRuntime.InvokeAsync<object>("TestDataTablesRemove", "#equipos");
+            await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#equipos");
+        }
+
+        StateHasChanged();
+    }
+
+
+
+    private async Task DeleteEquipo(Guid EquipoId)
+    {
+        var confirmado = await JSRuntime.Confirm($"¿Desea eliminar el User?");
+        if (confirmado)
+        {
+            await bookStoresService.DeleteAsync("User/DeleteUser/", EquipoId);
+            await LoadUser();
+        }
+        //throw new Exception("DeleteEquipo");
+    }
+
+    private void EditEquipo(Evento argEquipo)
+    {
+        Equipo = argEquipo;
+    }
+
+    private void OnSelectCityChange(ChangeEventArgs changeEventArgs)
+    {
+        SelectedCity = (string)changeEventArgs.Value;
+    }
+
+    //private void OnUserearchTextChanged(ChangeEventArgs changeEventArgs, string columnTitle)
+    //{
+    //    string searchText = changeEventArgs.Value.ToString();
+    //    IsGridViewFiltered = true;
+
+    //    switch (columnTitle)
+    //    {
+    //        case "Usuario":
+    //            filteredEquipoList = EquipoList.Where(auth => auth.EmailAddress.ToLower().Contains(searchText)).ToList();
+    //            break;
+    //        case "Nombre":
+    //            filteredEquipoList = EquipoList.Where(auth => auth.FirstName.ToLower().Contains(searchText) || auth.LastName.ToLower().Contains(searchText)).ToList();
+    //            break;
+    //        case "Rol":
+    //            filteredEquipoList = EquipoList.Where(auth => auth.IdRole != null).ToList().Where(auth => auth.IdRoleNavigation.Descripcion.ToLower().Contains(searchText)).ToList();
+    //            break;
+    //        default:
+    //            Console.WriteLine("Default case");
+    //            break;
+    //    }
+    //}
+
+}
