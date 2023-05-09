@@ -1,0 +1,139 @@
+﻿@page "/addSintoma"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@inject ILocalStorageService localStorageService
+@inject ISgrService<Sintoma> bookStoresService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navigationManager
+@implements IDisposable
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+<div class="col-12">
+    <h3><b>Agregar Nueva Sintoma</b></h3>
+    <hr />
+
+    <ServerValidations IsVisible="IsVisible" Result="Result">
+        @RecordName
+    </ServerValidations>
+
+    <EditForm Model="@Sintoma" OnValidSubmit="@SaveSintoma">
+        @*<DataAnnotationsValidator />*@
+
+        <div class="col-12 row">
+            <label class="col-2 font-weight-bold">Descripcion:</label>
+            <InputText class="form-control col-3" @bind-Value="Sintoma.Descripcion" placeholder="Descripcion" required />
+            &nbsp;<ValidationMessage For="@(() => Sintoma.Descripcion)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <span class="col-2"></span>
+            <input type="submit" class="btn btn-success" value="Guardar" />
+            <span>&nbsp;</span>
+            <a style="background-color:red;color:white" class="btn btn-success" href="/Sintoma">Cancelar</a>
+        </div>
+    </EditForm>
+</div>
+<br />
+
+
+@code
+{
+    public Sintoma Sintoma { get; set; }
+    public bool IsVisible { get; set; }
+    public bool Result { get; set; }
+    public string RecordName { get; set; }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Sintoma - Dispose");
+    }
+
+    private Dictionary<string, object> htmlAttribute { get; set; } = new Dictionary<string, object>() {
+            {"maxlength", "8" }
+            };
+
+    //private async void OnChange(KeyboardEventArgs e)
+    //{
+    //    if(!String.IsNullOrEmpty(Sintoma.NumeroSintoma))
+    //    {
+    //        if (Sintoma.NumeroSintoma.Length > 7)
+    //        {
+    //            await JSRuntime.MostrarMensaje("Error!", "El Numero de Sintoma no puede ser mayor a 8 caracteres", TipoMensajeSweetAlert.error);
+    //            Sintoma.NumeroSintoma = Sintoma.NumeroSintoma.Substring(0,8);
+    //        }
+    //    }
+    //}
+
+    //string stringValue = "";
+
+    //private async Task SetValue(string Value)
+    //{
+    //    if (Value.Length > 7)
+    //    {
+    //        await JSRuntime.MostrarMensaje("Error!", "El Numero de Sintoma no puede ser mayor a 8 caracteres", TipoMensajeSweetAlert.error);
+    //        Sintoma.NumeroSintoma = Value.Substring(0,8);
+    //    }
+    //    else
+    //    {
+    //        stringValue = Value;
+
+    //    }
+    //}
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Clientes - OnInitialized");
+        base.OnInitialized();
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+
+    bool IsUserAuthenticated;
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+        Console.WriteLine("Clientes - OnInitializedAsync");
+
+        Sintoma = new Sintoma();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task SaveSintoma()
+    {
+        await bookStoresService.SaveAsync("Sintoma/CreateSintoma", Sintoma);
+
+        //if(Sintoma.NumeroSintoma.Length < 8)
+        //{
+        //    Sintoma.NumeroSintoma = Sintoma.NumeroSintoma.PadLeft(8, '0');
+        //    //Sintoma.NumeroSintoma = Sintoma.NumeroSintoma.ToString("00000000");
+        //    //Sintoma.NumeroSintoma = Sintoma.NumeroSintoma.ToString("D8");
+        //}
+        Result = true;
+        IsVisible = true;
+
+        //var firstName = Sintoma.NumeroSintoma;
+        //var lastName = Sintoma.Sintoma;
+
+        //RecordName = firstName + " " + lastName;
+
+        Sintoma = new Sintoma();
+
+        navigationManager.NavigateTo("/Sintoma");
+    }
+}

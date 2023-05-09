@@ -1,5 +1,320 @@
-﻿<h3>Sintomas</h3>
+﻿@page "/Sintoma"
+@using SGRBlazorApp.Data
+@using SGRBlazorApp.Interfaces
+@using CuriousDriveRazorLibrary
+@using Blazored.LocalStorage
+@using SGRBlazorApp.Shared
+@inject ISgrService<Sintoma> bookStoresService
+@inject IUserService userService
+@inject ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+@inject NavigationManager navigationManager
+
+<div class="col-12">
+
+    <h3><b>Listado de Sintomas</b></h3>
+    <br />
+    <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+        <Authorized>
+            <a class="btn btn-primary" style="text-underline-position:below;cursor:pointer; " href="/addSintoma">Nuevo Sintoma</a>
+        </Authorized>
+    </AuthorizeView>
+    <br />
+    <br />
+
+    @if (isLoading)
+    {
+        <RadzenDataGrid AllowFiltering="true" AllowColumnResize="true"
+                    FilterMode="FilterMode.Simple" PageSize="20" AllowPaging="true" AllowSorting="true" Data="@SintomaList" TItem="Sintoma" ColumnWidth="300px"
+                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                    LogicalFilterOperator="LogicalFilterOperator.Or">
+            <Columns>
+                <RadzenDataGridColumn TItem="Sintoma" Property="Descripcion" Title="Descripcion" />
+                <RadzenDataGridColumn TItem="Sintoma" Context="sampleBlazorModelsSampleOrder" Title="Editar" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="100px">
+                    <Template Context="Sintoma">
+                        <RadzenButton Icon="edit" Size="ButtonSize.Medium" Click="@(args => EditRow(Sintoma.Id))" @onclick:stopPropagation="true">
+                        </RadzenButton>
+                    </Template>
+
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="Sintoma" Context="order" Filterable="false" Sortable="false" Title="Eliminar" TextAlign="TextAlign.Center" Width="70px">
+                    <Template Context="Sintoma">
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Medium" Click="@(args => DeleteRow(Sintoma.Id))" @onclick:stopPropagation="true">
+                        </RadzenButton>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+        @*<table id="equipos" class="table" style="width:100%">
+    <thead>
+    <tr>
+    <th>Codigo</th>
+    <th>Descripcion</th>
+    <th style="width:15%"></th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var Sintoma in Sintoma)
+    {
+    <tr>
+    <td>@Sintoma.Codigo</td>
+    <td>@Sintoma.Descripcion</td>
+    <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+    <Authorized>
+    <td>
+    <a class="btn btn-success" href=@string.Format("/editSintoma/{0}", Sintoma.Id)><i class="fa fa-pencil"></i></a>
+    <a style="background-color:red;color:white" class="btn btn-success" href=@string.Format("/deleteSintoma/{0}", Sintoma.Id)><i class="fa fa-trash"></i></a>
+    </td>
+    </Authorized>
+    </AuthorizeView>
+    </tr>
+    }
+    </tbody>
+    </table>*@
+    }
+    else
+    {
+        <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
+            <br /><br />
+            <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
+        </div>
+    }
+    @*<SpinLoader IsLoading="isLoading">
+    <LoadingTemplate>
+    <div class="col-12" style="background-color: lightgray; height:400px; vertical-align:middle">
+    <br /><br />
+    <Chase Center="true" Color="#c21f13" Size="70px"></Chase>
+    </div>
+    </LoadingTemplate>
+    <ContentTemplate>
+    @if (filteredSintomaList != null)
+    {
+    <GridView Items="filteredSintomaList" ReloadList="IsGridViewFiltered">
+    <GridColumns>
+    <GridColumn ColumnTitle="NumeroSintoma"
+    OnSearchTextChanged="@(e => OnSintomaearchTextChanged(e, "NumeroSintoma"))"></GridColumn>
+    <GridColumn ColumnTitle="Modelo"
+    OnSearchTextChanged="@(e => OnSintomaearchTextChanged(e, "Modelo"))"></GridColumn>
+    <GridColumn ColumnTitle="Sintoma"
+    OnSearchTextChanged="@(e => OnSintomaearchTextChanged(e, "Sintoma"))"></GridColumn>
+    <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
+    <Authorized>
+    <GridColumn ColumnTitle="Actions"></GridColumn>
+    </Authorized>
+    </AuthorizeView>
+    </GridColumns>
+    <GridRow Context="Sintoma">
+    <td>
+    <NavLink href=@string.Format("/Sintoma/Sintomadetail/{0}", @Sintoma.Id)>
+    @Sintoma.Id
+    </NavLink>
+    </td>
+
+    <Authorized>
+    <th>
+    <a style="text-underline-position:below; cursor:pointer; color:blue" href=@string.Format("/editSintoma/{0}", Sintoma.Id)>Edit</a> |
+    <a style="text-underline-position:below; cursor:pointer; color:blue" @onclick="(() => DeleteSintoma(Sintoma.Id))">Delete</a>
+    </th>
+    </Authorized>
+    </AuthorizeView>
+    </GridRow>
+    </GridView>
+    }
+    </ContentTemplate>
+    </SpinLoader>*@
+</div>
 
 @code {
+
+    public Sintoma Sintoma { get; set; }
+    public List<Sintoma> SintomaList { get; set; }
+    public List<Sintoma> filteredSintomaList { get; set; }
+    public string SelectedCity { get; set; }
+
+    public bool IsVisible { get; set; }
+    public bool Result { get; set; }
+    public string RecordName { get; set; }
+    public string[] Cities { get; set; }
+    public bool IsGridViewFiltered { get; set; }
+    bool isLoading = false;
+
+    ElementReference firstNameTextBox;
+
+    void EditRow(Guid id)
+    {
+        navigationManager.NavigateTo(string.Format("/editSintoma/{0}", id));
+    }
+
+    void DeleteRow(Guid id)
+    {
+        navigationManager.NavigateTo(string.Format("/deleteSintoma/{0}", id));
+    }
+
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Sintoma - OnInitialized");
+        base.OnInitialized();
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    ClaimsPrincipal user;
+
+    bool IsUserAuthenticated;
+    bool IsPublisher;
+    bool IsSeniorEmployee;
+
+    public int Count { get; set; } = 400;
+
+    private SGRBlazorApp.Data.User users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/");
+        }
+        Console.WriteLine("Sintoma - OnInitializedAsync");
+
+        Sintoma = new Sintoma();
+        SintomaList = filteredSintomaList = await bookStoresService.GetAllAsync("Sintoma/GetSintoma");
+
+        if (SintomaList == null)
+        {
+
+            RefreshRequest refreshRequest = new RefreshRequest();
+            refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+            refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+            var user1 = await userService.RefreshTokenAsync(refreshRequest);
+            await localStorageService.SetItemAsync("accessToken", user1.AccessToken);
+
+            SintomaList = filteredSintomaList = await bookStoresService.GetAllAsync("Sintoma/GetSintoma");
+        }
+        isLoading = true;
+
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#equipos");
+        await base.OnInitializedAsync();
+    }
+
+    protected override void OnParametersSet()
+    {
+        Console.WriteLine("Sintoma - OnParametersSet");
+        base.OnParametersSet();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Console.WriteLine("Sintoma - OnParametersSetAsync");
+        await base.OnParametersSetAsync();
+    }
+
+    protected override bool ShouldRender()
+    {
+        base.ShouldRender();
+        Console.WriteLine("Sintoma - ShouldRender");
+
+        return true;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        Console.WriteLine("Sintoma - OnAfterRender - firstRender = " + firstRender);
+        base.OnAfterRender(firstRender);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Console.WriteLine("Sintoma - OnAfterRenderAsync - firstRender = " + firstRender);
+        ////await JSRuntime.InvokeAsync<object>("TestDataTablesRemove", "#equipos");
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#equipos");
+        if (firstRender)
+        {
+            //await LoadSintoma();
+
+            //isLoading = false;
+            StateHasChanged();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    public void Dispose()
+    {
+        Console.WriteLine("Sintoma - Dispose");
+    }
+
+    private async Task LoadSintoma()
+    {
+        await Task.Delay(500);
+
+        SintomaList = filteredSintomaList = await bookStoresService.GetAllAsync("Sintoma/GetSintoma");
+
+        if (SintomaList == null)
+        {
+
+            RefreshRequest refreshRequest = new RefreshRequest();
+            refreshRequest.AccessToken = await localStorageService.GetItemAsync<string>("accessToken");
+            refreshRequest.RefreshToken = await localStorageService.GetItemAsync<string>("refreshToken");
+            var user1 = await userService.RefreshTokenAsync(refreshRequest);
+            await localStorageService.SetItemAsync("accessToken", user1.AccessToken);
+
+            SintomaList = filteredSintomaList = await bookStoresService.GetAllAsync("Sintoma/GetSintoma");
+        }
+
+        isLoading = true;
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesRemove", "#equipos");
+        //await JSRuntime.InvokeAsync<object>("TestDataTablesAdd", "#equipos");
+
+        StateHasChanged();
+    }
+
+
+
+    private async Task DeleteSintoma(Guid SintomaId)
+    {
+        var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea eliminar el Sintoma?", TipoMensajeSweetAlert.warning);
+        if (confirmado)
+        {
+            await bookStoresService.DeleteAsync("Sintoma/DeleteSintoma/", SintomaId);
+            await LoadSintoma();
+        }
+        //throw new Exception("DeleteSintoma");
+    }
+
+    private void EditSintoma(Sintoma argSintoma)
+    {
+        Sintoma = argSintoma;
+    }
+
+    private void OnSelectCityChange(ChangeEventArgs changeEventArgs)
+    {
+        SelectedCity = (string)changeEventArgs.Value;
+    }
+
+    private void OnSintomaearchTextChanged(ChangeEventArgs changeEventArgs, string columnTitle)
+    {
+        //string searchText = changeEventArgs.Value.ToString();
+        //IsGridViewFiltered = true;
+
+        //switch (columnTitle)
+        //{
+        //    case "NumeroSintoma":
+        //        filteredSintomaList = SintomaList.Where(auth => auth.NumeroSintoma.ToLower().Contains(searchText)).ToList();
+        //        break;
+        //    case "Modelo":
+        //        filteredSintomaList = SintomaList.Where(auth => auth.Modelo.ToLower().Contains(searchText)).ToList();
+        //        break;
+        //    case "Sintoma":
+        //        filteredSintomaList = SintomaList.Where(auth => auth.Sintoma.ToLower().Contains(searchText)).ToList();
+        //        break;
+        //    default:
+        //        Console.WriteLine("Default case");
+        //        break;
+        //}
+    }
 
 }
