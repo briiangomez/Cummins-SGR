@@ -222,7 +222,9 @@
                                     }
                                 }
                             </select>
-                            <label>Es Garantia / Is Warranty</label>
+                            <label>
+                                Es Garantía / Lite Repair
+                            </label>
                             @*<RadzenCheckBox @bind-Value="@CheckBox1Value" Style="margin-bottom: 20px" TValue="bool" />*@
                             <input type="checkbox" checked=@CheckBox1Value
                                    @onchange="eventArgs => { CheckboxClicked(eventArgs.Value); }" />
@@ -444,6 +446,17 @@ else
             string path = await fileUpload.Upload(item, "Incidencias");
             ArchivoCompra.Add(path);
             files.Add(item);
+        }
+    }
+
+    async Task HandleFileSelectedDoc(IFileListEntry[] entryFiles)
+    {
+        foreach (var item in entryFiles)
+        {
+            //await fileUpload.Upload(item);
+            string path = await fileUpload.Upload(item, "Datos Adjuntos");
+            DatosAdjuntos.Add(path);
+            //files.Add(item);
         }
     }
 

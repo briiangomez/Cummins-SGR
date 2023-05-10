@@ -36,6 +36,8 @@ namespace SGRBlazorApp.Pages
 
         public List<string> ArchivoCompra = new List<string>();
 
+        public List<string> DatosAdjuntos = new List<string>();
+
         [Inject]
         protected IJSRuntime JSRuntime { get; set; }
 
@@ -199,7 +201,18 @@ namespace SGRBlazorApp.Pages
                 {
                     throw new Exception("El archivo es obligatorio");
                 }
-
+                if (DatosAdjuntos.Count > 0)
+                {
+                    foreach (var item in DatosAdjuntos)
+                    {
+                        //string path = await fileUpload.Upload(item, sgiCoreCreateIncidenciaResult.Id.ToString());
+                        ImagenesIncidencium img = new ImagenesIncidencium();
+                        img.Imagen = item;
+                        img.Tipo = "Datos Adjuntos";
+                        img.IncidenciaId = sgiCoreCreateIncidenciaResult.Id;
+                        await imagenesService.SaveAsync("ImagenesIncidencia/CreateImagenesIncidencia", img);
+                    }
+                }
                 navigationManager.NavigateTo("/incidenciaDetail/" + sgiCoreCreateIncidenciaResult.Id.ToString());
             }
             catch (System.Exception ex)

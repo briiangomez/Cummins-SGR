@@ -114,7 +114,7 @@
     <br />
     <div class="col-12 row">
         <span class="col-2"></span>
-        <textarea class="form-control" cols="10" rows="5" @bind="@Observaciones"></textarea>
+        <textarea class="form-control" cols="10" rows="5" @bind="@Observaciones" required></textarea>
     </div>
     <div class="col-md-12" style="margin-top:15px">
         <label class="col-12 font-weight-bold">Fecha de Visita:</label>
@@ -199,6 +199,10 @@ else
         if(value == null)
         {
             await JSRuntime.MostrarMensaje("Atencion!", "Ingrese una posible fecha de visita!", TipoMensajeSweetAlert.warning);
+        }
+        else if (!String.IsNullOrEmpty(Observaciones))
+        {
+            await JSRuntime.MostrarMensaje("Atencion!", "Ingrese observaciones, es un campo obligatorio", TipoMensajeSweetAlert.error);
         }
         else if (confirmado)
         {

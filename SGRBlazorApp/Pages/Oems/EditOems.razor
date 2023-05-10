@@ -15,7 +15,7 @@
 @using SGRBlazorApp.Services
 @inject GeocodingService GeocodingService
 <div class="col-12">
-    <h3><b>Editar Oem</b></h3>
+    <h3><b>Editar OEM/DOEM</b></h3>
     <hr />
 
     <ServerValidations IsVisible="IsVisible" Result="Result">
@@ -27,8 +27,18 @@
 
         <div class="col-12 row">
             <label class="col-2 font-weight-bold">Nombre:</label>
-            <InputText class="form-control col-3" @bind-Value="Oem.Nombre" placeholder="Codigo"  />
+            <InputText class="form-control col-3" @bind-Value="Oem.Nombre" placeholder="Codigo" />
             &nbsp;<ValidationMessage For="@(() => Oem.Nombre)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <RadzenRadioButtonList @bind-Value=@Tipo TValue="int" Change=@((args) => OnChangeRB(args, "RadioButtonList with horizontal orientation")) Style="width:50%">
+                <Items>
+                    <RadzenRadioButtonListItem Text="OEM" Value="1" />
+                    <RadzenRadioButtonListItem Text="DOEM" Value="2" />
+                </Items>
+            </RadzenRadioButtonList>
+            &nbsp;<ValidationMessage For="@(() => Oem.Aux1)" />
         </div>
         <br />
         <div class="col-12 row">
@@ -47,11 +57,17 @@
     [Parameter]
     public Guid Id { get; set; }
     public Oem Oem { get; set; }
+    public int Tipo { get; set; }
     public bool IsVisible { get; set; }
     public bool Result { get; set; }
     public string RecordName { get; set; }
 
     Subject<string> addressSubject = new Subject<string>();
+
+    void OnChangeRB(int? value, string name)
+    {
+        Tipo = value.Value;
+    }
 
     protected async override void OnInitialized()
     {
@@ -82,7 +98,7 @@
         Console.WriteLine("Oems - OnInitializedAsync");
         Oem = new Oem();
         Oem = await bookStoresService.GetByIdAsync("Oems/GetOems/", Id);
-
+        Tipo = Oem.Aux1 != null ? Int32.Parse(Oem.Aux1) : 0;
         await base.OnInitializedAsync();
     }
 
@@ -93,6 +109,8 @@
 
     private async Task SaveOem()
     {
+        Oem.Aux1 = Tipo > 0 ? Tipo.ToString() : null;
+
         if (Oem.Id == Guid.Empty)
             await bookStoresService.SaveAsync("Oems/CreateOems", Oem);
         else

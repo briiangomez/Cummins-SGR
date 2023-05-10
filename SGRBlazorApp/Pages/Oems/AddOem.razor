@@ -11,7 +11,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 <div class="col-12">
-    <h3><b>Agregar Nueva Oem</b></h3>
+    <h3><b>Agregar OEM/DOEM</b></h3>
     <hr />
 
     <ServerValidations IsVisible="IsVisible" Result="Result">
@@ -24,6 +24,20 @@
         <div class="col-12 row">
             <label class="col-2 font-weight-bold">Nombre:</label>
             <InputText class="form-control col-3" @bind-Value="Oem.Nombre" placeholder="Nombre" required/>
+            &nbsp;<ValidationMessage For="@(() => Oem.Nombre)" />
+        </div>
+        <br />
+        <div class="col-12 row">
+            <RadzenRadioButtonList @bind-Value=@Tipo TValue="int" Change=@((args) => OnChangeRB(args, "RadioButtonList with horizontal orientation")) Style="width:50%">
+                <Items>
+                    <RadzenRadioButtonListItem Text="OEM" Value="1" />
+                    <RadzenRadioButtonListItem Text="DOEM" Value="2" />
+                </Items>
+            </RadzenRadioButtonList>
+            @*<select class="form-control" @bind="@Oem.Aux1" name="Aux1" id="Aux1">
+            <option value="1">Oem</option>
+            <option value="2">Doem</option>
+        </select>*@
             &nbsp;<ValidationMessage For="@(() => Oem.Nombre)" />
         </div>
         <br />
@@ -44,10 +58,15 @@
     public bool IsVisible { get; set; }
     public bool Result { get; set; }
     public string RecordName { get; set; }
-
+    public int Tipo { get; set; } = 0;
     public void Dispose()
     {
         Console.WriteLine("Oems - Dispose");
+    }
+
+    void OnChangeRB(int? value, string name)
+    {
+        Tipo = value.Value;
     }
 
     private Dictionary<string, object> htmlAttribute { get; set; } = new Dictionary<string, object>() {
@@ -116,6 +135,7 @@
 
     private async Task SaveOem()
     {
+        Oem.Aux1 = Tipo > 0 ? Tipo.ToString() : null;
         await bookStoresService.SaveAsync("Oems/CreateOems", Oem);
 
         //if(Oem.NumeroOem.Length < 8)

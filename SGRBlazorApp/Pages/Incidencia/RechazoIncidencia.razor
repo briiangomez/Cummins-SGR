@@ -113,7 +113,7 @@
         <br />
         <div class="col-12 row">
             <span class="col-2"></span>
-            <textarea class="form-control" cols="10" rows="10" @bind="@Observaciones"></textarea>
+            <textarea class="form-control" cols="10" rows="10" @bind="@Observaciones" required></textarea>
         </div>
         <div class="col-12 row" style="margin-top:15px;margin-bottom:20px">
             <span class="col-2"></span>
@@ -184,7 +184,11 @@ else
     private async Task RechazarIncidencia(Guid ClienteId)
     {
         var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea confirmar que Rechaza el Reclamo?", TipoMensajeSweetAlert.warning);
-        if (confirmado)
+        if (!String.IsNullOrEmpty(Observaciones))
+        {
+            await JSRuntime.MostrarMensaje("Atencion!", "Ingrese observaciones, es un campo obligatorio", TipoMensajeSweetAlert.error);
+        }
+        else if (confirmado)
         {
             try
             {
