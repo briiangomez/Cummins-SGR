@@ -155,11 +155,11 @@
                                 </div>
                                 <div class="col-md-6">
                                     @*<RadzenRadioButtonList @bind-Value=@KmOrHs TValue="int" Change=@((args) => OnChange(args, "RadioButtonList with horizontal orientation")) Style="width:50%">
-                                            <Items>
-                                                <RadzenRadioButtonListItem Text="KM" Value="1" />
-                                                <RadzenRadioButtonListItem Text="HS" Value="2" />
-                                            </Items>
-                                        </RadzenRadioButtonList>*@
+                    <Items>
+                        <RadzenRadioButtonListItem Text="KM" Value="1" />
+                        <RadzenRadioButtonListItem Text="HS" Value="2" />
+                    </Items>
+                </RadzenRadioButtonList>*@
                                     <select class="form-control" @bind="@incidencia.Aux3" name="Aux3" id="Aux3">
                                         <option value="1">KM</option>
                                         <option value="2">HS</option>
@@ -180,8 +180,8 @@
                             <input type="text" class="form-control" placeholder="" @bind="incidencia.numeroChasis" name="numeroChasis" autocomplete="off" required />
                             <label>OEM: </label>
                             @*<RadzenDropDown @bind-Value="@(incidencia.Equipo)" AllowClear="true" Placeholder="Seleccione Equipo" Data="@Oems" style="width: 100%;" TextProperty="Nombre" ValueProperty="Nombre" Name="Equipo">
-                                </RadzenDropDown>*@
-                            <select class="form-control"  name="Equipo" id="Equipo" @onchange="OnChangeEventOem"  required>
+        </RadzenDropDown>*@
+                            <select class="form-control" name="Equipo" id="Equipo" @onchange="OnChangeEventOem" required>
                                 <option value="">Seleccione OEM...</option>
                                 @if (Oems != null)
                                 {
@@ -211,7 +211,7 @@
                             }
                             <label>Sintoma / Symptom</label>
                             @*<RadzenDropDown @bind-Value="@(incidencia.Sintoma)" @onchange="OnChangeEvent" AllowClear="true" Placeholder="Seleccione Sintoma" Data="@sims" style="width: 100%;" TextProperty="Descripcion" ValueProperty="Codigo" Name="Sintoma">
-                                </RadzenDropDown>*@
+        </RadzenDropDown>*@
                             <select class="form-control" @bind="@incidencia.Sintoma" name="Sintoma" id="Sintoma" required>
                                 <option value="">Seleccione Sintoma...</option>
                                 @if (sims != null)
@@ -243,8 +243,13 @@
                                             }
                                         }
                                     </select>
+                                    <br />
                                 }
                             }
+                            <label>
+                                Datos Adjuntos:
+                            </label>
+                            <InputFile for="Name" class="form-control" OnChange="HandleFileSelectedDoc" />
                         </div>
                     </div>
                 </div>
@@ -440,23 +445,38 @@ else
 
     async Task HandleFileSelected(IFileListEntry[] entryFiles)
     {
-        files = new List<IFileListEntry>();
-        foreach (var item in entryFiles)
+        try
         {
-            string path = await fileUpload.Upload(item, "Incidencias");
-            ArchivoCompra.Add(path);
-            files.Add(item);
+            files = new List<IFileListEntry>();
+            foreach (var item in entryFiles)
+            {
+                string path = await fileUpload.Upload(item, "Incidencias");
+                ArchivoCompra.Add(path);
+                files.Add(item);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.AddLine(String.Format("Error Crear Incidencia - {0}-{1}-{2}", DateTime.Now.ToString(), ex.Message, ex.StackTrace));
         }
     }
 
     async Task HandleFileSelectedDoc(IFileListEntry[] entryFiles)
     {
-        foreach (var item in entryFiles)
+        try
         {
-            //await fileUpload.Upload(item);
-            string path = await fileUpload.Upload(item, "Datos Adjuntos");
-            DatosAdjuntos.Add(path);
-            //files.Add(item);
+            foreach (var item in entryFiles)
+            {
+                DatosAdjuntos.Clear();
+                //await fileUpload.Upload(item);
+                string path = await fileUpload.Upload(item, "Datos Adjuntos");
+                DatosAdjuntos.Add(path);
+                //files.Add(item);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.AddLine(String.Format("Error Crear Incidencia - {0}-{1}-{2}", DateTime.Now.ToString(), ex.Message, ex.StackTrace));
         }
     }
 
@@ -471,21 +491,29 @@ else
     private void OnChangeEvent(ChangeEventArgs changeEventArgs)
     {
 
-        Guid idDealer = Guid.NewGuid();
-        if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Motor...")
+        try
         {
-            string nombre = (string)changeEventArgs.Value;
-            incidencia.ModeloMotor = nombre;
-            idDealer = MotoresList.FirstOrDefault(o => o.Codigo == nombre).Id;
-            MotorId = idDealer;
-            if(MotorId != Guid.Empty && OemId != Guid.Empty)
+            Guid idDealer = Guid.NewGuid();
+            if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione Motor...")
             {
-                EquipoList = Equipos;
-                EquipoList = EquipoList.Where(o => o.MotorId == MotorId && o.Oemid == OemId).ToList();
-
-                if (EquipoList.Count > 0)
+                string nombre = (string)changeEventArgs.Value;
+                incidencia.ModeloMotor = nombre;
+                idDealer = MotoresList.FirstOrDefault(o => o.Codigo == nombre).Id;
+                MotorId = idDealer;
+                if (MotorId != Guid.Empty && OemId != Guid.Empty)
                 {
-                    isEquipos = true;
+                    EquipoList = Equipos;
+                    EquipoList = EquipoList.Where(o => o.MotorId == MotorId && o.Oemid == OemId).ToList();
+
+                    if (EquipoList.Count > 0)
+                    {
+                        isEquipos = true;
+                    }
+                    else
+                    {
+                        isEquipos = false;
+                        incidencia.ModeloEquipo = "Otros";
+                    }
                 }
                 else
                 {
@@ -499,10 +527,11 @@ else
                 incidencia.ModeloEquipo = "Otros";
             }
         }
-        else
+        catch (Exception ex)
         {
             isEquipos = false;
             incidencia.ModeloEquipo = "Otros";
+            Logger.AddLine(String.Format("Error Crear Incidencia - {0}-{1}-{2}", DateTime.Now.ToString(), ex.Message, ex.StackTrace));
         }
 
     }
@@ -510,22 +539,30 @@ else
     private void OnChangeEventOem(ChangeEventArgs changeEventArgs)
     {
 
-        Guid idOem = Guid.NewGuid();
-        if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione OEM...")
+        try
         {
-            string nombre = (string)changeEventArgs.Value;
-            incidencia.Equipo = nombre;
-            idOem = Oems.FirstOrDefault(o => o.Nombre == nombre).Id;
-            OemId = idOem;
-            incidencia.IdOem = idOem;
-            if (MotorId != Guid.Empty && OemId != Guid.Empty)
+            Guid idOem = Guid.NewGuid();
+            if (!String.IsNullOrEmpty((string)changeEventArgs.Value) && (string)changeEventArgs.Value != "Seleccione OEM...")
             {
-                EquipoList = Equipos;
-                EquipoList = EquipoList.Where(o => o.MotorId == MotorId && o.Oemid == OemId).ToList();
-
-                if (EquipoList.Count > 0)
+                string nombre = (string)changeEventArgs.Value;
+                incidencia.Equipo = nombre;
+                idOem = Oems.FirstOrDefault(o => o.Nombre == nombre).Id;
+                OemId = idOem;
+                incidencia.IdOem = idOem;
+                if (MotorId != Guid.Empty && OemId != Guid.Empty)
                 {
-                    isEquipos = true;
+                    EquipoList = Equipos;
+                    EquipoList = EquipoList.Where(o => o.MotorId == MotorId && o.Oemid == OemId).ToList();
+
+                    if (EquipoList.Count > 0)
+                    {
+                        isEquipos = true;
+                    }
+                    else
+                    {
+                        isEquipos = false;
+                        incidencia.ModeloEquipo = "Otros";
+                    }
                 }
                 else
                 {
@@ -539,10 +576,11 @@ else
                 incidencia.ModeloEquipo = "Otros";
             }
         }
-        else
+        catch (Exception ex)
         {
             isEquipos = false;
             incidencia.ModeloEquipo = "Otros";
+            Logger.AddLine(String.Format("Error Crear Incidencia - {0}-{1}-{2}", DateTime.Now.ToString(), ex.Message, ex.StackTrace));
         }
 
     }

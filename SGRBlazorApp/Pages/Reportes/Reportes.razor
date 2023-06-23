@@ -48,7 +48,7 @@
     <h5 style="font-weight:bold; color:black">Reportes de Reclamos registrados por Equipo</h5>
     <div class="row">
         <div class="col-md-6 col-sm-12 p-4">
-            <RadzenChart ColorScheme="@colorScheme">
+            <RadzenChart>
                 <RadzenPieSeries Data="@revenue" Title="Total" CategoryProperty="Nombre" ValueProperty="Total" Fills="this.fills" />
             </RadzenChart>
         </div>
@@ -75,7 +75,7 @@
     <div class="row">
 
         <div class="col-md-12 col-sm-12 p-4">
-            <RadzenChart ColorScheme="@colorScheme">
+            <RadzenChart>
                 <RadzenDonutSeries Data="@revenue2022" CategoryProperty="Nombre" ValueProperty="Total" Fills="this.fills">
             <TitleTemplate>
                         <div class="rz-donut-content">
@@ -106,8 +106,8 @@ else
 @code {
     private List<string> colorsIds = new List<string>();
     private List<string> fills = Colorss.Current.GetAllColors(); //new List<string>() { "#F78989", "#89F798", "#A889F7", "#F7B589", "#89F7C2", "#D289F7", "#F5D66B", "#6BF5EA" };
-    IEnumerable<ColorScheme> colorSchemes = Enum.GetValues(typeof(ColorScheme)).Cast<ColorScheme>();
-    ColorScheme colorScheme = ColorScheme.Pastel;
+    //IEnumerable<ColorScheme> colorSchemes = Enum.GetValues(typeof(ColorScheme)).Cast<ColorScheme>();
+    //ColorScheme colorScheme = ColorScheme.Pastel;
     DateTime? fechaDesde = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
     DateTime? fechaHasta = DateTime.Now;
     public IncidenciaApi Incidenciaa { get; set; }

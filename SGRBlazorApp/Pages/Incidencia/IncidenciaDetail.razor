@@ -251,6 +251,38 @@
         </div>
     </Authorized>
 </AuthorizeView>
+<AuthorizeView Roles="OEM" Policy="SeniorEmployee">
+    <Authorized>
+        <div class="col-12">
+            <br />
+            <br />
+            <label>Archivos Adjuntos</label>
+            <br />
+            @if (imagenesIncidencia.Count() > 0 && imagenesIncidencia != null)
+            {
+                <table id="equipos" class="table" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Tipo de Archivo</th>
+                            <th>Archivo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var Setting in imagenesIncidencia)
+                        {
+                            <tr>
+                                <td>@Setting.Tipo</td>
+                                <td>
+                                    <a class="btn btn-success" @onclick="(() => DownloadServerFile(Setting.Imagen))"><i class="fa fa-file"></i> Abrir Archivo</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </Authorized>
+</AuthorizeView>
     <AuthorizeView Roles="Administrador" Policy="SeniorEmployee">
         <Authorized>
             @if (IncidenciaApi.nombreEstadoIncidencia == "Cerrado")
@@ -311,9 +343,9 @@
                 </div>
 
             }
-            @if (IncidenciaApi.nombreEstadoIncidencia == "Rechazado" && Rechs > 1)
+            @if (IncidenciaApi.nombreEstadoIncidencia == "Rechazado"  || IncidenciaApi.nombreEstadoIncidencia == "Pendiente")
             {
-                <h3><b>Asignar Nuevo Dealer</b></h3>
+                <h3><b>Actualizar Dealer</b></h3>
                 <div class="col-12 row">
                     <label class="col-12 font-weight-bold">Dealer :</label>
                     <select class="form-control col-10" @onchange="OnChangeEvent2" name="IdDealer" id="IdDealer">

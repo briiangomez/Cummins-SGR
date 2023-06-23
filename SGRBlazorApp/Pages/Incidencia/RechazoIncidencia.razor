@@ -184,7 +184,7 @@ else
     private async Task RechazarIncidencia(Guid ClienteId)
     {
         var confirmado = await JSRuntime.Confirmar("Atencion!", "¿Desea confirmar que Rechaza el Reclamo?", TipoMensajeSweetAlert.warning);
-        if (!String.IsNullOrEmpty(Observaciones))
+        if (String.IsNullOrEmpty(Observaciones))
         {
             await JSRuntime.MostrarMensaje("Atencion!", "Ingrese observaciones, es un campo obligatorio", TipoMensajeSweetAlert.error);
         }

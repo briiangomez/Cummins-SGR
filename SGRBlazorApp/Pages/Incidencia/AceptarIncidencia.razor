@@ -200,7 +200,7 @@ else
         {
             await JSRuntime.MostrarMensaje("Atencion!", "Ingrese una posible fecha de visita!", TipoMensajeSweetAlert.warning);
         }
-        else if (!String.IsNullOrEmpty(Observaciones))
+        else if (String.IsNullOrEmpty(Observaciones))
         {
             await JSRuntime.MostrarMensaje("Atencion!", "Ingrese observaciones, es un campo obligatorio", TipoMensajeSweetAlert.error);
         }
