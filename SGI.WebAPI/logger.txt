@@ -980,3 +980,4 @@
    at SGIWebApi.Controllers.IncidenciaController.CrearIncidencia(String accessToken, IncidenciaApi entity) in D:\Desarrollo\Cummins\SGI.WebAPI\Controllers\IncidenciaController.cs:line 384
 15/6/2023 16:10:03-admin-910863145d0d28146189480609284d99
 23/6/2023 14:02:24-gabrielmainero-910863145d0d28146189480609284d99
+24/6/2023 21:55:14-gabrielmainero-910863145d0d28146189480609284d99
